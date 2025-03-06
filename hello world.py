@@ -6,6 +6,6 @@ print("hello world")
 
 i = 1
 ii = 1
-for _ in range(1000):
+for _ in range(100):
     i, ii = ii, i + ii
     print(i)
