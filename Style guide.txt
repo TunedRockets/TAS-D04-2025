@@ -1,6 +1,11 @@
 
 [general coding style stuff here]:
 
+Add comments to everything and give each function and class a docstring
+""" these things """
+that explain the inputs and outputs of the function.
+Trust me, even if it's dead simple, just add it, we're 10 ppl and will be working on this for months
+good documentation is needed.
 
 
 
