@@ -91,7 +91,10 @@ def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
 def main():
     
     # add testing code here
-    pass
+    start = [0,0]
+    end = [5, 3]
+    test_coord = [2,1]
+    print(convert_coordinates(start,end,test_coord))
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
