@@ -7,3 +7,8 @@ not the sorting, importing, or parsing.
 
 import pandas
 
+def function(raw_Data:list) -> pandas.DataFrame:
+    '''some function'''
+
+
+    
