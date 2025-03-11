@@ -42,10 +42,12 @@ def laser_tracker_data_cleaner(data_array):
 
 def main():
     
-    data = _get_laser_tracker_raw()
+    data = _get_laser_tracker_raw() #The argument for this function is the file number you want to clean
     data_array = np.array(data)
     clean_data_laser_tracker = laser_tracker_data_cleaner(data_array)
     #print(clean_data_laser_tracker) In real case not necessary to print anything
+    return clean_data_laser_tracker
+    
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
