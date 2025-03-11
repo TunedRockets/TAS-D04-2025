@@ -65,6 +65,29 @@ def handle_camera(time: list) -> pd.DataFrame:
 
 ################################################################################################################
 
+'''linear algebra stuff'''
+
+def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
+    '''
+    converts the coordinate into a new coordinate system based on the line between start and end
+    '''
+
+    vector = np.array(end) - np.array(start) # a vector between start and end
+
+    unit = vector / vector.dot(vector) # the unit vector in that direction
+
+    normal = np.rot90(unit)
+
+    proj_tangent = unit.dot(coord) # gets the projection. I.e. the coordinates in the new system
+    proj_normal = normal.dot(coord)
+
+    return proj_tangent, proj_normal 
+
+
+
+
+################################################################################################################
+
 def main():
     
     # add testing code here
