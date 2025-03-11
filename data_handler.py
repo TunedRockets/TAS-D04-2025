@@ -27,8 +27,6 @@ def function(x: list, y: list, z: list, time: list) -> pd.DataFrame:
 
     return pandas_table
 
-
-
 ################################################################################################################
 """Functions for Laser Line Scanner"""
 
