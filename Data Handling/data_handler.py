@@ -6,7 +6,7 @@ not the sorting, importing, or parsing.
 """
 
 ################################################################################################################
-"""Functions for Laser Trakcer"""
+"""Functions for Laser Tracker"""
 
 
 
