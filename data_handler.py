@@ -23,6 +23,11 @@ def handle_LT(time: list, x: list, y: list, z: list) -> pd.DataFrame:
         pandas_table[i][1] = (x[i])
         pandas_table[i][2] = (y[i])
         pandas_table[i][3] = (z[i])
+# (Optional) Rename the columns to something more readable:
+pandas_table.columns = ["x", "y", "z", "time"]
+
+# Write DataFrame to CSV
+pandas_table.to_csv(csv_pandastable, index=False)
 
     return pandas_table
 
