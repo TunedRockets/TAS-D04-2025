@@ -31,4 +31,10 @@ def function(raw_Data:list) -> pandas.DataFrame:
 
 
 
+def main():
     
+    # add testing code here
+    pass
+
+if __name__ == "__main__":
+    main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
