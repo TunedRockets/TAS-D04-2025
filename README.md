@@ -1,6 +1,8 @@
 # TAS-D04-2025
 A git distribution for Test, Analysis, and Design. Project group D04 at TUDelft.
 
+Common Conventions:
+
 📂 File & Project Structure
 Use virtual environments to manage dependencies (venv).
 Exclude environment folders (venv) and sensitive files in .gitignore.
