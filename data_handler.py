@@ -29,7 +29,7 @@ def handle_LT(time: list, x: list, y: list, z: list) -> pd.DataFrame:
     # Write DataFrame to CSV
     pandas_table.to_csv(csv_pandastable, index=False)
 
-        return pandas_table
+    return pandas_table
 
 ################################################################################################################
 """Functions for Laser Line Scanner"""
