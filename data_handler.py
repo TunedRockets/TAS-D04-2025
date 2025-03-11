@@ -48,8 +48,6 @@ def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
 
     return pandas_table
 
-
-
 ################################################################################################################
 """Functions for Camera"""
 
@@ -65,11 +63,7 @@ def handle_camera(time: list) -> pd.DataFrame:
 
     return pandas_table
 
-
-
 ################################################################################################################
-
-
 
 def main():
     
