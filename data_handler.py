@@ -52,7 +52,7 @@ def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
 """Functions for Camera"""
 
 def handle_camera(time: list) -> pd.DataFrame:
-    rows = len(x)
+    rows = len(time)
     columns = 1
     shape = (rows, columns)
     np_array = np.empty(shape)
