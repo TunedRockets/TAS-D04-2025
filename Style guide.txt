@@ -16,5 +16,8 @@ good documentation is needed.
 
 [Formatting of data here]:
 
+<<<<<<< HEAD
 
 your mom
+=======
+>>>>>>> 383166e97f14c95a1e13a98d10994f9edfe6d6c9
