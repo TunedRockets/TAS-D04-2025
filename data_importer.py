@@ -49,5 +49,5 @@ def laser_tracker_data_cleaner(file_number):
     return clean_data_laser_tracker
     
 
-if __name__ == "__main__":
-    main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
+#if __name__ == "__main__":
+   # main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
