@@ -5,13 +5,27 @@ not the sorting, importing, or parsing.
 
 """
 
-import pandas
+import numpy as np
+import pandas as pd
 
 ################################################################################################################
 """Functions for Laser Tracker"""
 
-def function(raw_Data:list) -> pandas.DataFrame:
-    '''some function'''
+def function(x: list, y: list, z: list, time: list) -> pd.DataFrame:
+    rows = len(x)
+    columns = 4
+    shape = (rows, columns)
+    np_array = np.empty(shape)
+    pandas_table = pd.DataFrame(np_array)
+
+
+    for i in range(len(x)):
+        pandas_table[i][0] = (x[i])
+        pandas_table[i][1] = (y[i])
+        pandas_table[i][2] = (z[i])
+        pandas_table[i][3] = (time[i])
+
+    return pandas_table
 
 
 
