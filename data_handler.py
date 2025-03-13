@@ -151,7 +151,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
     name = type + "_" + str(tow)
 
     # check if file exists:
-    if data := load_table(name) or not overwrite:
+    if data := load_table(name) and not overwrite:
         #if true the data already exists, return it:
         return data
     # else the data doesn't exist, grab it
@@ -182,7 +182,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
             return processesed_data
 
     
-
+def get_full_data
 
 
 
