@@ -8,35 +8,37 @@ not the sorting, importing, or parsing.
 import numpy as np
 import pandas as pd
 
+from constants import z_ref
+
 ################################################################################################################
 """Functions for Laser Tracker"""
 
 def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     rows = len(time)
-    columns = 5
+    columns = 6
     shape = (rows, columns)
     np_array = np.empty(shape)
     pandas_table = pd.DataFrame(np_array)
-    error = error_LT(y, z, tow)
+    error_y, error_z = error_LT(y, z, tow)
 
     for i in range(len(x)):
         pandas_table[i][0] = time[i]
         pandas_table[i][1] = x[i]
         pandas_table[i][2] = y[i]
         pandas_table[i][3] = z[i]
-        pandas_table[i][4] = error[i]
+        pandas_table[i][4] = error_y[i]
+        pandas_table[i][5] = error_z[i]
     # (Optional) Rename the columns to something more readable:
-    pandas_table.columns = ["x", "y", "z", "time"]
+    pandas_table.columns = ["x", "y", "z", "time", "y error", "z error"]
 
 
     return pandas_table
 
-def error_LT(y: list, z: list, tow)->list:
+def error_LT(y: list, z: list, tow_number)->list:
     error_y = []
     error_z = []
     
-    y_ref = 125 + 12.5*(tow-1)
-    z_ref = 0
+    y_ref = 125 + 12.5*(tow_number-1)
 
     for i in range(len(y)):
         error_y.append(y[i] - y_ref)
