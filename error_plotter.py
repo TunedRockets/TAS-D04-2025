@@ -146,6 +146,8 @@ def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
 
 
 
+
+
 # This is just a backup algorithm (hard-coded) in case the for loop doesn't work.
 '''def error_vs_distance_plot(data: pd.DataFrame, title: str):
     # Plot the error of each sensor vs. distance
