@@ -2,12 +2,10 @@
 """A genera data plotter in order to find how to synchronize later for future steps"""
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-from dataclasses import dataclass
 
 import data_handler
-import laser_tracker_data_importer
+
 
 ########################################################
 def plot_LT(data: pd.DataFrame, name: str):

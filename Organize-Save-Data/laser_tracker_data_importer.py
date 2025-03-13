@@ -17,7 +17,7 @@ def _get_laser_tracker_raw(line_id:int)->list:
     """
 
     # get the path (currently fixed path, so don't move stuff around)
-    path_start = "Raw data\Data Sans Camera\Laser tracker\Straight lines"
+    path_start = "../Raw data/Data Sans Camera/Laser tracker/Straight lines"
     path_extension = ".csv"
     path_number = "\\" + str(line_id) + "\\" + str(line_id)
     path = path_start + path_number + path_extension

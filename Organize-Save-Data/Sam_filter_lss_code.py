@@ -8,7 +8,7 @@ def get_directory_LLS_data(LLS_type, LLS_tow_number):
     Generates the directory for the LLS data files as a function of the LLS type and the tow number
     """
     
-    path_start = "Raw data\Data Sans Camera\LLS\Straight lines"
+    path_start = "../Raw data/Data Sans Camera/LLS/Straight lines"
     path_extension = ".csv"
     path_number = "\\" + str(LLS_tow_number) + "\\" + "LLS_" + str(LLS_type) + "_data"
     directory = path_start + path_number + path_extension
@@ -20,7 +20,7 @@ def get_LLS_timestamps(line_id:int)->list:
     """
 
     # get the path (currently fixed path, so don't move stuff around)
-    path_start = "Raw data\Data Sans Camera\LLS\Straight lines"
+    path_start = "../Raw data/Data Sans Camera/LLS/Straight lines"
     path_extension = ".csv"
     path_number = "\\" + str(line_id) + "\\" + "LLS_A_B_profilenum_timestamp_data"
     path = path_start + path_number + path_extension
