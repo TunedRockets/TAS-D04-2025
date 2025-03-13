@@ -39,9 +39,13 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     return pandas_table
 
 def error_LT(y: list, z: list, tow_number)->list:
+    """"This function takes a given tow path
+        and calculates the error between the
+        actual path and the intended path"""
+    
     error_y = []
     error_z = []
-    
+
     y_ref = 125 + 12.5*(tow_number-1)
 
     for i in range(len(y)):
@@ -54,6 +58,11 @@ def error_LT(y: list, z: list, tow_number)->list:
 """Functions for Laser Line Scanner"""
 
 def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
+    """"This function takes the processed data and
+        creates new data points for each time stamp
+        where each point in time has a corresponding
+        width and its the center of the tow"""
+    
     rows = len(time)
     columns = 3
     shape = (rows, columns)
@@ -87,9 +96,8 @@ def handle_camera(time: list) -> pd.DataFrame:
 '''linear algebra stuff'''
 
 def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
-    '''
-    converts the coordinate into a new coordinate system based on the line between start and end
-    '''
+    '''This function converts the coordinate into a new
+        coordinate system based on the line between start and end'''
 
     vector = np.array(end) - np.array(start) # a vector between start and end
 
@@ -102,8 +110,7 @@ def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
 
     return proj_tangent, proj_normal 
 
-
-###############################################################################################
+################################################################################################################
 """saving and loading data"""
 
 _save_path = "Processed data\\"
