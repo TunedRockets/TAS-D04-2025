@@ -31,6 +31,19 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
 
     return pandas_table
 
+def error_LT(y: list, z: list, tow)->list:
+    error_y = []
+    error_z = []
+    
+    y_ref = 125 + 12.5*(tow-1)
+    z_ref = 0
+
+    for i in range(len(y)):
+        error_y.append(y[i] - y_ref)
+        error_z.append(z[i] - z_ref)
+
+    return error_y, error_z
+
 ################################################################################################################
 """Functions for Laser Line Scanner"""
 
