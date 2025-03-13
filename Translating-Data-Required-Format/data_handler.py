@@ -116,41 +116,37 @@ def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
 _save_path = "Processed data\\"
 
 def save_table(data_table:pd.DataFrame, short_name:str)-> None:
-    '''
-    saves a pandas dataframe as a ., it will be saved with the short name, use that to access it 
-    '''
+    '''This function saves a pandas dataframe as
+        a ., it will be saved with the short name, 
+        use that to access it'''
+    
     data_table.to_pickle(_save_path + short_name + ".pkl")
     # note! this does not save headers or indexes. might need to change that depending on how we do
     return
 
-
-
 def load_table(short_name:str)->pd.DataFrame:
-    '''
-    reads a csv and turns it into a panda Dataframe. access it with the same name used in the save_csv() function
-    if file doesn't exist it returns none
-    '''
+    '''This function reads a csv and turns it into 
+        a panda Dataframe. access it with the same name 
+        used in the save_csv() function if file doesn't exist it returns none'''
+    
     try:
         return pd.read_pickle(_save_path + short_name + ".pkl")
     except FileNotFoundError:
         return None
 
 def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
-    '''
-    exports the table to CSV.\n
-    Note! if you want to save your progress, use the save_table() function instead,\n
-    as the CSV is not reversibly saved (metadata is lost)
-    '''
+    '''This function exports the table to CSV.
+        Note! if you want to save your progress, use the save_table() function instead,
+        as the CSV is not reversibly saved (metadata is lost)'''
+    
     data_table.to_csv(_save_path + name)
     return None
 
 def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
-    '''
-    Load the processed data, grabbing it from raw if it does not yet exist
-    the type specifies what data to grab.
-    use the keys: "LT","LLS1","LLS2","CAM"
-    if overwrite is true, it will grab from the raw regardless if data exists.
-    '''
+    '''This function loads the processed data, grabbing it from raw if it does not yet exist
+    the type specifies what data to grab. use the keys: "LT","LLS1","LLS2","CAM"
+    if overwrite is true, it will grab from the raw regardless if data exists.'''
+
     # generate consistent name:
     # first check if key is valid
     if type not in ["LS","LLS1","LLS2","CAM"]:
@@ -191,9 +187,6 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
             processesed_data = handle_LLS(*data)
             save_table(processesed_data, name) # save the data
             return processesed_data
-
-
-
 
 ################################################################################################################
 
