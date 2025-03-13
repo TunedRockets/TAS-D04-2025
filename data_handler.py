@@ -26,8 +26,6 @@ def handle_LT(time: list, x: list, y: list, z: list) -> pd.DataFrame:
     # (Optional) Rename the columns to something more readable:
     pandas_table.columns = ["x", "y", "z", "time"]
 
-    # Write DataFrame to CSV
-    pandas_table.to_csv(csv_pandastable, index=False)
 
     return pandas_table
 
@@ -84,6 +82,38 @@ def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
     return proj_tangent, proj_normal 
 
 
+###############################################################################################
+"""saving and loading data"""
+
+_save_path = "Processed data\\"
+
+def save_table(data_table:pd.DataFrame, short_name:str)-> None:
+    '''
+    saves a pandas dataframe as a ., it will be saved with the short name, use that to access it 
+    '''
+    data_table.to_pickle(_save_path + short_name + ".pkl")
+    # note! this does not save headers or indexes. might need to change that depending on how we do
+    return
+
+
+
+def load_table(short_name:str)->pd.DataFrame:
+    '''
+    reads a csv and turns it into a panda Dataframe. access it with the same name used in the save_csv() function
+    '''
+    return pd.read_pickle(_save_path + short_name + ".pkl")
+
+def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
+    '''
+    exports the table to CSV.\n
+    Note! if you want to save your progress, use the save_table() function instead,\n
+    as the CSV is not reversibly saved (metadata is lost)
+    '''
+    data_table.to_csv(_save_path + name)
+    return None
+
+
+
 
 
 ################################################################################################################
@@ -91,10 +121,15 @@ def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
 def main():
     
     # add testing code here
-    start = [0,0]
-    end = [5, 3]
-    test_coord = [2,1]
-    print(convert_coordinates(start,end,test_coord))
+    foo = pd.DataFrame([[1,1,1], [1,2,3], ["hello", "world", "!"]])
+    foo.index = ["ones", "range", "strings"]
+    foo.columns = [1,2,3]
+
+    print(foo)
+    save_table(foo, "test")
+
+    bar = load_table("test")
+    print(bar)
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
