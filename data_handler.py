@@ -169,13 +169,13 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
             save_table(processesed_data, name) # save the data
             return processesed_data
         case "LLS1":
-            # Laser Tracker
+            # Laser Line Sensor 1
             data = ... # ADD THE LLS1 DATA HERE
             processesed_data = handle_LLS(*data)
             save_table(processesed_data, name) # save the data
             return processesed_data
         case "LLS2":
-            # Laser Tracker
+            # Laser Line Sensor 2
             data = ... # ADD THE LLS2 DATA HERE
             processesed_data = handle_LLS(*data)
             save_table(processesed_data, name) # save the data
