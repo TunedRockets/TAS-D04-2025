@@ -29,7 +29,7 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
         pandas_table[i][4] = error_y[i]
         pandas_table[i][5] = error_z[i]
     # (Optional) Rename the columns to something more readable:
-    pandas_table.columns = ["x", "y", "z", "time", "y error", "z error"]
+    pandas_table.columns = ["time", "x", "y", "z", "y error", "z error"]
 
 
     return pandas_table
