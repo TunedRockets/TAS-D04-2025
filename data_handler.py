@@ -174,9 +174,9 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
             processesed_data = handle_LLS(*data)
             save_table(processesed_data, name) # save the data
             return processesed_data
-        case "LLS1":
+        case "LLS2":
             # Laser Tracker
-            data = ... # ADD THE LLS1 DATA HERE
+            data = ... # ADD THE LLS2 DATA HERE
             processesed_data = handle_LLS(*data)
             save_table(processesed_data, name) # save the data
             return processesed_data
