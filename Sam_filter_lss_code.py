@@ -3,8 +3,12 @@ import pandas as pd
 import glob
 import os
 
-def get_directory_laser_data(number):
-    directory = 
+def get_directory_LLS_data(LLS_type, LLS_tow_number):
+    """Generates the directory for the LLS data files as a function of the LLS type and the tow number"""
+    path_start = "Raw data\Data Sans Camera\LLS\Straight lines"
+    path_extension = ".csv"
+    path_number = "\\" + str(LLS_tow_number) + "\\" + "LLS_" + str(LLS_type) + "_data"
+    directory = path_start + path_number + path_extension
     return(directory)
 
 def get_LLS_timestamps(line_id:int)->list:
@@ -25,16 +29,16 @@ def get_LLS_timestamps(line_id:int)->list:
             data[i] = data[i].split(";") # splits the csv
     
     data_time_array = np.array(data)
-    clean_time_data = np.delete(data_time_array, [1, 2, 3, 4, 5, 6], axis=1) #removes everything that is not a timestamp
+    clean_LLS_time_data = np.delete(data_time_array, [1, 2, 3, 4, 5, 6], axis=1) #removes everything that is not a timestamp
     
-    return clean_time_data
+    return clean_LLS_time_data
 
-def load_laser_data(directory, laser_type):
+def load_LLS_data(directory, LLS_type):
     """
-    For laser type A: laser_type = A_3060
-    For laser type B: laser_type = B_3010
+    For LLS type A: laser_type = A_3060
+    For LLS type B: laser_type = B_3010
     """
-    file_pattern = os.path.join(directory, f"LLS_{laser_type}_data.csv")
+    file_pattern = os.path.join(directory, f"LLS_{LLS_type}_data.csv")
     files = glob.glob(file_pattern)
 
     all_coords = []

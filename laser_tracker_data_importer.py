@@ -8,11 +8,7 @@ Author(s): Johannes Nilsson, Martijn van der Voort
 #import data_handler
 import numpy as np
 
-
 LINES = 31
-
-
-
 
 # just doing the laser for now as an example
 def _get_laser_tracker_raw(line_id:int)->list:

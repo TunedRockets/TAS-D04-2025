@@ -29,16 +29,16 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
         pandas_table[i][4] = error_y[i]
         pandas_table[i][5] = error_z[i]
     # (Optional) Rename the columns to something more readable:
-    pandas_table.columns = ["x", "y", "z", "time", "y error", "z error"]
+    pandas_table.columns = ["time", "x", "y", "z", "y error", "z error"]
 
 
     return pandas_table
 
-def error_LT(y: list, z: list, tow)->list:
+def error_LT(y: list, z: list, tow_number)->list:
     error_y = []
     error_z = []
     
-    y_ref = 125 + 12.5*(tow-1)
+    y_ref = 125 + 12.5*(tow_number-1)
 
     for i in range(len(y)):
         error_y.append(y[i] - y_ref)
