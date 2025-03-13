@@ -3,11 +3,13 @@ import pandas as pd
 import glob
 import os
 
-
+def get_directory_laser_data(number):
+    directory = 
+    return(directory)
 
 def get_LLS_timestamps(line_id:int)->list:
     """
-    Get's the timestamps of the LLS data
+    Gets the timestamps of the LLS data
     """
 
     # get the path (currently fixed path, so don't move stuff around)
