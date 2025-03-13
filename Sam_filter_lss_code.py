@@ -4,7 +4,10 @@ import glob
 import os
 
 def get_directory_LLS_data(LLS_type, LLS_tow_number):
-    """Generates the directory for the LLS data files as a function of the LLS type and the tow number"""
+    """
+    Generates the directory for the LLS data files as a function of the LLS type and the tow number
+    """
+    
     path_start = "Raw data\Data Sans Camera\LLS\Straight lines"
     path_extension = ".csv"
     path_number = "\\" + str(LLS_tow_number) + "\\" + "LLS_" + str(LLS_type) + "_data"
@@ -33,12 +36,13 @@ def get_LLS_timestamps(line_id:int)->list:
     
     return clean_LLS_time_data
 
-def load_LLS_data(directory, LLS_type):
+def load_LLS_data(LLS_type, LLS_tow_number):
     """
-    For LLS type A: laser_type = A_3060
-    For LLS type B: laser_type = B_3010
+    For LLS type A: LLS_type = A_3060
+    For LLS type B: LLS_type = B_3010
     """
-    file_pattern = os.path.join(directory, f"LLS_{LLS_type}_data.csv")
+    file_pattern = get_directory_LLS_data(LLS_type, LLS_tow_number) #Calls get_directory_LLS_data to generate the appropriate path
+    #file_pattern = os.path.join(directory, f"LLS_{LLS_type}_data.csv")
     files = glob.glob(file_pattern)
 
     all_coords = []
@@ -65,6 +69,8 @@ def load_LLS_data(directory, LLS_type):
             all_coords.append((y_coords, z_coords))
 
     return np.array(all_coords, dtype=object)  # Returns a large array where each element is a tuple (y_coords, z_coords)
+
+
 
 # Example usage:
 # directory = "C:/Users/srott/PycharmProjects/TAS-D04-2025/Raw data/Data Sans Camera/LLS/Straight lines/1"
