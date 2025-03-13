@@ -36,7 +36,6 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     # (Optional) Rename the columns to something more readable:
     pandas_table.columns = ["time", "x", "y", "z", "y error", "z error"]
 
-
     return pandas_table
 
 def error_LT(y: list, z: list, tow_number)->list:
