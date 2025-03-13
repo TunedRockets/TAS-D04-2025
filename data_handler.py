@@ -11,19 +11,21 @@ import pandas as pd
 ################################################################################################################
 """Functions for Laser Tracker"""
 
-def handle_LT(time: list, x: list, y: list, z: list) -> pd.DataFrame:
+def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     rows = len(time)
-    columns = 4
+    columns = 5
     shape = (rows, columns)
     np_array = np.empty(shape)
     pandas_table = pd.DataFrame(np_array)
+    error = error_LT(y, z, tow)
 
     for i in range(len(x)):
-        pandas_table[i][0] = (time[i])
-        pandas_table[i][1] = (x[i])
-        pandas_table[i][2] = (y[i])
-        pandas_table[i][3] = (z[i])
-    # Rename the columns to something more readable:
+        pandas_table[i][0] = time[i]
+        pandas_table[i][1] = x[i]
+        pandas_table[i][2] = y[i]
+        pandas_table[i][3] = z[i]
+        pandas_table[i][4] = error[i]
+    # (Optional) Rename the columns to something more readable:
     pandas_table.columns = ["x", "y", "z", "time"]
 
     # Write DataFrame to CSV
