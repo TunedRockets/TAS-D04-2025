@@ -70,10 +70,13 @@ def load_LLS_data(LLS_type, LLS_tow_number):
     return np.array(all_coords, dtype=object)  # Returns a large array where each element is a tuple (y_coords, z_coords)
 
 def connect_LLS_timestamps_to_data(clean_LLS_time_data, all_coords):
-    LLS_data = np.hstack((clean_LLS_time_data, all_coords))
+    """
+    Stacks the timestamps column and the y and z coordinate columns next to each other and removes empty rows
+    """
+    LLS_data = np.hstack((clean_LLS_time_data, all_coords)) #Stacking the columns
+    for rows in LLS_data:
+        if 
     return LLS_data
-
-
 
 # Example usage:
 # directory = "C:/Users/srott/PycharmProjects/TAS-D04-2025/Raw data/Data Sans Camera/LLS/Straight lines/1"
