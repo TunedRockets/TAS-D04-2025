@@ -7,7 +7,6 @@ to test out stuff
 import data_handler
 import laser_tracker_data_importer
 
-
 # Code to call the function multiple times
 def repeat_function(func, n):
     for i in range(n):
