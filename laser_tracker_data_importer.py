@@ -27,8 +27,6 @@ def _get_laser_tracker_raw(line_id:int)->list:
         data = file.readlines()
         for i in range(len(data)):
             data[i] = data[i].split(";") # splits the csv
-    
-    
     return data
 
 def column_remover_laser_tracker(data_array):
@@ -41,7 +39,6 @@ def laser_tracker_data_cleaner(file_number):
     data = _get_laser_tracker_raw(file_number) #The argument for this function is the file number you want to clean
     data_array = np.array(data)
     clean_data_laser_tracker = column_remover_laser_tracker(data_array)
-    #print(clean_data_laser_tracker) #In real case not necessary to print anything
     return clean_data_laser_tracker
     
 

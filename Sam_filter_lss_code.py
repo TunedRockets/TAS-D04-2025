@@ -33,8 +33,7 @@ def get_LLS_timestamps(line_id:int)->list:
     
     data_time_array = np.array(data)
     clean_LLS_time_data = np.delete(data_time_array, [1, 2, 3, 4, 5, 6], axis=1) #removes everything that is not a timestamp
-    
-    return clean_LLS_time_data
+    return clean_LLS_time_data #Returns an array of 1 column with timestamps
 
 def load_LLS_data(LLS_type, LLS_tow_number):
     """
@@ -69,6 +68,10 @@ def load_LLS_data(LLS_type, LLS_tow_number):
             all_coords.append((y_coords, z_coords))
 
     return np.array(all_coords, dtype=object)  # Returns a large array where each element is a tuple (y_coords, z_coords)
+
+def connect_LLS_timestamps_to_data(clean_LLS_time_data, all_coords):
+    LLS_data = np.hstack((clean_LLS_time_data, all_coords))
+    return LLS_data
 
 
 
