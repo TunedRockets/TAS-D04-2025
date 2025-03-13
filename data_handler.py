@@ -117,8 +117,12 @@ def save_table(data_table:pd.DataFrame, short_name:str)-> None:
 def load_table(short_name:str)->pd.DataFrame:
     '''
     reads a csv and turns it into a panda Dataframe. access it with the same name used in the save_csv() function
+    if file doesn't exist it returns none
     '''
-    return pd.read_pickle(_save_path + short_name + ".pkl")
+    try:
+        return pd.read_pickle(_save_path + short_name + ".pkl")
+    except FileNotFoundError:
+        return None
 
 def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
     '''
@@ -129,6 +133,55 @@ def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
     data_table.to_csv(_save_path + name)
     return None
 
+def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
+    '''
+    Load the processed data, grabbing it from raw if it does not yet exist
+    the type specifies what data to grab.
+    use the keys: "LT","LLS1","LLS2","CAM"
+    if overwrite is true, it will grab from the raw regardless if data exists.
+    '''
+    # generate consistent name:
+    # first check if key is valid
+    if type not in ["LS","LLS1","LLS2","CAM"]:
+        raise KeyError("No such data exists")
+    # then that tow exists:
+    if type not in range(1,32):
+        raise IndexError("Tow ID out of range")
+    # set the name
+    name = type + "_" + str(tow)
+
+    # check if file exists:
+    if data := load_table(name) or not overwrite:
+        #if true the data already exists, return it:
+        return data
+    # else the data doesn't exist, grab it
+    match type:
+        case "LT":
+            # Laser Tracker
+            data = ... # ADD THE LT DATA HERE
+            processesed_data = handle_LT(*data)
+            save_table(processesed_data, name) # save the data
+            return processesed_data
+        case "CAM":
+            # Camera Data
+            data = ... # ADD THE CAM DATA HERE
+            processesed_data = handle_camera(*data)
+            save_table(processesed_data, name) # save the data
+            return processesed_data
+        case "LLS1":
+            # Laser Tracker
+            data = ... # ADD THE LLS1 DATA HERE
+            processesed_data = handle_LLS(*data)
+            save_table(processesed_data, name) # save the data
+            return processesed_data
+        case "LLS1":
+            # Laser Tracker
+            data = ... # ADD THE LLS1 DATA HERE
+            processesed_data = handle_LLS(*data)
+            save_table(processesed_data, name) # save the data
+            return processesed_data
+
+    
 
 
 
@@ -145,7 +198,7 @@ def main():
     print(foo)
     save_table(foo, "test")
 
-    bar = load_table("test")
+    bar = load_table("blard")
     print(bar)
 
 if __name__ == "__main__":
