@@ -3,7 +3,7 @@
 takes the data from the unzipped .zip and turn it into whatever format we pass on
 I.e. from the .zip into something to pass on to the data_handler
 
-Author(s): Johannes Nilsson,
+Author(s): Johannes Nilsson, Martijn van der Voort
 """
 #import data_handler
 import numpy as np
