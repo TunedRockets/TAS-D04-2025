@@ -52,7 +52,7 @@ def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
 """Functions for Camera"""
 
 def handle_camera(time: list) -> pd.DataFrame:
-    rows = len(x)
+    rows = len(time)
     columns = 1
     shape = (rows, columns)
     np_array = np.empty(shape)
@@ -65,10 +65,36 @@ def handle_camera(time: list) -> pd.DataFrame:
 
 ################################################################################################################
 
+'''linear algebra stuff'''
+
+def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
+    '''
+    converts the coordinate into a new coordinate system based on the line between start and end
+    '''
+
+    vector = np.array(end) - np.array(start) # a vector between start and end
+
+    unit = vector / vector.dot(vector) # the unit vector in that direction
+
+    normal = np.rot90(unit)
+
+    proj_tangent = unit.dot(coord) # gets the projection. I.e. the coordinates in the new system
+    proj_normal = normal.dot(coord)
+
+    return proj_tangent, proj_normal 
+
+
+
+
+################################################################################################################
+
 def main():
     
     # add testing code here
-    pass
+    start = [0,0]
+    end = [5, 3]
+    test_coord = [2,1]
+    print(convert_coordinates(start,end,test_coord))
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
