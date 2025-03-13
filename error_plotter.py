@@ -2,18 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-def plot_error(data: pd.DataFrame, title: str):
-    """
-    Plots the error of the data
-    """
-    # Create a figure and a set of subplots
-    fig, ax = plt.subplots(2, 2)
-    ax.plot(data["time"], data["error"])
-    ax.set_title(title)
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Error")
-    plt.show()
-
 
 # Plot the error of each sensor vs. Distance
 def error_vs_distance_plot(data: pd.DataFrame, title: str):
@@ -100,6 +88,60 @@ def error_vs_time_plot(data: pd.DataFrame, title: str):
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     plt.show()
+
+    #TODO: Find mean and standard deviation of the errors
+    #todo: create a function to plot all errors in the same plot 
+
+# Plot every error line in the same plot vs. X distance
+def all_errors_vs_distance_plot(data: pd.DataFrame, title:str):
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.set_title('All errors vs. distance')  # Set main title for the figure
+    ax.set_xlabel('Distance')
+    ax.set_ylabel('Error')
+
+    ''' error_LLS_A = LLS A
+        error_LLS_B = LLS B
+        error_LT = Laser tracker 
+        error_camera = camera '''
+
+    ax.plot(data['distance'], data['error_LLS_A'])
+    ax.plot(data['distance'], data['error_LLS_b'])
+    ax.plot(data['distance'], data['error_LT'])
+    ax.plot(data['distance'], data['error_camera'])
+
+    # Identify every line in the plot
+    ax.legend()
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show()
+
+    # Plot every error line in the same plot vs. time
+def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.set_title('All errors vs. time')  # Set main title for the figure
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Error')
+
+    ''' error_LLS_A = LLS A
+        error_LLS_B = LLS B
+        error_LT = Laser tracker 
+        error_camera = camera '''
+
+    ax.plot(data['Time'], data['error_LLS_A'])
+    ax.plot(data['Time'], data['error_LLS_b'])
+    ax.plot(data['Time'], data['error_LT'])
+    ax.plot(data['Time'], data['error_camera'])
+
+    # Identify every line in the plot
+    ax.legend()
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show()
+
 
 
 
