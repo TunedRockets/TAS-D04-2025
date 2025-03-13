@@ -15,8 +15,9 @@ from constants import z_ref
 
 def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     """"This function takes the processed data and
-        creates a new data point which consist of
-        the position time and errors at that point"""
+        creates new data points for each time stamp
+        where each point in time has a corresponding
+        position, and its errors in position"""
     
     rows = len(time)
     columns = 6
