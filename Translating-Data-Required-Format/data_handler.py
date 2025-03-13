@@ -73,6 +73,9 @@ def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
         pandas_table[i][0] = (time[i])
         pandas_table[i][1] = (width[i])
         pandas_table[i][2] = (center[i])
+    
+    # (Optional) Rename the columns to something more readable:
+    pandas_table.columns = ["time", "width", "center"]
 
     return pandas_table
 
@@ -88,6 +91,9 @@ def handle_camera(time: list) -> pd.DataFrame:
 
     for i in range(len(time)):
         pandas_table[i][0] = time[i]
+
+    # (Optional) Rename the columns to something more readable:
+    pandas_table.columns = ["time",]
 
     return pandas_table
 
