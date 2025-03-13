@@ -181,8 +181,6 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
             save_table(processesed_data, name) # save the data
             return processesed_data
 
-    
-def get_full_data
 
 
 
