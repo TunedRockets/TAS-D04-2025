@@ -83,9 +83,6 @@ def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
 
     return proj_tangent, proj_normal 
 
-
-
-
 ################################################################################################################
 
 def main():
