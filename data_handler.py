@@ -14,6 +14,10 @@ from constants import z_ref
 """Functions for Laser Tracker"""
 
 def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
+    """"This function takes the processed data and
+        creates a new data point which consist of
+        the position time and errors at that point"""
+    
     rows = len(time)
     columns = 6
     shape = (rows, columns)
