@@ -11,7 +11,7 @@ import laser_tracker_data_importer
 def repeat_function(func, n):
     for i in range(n):
         func()
-repeat_function(handle_LT,3)
+repeat_function(data_handler.handle_LT, 3)
 
 
 # get cool data
