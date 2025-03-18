@@ -9,15 +9,15 @@ def LT_exceltolist(file_path):
     excel_data = pd.read_excel(file_path, sheet_name=None)
 
     # Create an array (list of DataFrames) to store data for each sheet
-    sheets_data = []
+    LT_sheets_data = []
 
     # Iterate through the sheets and store them into the array
     for sheet_name, sheet_df in excel_data.items():
         # If the sheet name matches a specific pattern, for example, starts with "Sheet"
         if sheet_name.startswith("Sheet"):
             # Drop the first column (assuming the first column is always the first by index)
-            sheet_df = sheet_df.iloc[:, 0:]
-            sheets_data.append(sheet_df)
+            LT_sheet_df = sheet_df.iloc[:, 0:]
+            LT_sheets_data.append(LT_sheet_df)
 
     # Now `sheets_data` contains a list of DataFrames for all sheets starting with "Sheet",
     # excluding their first column.
@@ -28,6 +28,6 @@ def LT_exceltolist(file_path):
     #    print(f"Sheet {i + 1}:")
     #    print(sheet)
 
-    return sheets_data
+    return LT_sheets_data
 
 print(LT_exceltolist(file_path))
