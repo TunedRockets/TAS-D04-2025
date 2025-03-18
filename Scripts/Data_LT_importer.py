@@ -1,46 +1,33 @@
-"""
+import pandas as pd
 
-takes the data from the unzipped .zip and turn it into whatever format we pass on
-I.e. from the .zip into something to pass on to the data_handler
+# Load the Excel file
+file_path = 'C:/Users/srott/PycharmProjects/TAS-D04-2025/Data/Data Sans Camera/Laser tracker/Straight lines/All straight line mats/Excel_Version.xlsx'  # Replace with your Excel file path
 
-Author(s): Johannes Nilsson, Martijn van der Voort
-"""
-#import data_handler
-import numpy as np
+def LT_exceltolist(file_path):
+    # Read the Excel file into a dictionary where the keys are the sheet names
+    # and the values are the dataframes for each sheet.
+    excel_data = pd.read_excel(file_path, sheet_name=None)
 
-LINES = 31
+    # Create an array (list of DataFrames) to store data for each sheet
+    sheets_data = []
 
-# just doing the laser for now as an example
-def _get_laser_tracker_raw(line_id:int)->list:
-    """
-    Get's the laser tracker for the specified line
-    """
+    # Iterate through the sheets and store them into the array
+    for sheet_name, sheet_df in excel_data.items():
+        # If the sheet name matches a specific pattern, for example, starts with "Sheet"
+        if sheet_name.startswith("Sheet"):
+            # Drop the first column (assuming the first column is always the first by index)
+            sheet_df = sheet_df.iloc[:, 0:]
+            sheets_data.append(sheet_df)
 
-    # get the path (currently fixed path, so don't move stuff around)
-    path_start = "../Raw data/Data Sans Camera/Laser tracker/Straight lines"
-    path_extension = ".csv"
-    path_number = "\\" + str(line_id) + "\\" + str(line_id)
-    path = path_start + path_number + path_extension
+    # Now `sheets_data` contains a list of DataFrames for all sheets starting with "Sheet",
+    # excluding their first column.
+    # You can access each sheet's data by index or iterate over the list.
 
-    # grab the data
-    with open(path, "r") as file:
-        data = file.readlines()
-        for i in range(len(data)):
-            data[i] = data[i].split(";") # splits the csv
-    return data
+    # Print the sheets without the first column
+    #for i, sheet in enumerate(sheets_data):
+    #    print(f"Sheet {i + 1}:")
+    #    print(sheet)
 
-def column_remover_laser_tracker(data_array):
-    """Removes unusable data from csv-files"""
-    clean_data = np.delete(data_array, [0, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14], axis=1) #Removes columns that 
-    return clean_data
+    return sheets_data
 
-def laser_tracker_data_cleaner(file_number):
-    """Cleans laser tracker data by removing unnecessary columns and outputting np arrays"""
-    data = _get_laser_tracker_raw(file_number) #The argument for this function is the file number you want to clean
-    data_array = np.array(data)
-    clean_data_laser_tracker = column_remover_laser_tracker(data_array)
-    return clean_data_laser_tracker
-    
-
-#if __name__ == "__main__":
-   # main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
+print(LT_exceltolist(file_path))
