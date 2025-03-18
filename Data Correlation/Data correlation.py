@@ -5,14 +5,6 @@ import os
 sys.path.insert(0, os.path.abspath('TAS-D04-2025\Translating-Data-Required-Format'))
 import data_handler 
 
-
-
-
-
-
-
-
-
 def main():
     
     # get the data:
