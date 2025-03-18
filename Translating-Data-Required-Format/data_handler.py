@@ -8,6 +8,10 @@ Authors: Johannes Nilsson,
 import numpy as np
 import pandas as pd
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath('TAS-D04-2025'))
+
 from constants import z_ref
 
 ################################################################################################################
@@ -158,7 +162,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
     if type not in ["LS","LLS1","LLS2","CAM"]:
         raise KeyError("No such data exists")
     # then that tow exists:
-    if type not in range(1,32):
+    if tow not in range(1,32):
         raise IndexError("Tow ID out of range")
     # set the name
     name = type + "_" + str(tow)
