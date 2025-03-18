@@ -116,7 +116,6 @@ def LLS_exceltoarray(file_path):
 
     return sheets_data
 
-def 
 
 print(LLS_exceltoarray(file_path))
 
