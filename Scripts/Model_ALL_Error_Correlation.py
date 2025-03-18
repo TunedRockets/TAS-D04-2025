@@ -4,7 +4,7 @@ import os
 sys.path.insert(0, os.path.abspath('TAS-D04-2025'))
 sys.path.insert(0, os.path.abspath('TAS-D04-2025\Data-and-Data-Handling\Translating-Data-Required-Format'))
 import Scripts.constants as constants
-import data_handler
+import Scripts.Handling_ALL_Functions as Handling_ALL_Functions
 # does this work?
 
 
@@ -12,7 +12,7 @@ import data_handler
 def main():
     
     # get the data:
-    data_LS = data_handler.get_processed_data(1, "LS")
+    data_LS = Handling_ALL_Functions.get_processed_data(1, "LS")
     print(data_LS)
 
 
