@@ -34,6 +34,40 @@ data = pd.DataFrame({
     'error_camera': np.random.uniform(0.01, 0.02, data_size),})
 
 
+def plot_histograms(data: pd.DataFrame, title: str):
+    # Plot the error of each sensor vs. time
+    
+    ''' error_LLS_A = LLS A
+        error_LLS_B = LLS B
+        error_LT = Laser tracker 
+        error_camera = camera'''
+    
+    # Create a 2x2 grid (ax) to subplots
+    fig, ax = plt.subplots(2, 2, figsize=(10, 8))  
+    fig.suptitle(title)  # Set main title for the figure
+
+    # Created lists for the parameters I need in the for loop, because we cannot say 
+    # for e.g. data['error_LLS_A'] in a for loop (it has to have an associated number)
+    # and in lists you can refer to strings and so on as a number (the index)!
+    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_camera']]
+    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT','error_camera']
+    titles = ['Error LLS A vs. time', 
+              'Error LLS B vs. time',
+              'Error Laser Tracker vs. time',
+              'Error camera vs. time']
+    
+    # Algorithm to make the code more readable than hard-code every plot (see below)
+    for i, error in enumerate(errors):
+        row = i // 2  # Determine the row (0 or 1)
+        col = i % 2   # Determine the column (0 or 1)
+
+        # Just plotting and creating titles and labels for the plots
+        ax[row, col].hist(error, bins= 20, color='skyblue', edgecolor='black')
+        ax[row, col].set_title(titles[i])
+        ax[row, col].set_xlabel(errors_names[i])
+        ax[row, col].set_ylabel('Frequency')
+ 
+
 
 '''Example
 
