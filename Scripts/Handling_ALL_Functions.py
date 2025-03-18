@@ -1,8 +1,7 @@
 """
-for getting data from wherever we save it, and saving the data in that place
+For getting data from wherever we save it, and saving the data in that place
 
 not the sorting, importing, or parsing. 
-Authors: Johannes Nilsson, 
 """
 
 import numpy as np

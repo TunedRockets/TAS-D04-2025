@@ -4,7 +4,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import data_handler
+import Scripts.Handling_ALL_Functions as Handling_ALL_Functions
 
 
 ########################################################
