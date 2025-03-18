@@ -1,3 +1,4 @@
+"""
 import numpy as np
 import pandas as pd
 import glob
@@ -5,8 +6,8 @@ import os
 
 def get_directory_LLS_data(LLS_type, LLS_tow_number):
     """
-    Generates the directory for the LLS data files as a function of the LLS type and the tow number
-    """
+    #Generates the directory for the LLS data files as a function of the LLS type and the tow number
+"""
     
     path_start = "Raw data\Data Sans Camera\LLS\Straight lines"
     path_extension = ".csv"
@@ -16,8 +17,8 @@ def get_directory_LLS_data(LLS_type, LLS_tow_number):
 
 def get_LLS_timestamps(line_id:int)->list:
     """
-    Gets the timestamps of the LLS data
-    """
+    #Gets the timestamps of the LLS data
+"""
 
     # get the path (currently fixed path, so don't move stuff around)
     path_start = "Raw data\Data Sans Camera\LLS\Straight lines"
@@ -37,9 +38,9 @@ def get_LLS_timestamps(line_id:int)->list:
 
 def load_LLS_data(LLS_type, LLS_tow_number):
     """
-    For LLS type A: LLS_type = A_3060
-    For LLS type B: LLS_type = B_3010
-    """
+    #For LLS type A: LLS_type = A_3060
+    #For LLS type B: LLS_type = B_3010
+"""
     file_pattern = get_directory_LLS_data(LLS_type, LLS_tow_number) #Calls get_directory_LLS_data to generate the appropriate path
     #file_pattern = os.path.join(directory, f"LLS_{LLS_type}_data.csv")
     files = glob.glob(file_pattern)
@@ -71,11 +72,12 @@ def load_LLS_data(LLS_type, LLS_tow_number):
 
 def connect_LLS_timestamps_to_data(clean_LLS_time_data, all_coords):
     """
-    Stacks the timestamps column and the y and z coordinate columns next to each other and removes empty rows
-    """
+    #Stacks the timestamps column and the y and z coordinate columns next to each other and removes empty rows
+"""
     LLS_data_with_zeros = np.hstack((clean_LLS_time_data, all_coords)) #Stacking the columns
     LLS_data = np.array([row for row in LLS_data_with_zeros if not any(coord == 0 for coord in row[1:])], dtype=object)
     return LLS_data
+"""
 
 # Example usage:
 # directory = "C:/Users/srott/PycharmProjects/TAS-D04-2025/Raw data/Data Sans Camera/LLS/Straight lines/1"
@@ -83,3 +85,37 @@ def connect_LLS_timestamps_to_data(clean_LLS_time_data, all_coords):
 # coords_B = load_laser_data(directory, "B_3010")
 # print(coords_A)
 # print(coords_B)
+
+import pandas as pd
+
+# Load the Excel file
+file_path = 'Data\Data Sans Camera\LLS\Straight lines\All runs widths\LLS_Width_Before_After.xlsx'  # Replace with your Excel file path
+
+def LT_exceltoarray(file_path):
+    # Read the Excel file into a dictionary where the keys are the sheet names
+    # and the values are the dataframes for each sheet.
+    excel_data = pd.read_excel(file_path, sheet_name=None)
+
+    # Create an array (list of DataFrames) to store data for each sheet
+    sheets_data = []
+
+    # Iterate through the sheets and store them into the array
+    for sheet_name, sheet_df in excel_data.items():
+        # If the sheet name matches a specific pattern, for example, starts with "Sheet"
+        if sheet_name.startswith("Run"):
+            # Drop the first column (assuming the first column is always the first by index)
+            sheet_df = sheet_df.iloc[:, 0:]
+            sheets_data.append(sheet_df)
+
+    # Now `sheets_data` contains a list of DataFrames for all sheets starting with "Sheet",
+    # excluding their first column.
+    # You can access each sheet's data by index or iterate over the list.
+
+    # Print the sheets without the first column
+    #for i, sheet in enumerate(sheets_data):
+    #    print(f"Sheet {i + 1}:")
+    #    print(sheet)
+
+    return sheets_data
+
+print(LT_exceltoarray(file_path))
