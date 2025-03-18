@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Load the Excel file
-file_path = 'C:/Users/srott/PycharmProjects/TAS-D04-2025/Data/Data Sans Camera/Laser tracker/Straight lines/All straight line mats/Excel_Version.xlsx'  # Replace with your Excel file path
+file_path = 'Data\Data Sans Camera\Laser tracker\Straight lines\All straight line mats\Excel_Version.xlsx'  # Replace with your Excel file path
 
 def LT_exceltolist(file_path):
     # Read the Excel file into a dictionary where the keys are the sheet names
