@@ -3,7 +3,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath('TAS-D04-2025'))
 sys.path.insert(0, os.path.abspath('TAS-D04-2025\Data-and-Data-Handling\Translating-Data-Required-Format'))
-import constants
+import Scripts.constants as constants
 import data_handler
 # does this work?
 

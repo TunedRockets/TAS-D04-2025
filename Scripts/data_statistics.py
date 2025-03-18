@@ -2,9 +2,20 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+'''Here you can find the code to get meaningful statistical values 
+    and the function  to plot the histograms of the four type of errors
+    Written by: Manuel Cruz, Diogo Ying.'''
+
 # TODO: find the statistical values (mean, median, std, min, max) of the data
 # TODO: Create histograms of the four error types
 
+#Here we obtain the mean, median, standard deviation, minimum and maximum
+# of the four error types.
+'''Note: It might be necessary to change the names of the errors when calling the DataFrame 'data'.
+    For example: In the below function, I call data['error_LLS_A'],
+    but the name in the DataFrame might not be the same!,
+    so it may be necessary to change it either in all functions 
+    or in the DataFrame where the data is stored!'''
 def statistical_values(data: pd.DataFrame):
     # Find the statistical values of the data
     errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_camera']]
@@ -14,6 +25,9 @@ def statistical_values(data: pd.DataFrame):
     minimum = []
     maximum = []
 
+    '''We created a For loop to make the code more efficient and readable.
+    It goes through all errors (see list 'errors') and appends to a list the 
+    necessary statistical values'''
     for error in errors:
         mean.append(round(error.mean(), 4))
         median.append(round(error.median(), 4))   
@@ -23,17 +37,14 @@ def statistical_values(data: pd.DataFrame):
 
     return mean, median, std, minimum, maximum
 
-# Generating synthetic test data
-np.random.seed(42)  # For reproducibility
-data_size = 100  # Number of data points
 
-data = pd.DataFrame({
-    'error_LLS_A': np.random.uniform(0.01, 0.02, data_size),
-    'error_LLS_B': np.random.uniform(0.01, 0.02, data_size),
-    'error_LT': np.random.uniform(0.01, 0.02, data_size),
-    'error_camera': np.random.uniform(0.01, 0.02, data_size),})
-
-
+# Here is the function to plot all types of errors in histograms.
+# They all appear in the same figure, in subplots.
+'''Note: It might be necessary to change the names of the errors when calling the DataFrame 'data'.
+    For example: In the below function, I call data['error_LLS_A'],
+    but the name in the DataFrame might not be the same!,
+    so it may be necessary to change it either in all functions 
+    or in the DataFrame where the data is stored!'''
 def plot_histograms(data: pd.DataFrame, title: str):
     # Plot the error of each sensor vs. time
     
@@ -69,7 +80,18 @@ def plot_histograms(data: pd.DataFrame, title: str):
  
 
 
-'''Example
+'''Example to check if the first function (statistical_values) works'''
+
+'''
+# Generating random test data
+np.random.seed(42) 
+data_size = 100  
+
+data = pd.DataFrame({
+    'error_LLS_A': np.random.uniform(0.01, 0.02, data_size),
+    'error_LLS_B': np.random.uniform(0.01, 0.02, data_size),
+    'error_LT': np.random.uniform(0.01, 0.02, data_size),
+    'error_camera': np.random.uniform(0.01, 0.02, data_size),})
 
 # Running the function
 stats = statistical_values(data)
