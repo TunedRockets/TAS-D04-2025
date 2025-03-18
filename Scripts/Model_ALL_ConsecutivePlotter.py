@@ -112,23 +112,23 @@ def plot_LT(data: pd.DataFrame, name: str):
 def plot_LLS(data: pd.DataFrame, name: str):
     time = data["time"]
     width = data["width"]
-    center = data["center"]
+    E = data["error"]
 
-    v_width, v_center = [0], [0]
+    v_width, v_E = [0], [0]
     for i in range(len(time - 1)):
         dt = time[i + 1] - time[i]
 
         dw = width[i + 1] - width[i]
         x_velocity = dw / dt
-        dc = center[i + 1] - center[i]
-        y_velocity = dc / dt
+        dE = E[i + 1] - E[i]
+        E_velocity = dE / dt
 
         v_width.append(x_velocity)
-        v_center.append(y_velocity)
+        v_E.append(E_velocity)
 
     plt.subplot(121)
     plt.plot(time, width, label='width', color='red')
-    plt.plot(time, center, label='center', color='blue')
+    plt.plot(time, E, label='center', color='blue')
     plt.legend(loc='upper_right')
     plt.title('LLS, coordinates')
     plt.xlabel("Time")
@@ -136,7 +136,7 @@ def plot_LLS(data: pd.DataFrame, name: str):
 
     plt.subplot(122)
     plt.plot(time, v_width, label='v_width', color='red')
-    plt.plot(time, v_center, label='v_center', color='blue')
+    plt.plot(time, v_E, label='v_center', color='blue')
     plt.legend(loc='upper_right')
     plt.title('LLS, velocities')
     plt.xlabel("Time")
@@ -199,42 +199,6 @@ def plot_LLS(data: pd.DataFrame, name: str):
     plt.hist(V_5)
     plt.title('LT, split 5')
     plt.xlabel("V")
-
-    #####
-    time = data["time"]
-    width = data["width"]
-    center = data["center"]
-
-    v_width, v_center = [0], [0]
-    for i in range(len(time - 1)):
-        dt = time[i + 1] - time[i]
-
-        dw = width[i + 1] - width[i]
-        x_velocity = dw / dt
-        dc = center[i + 1] - center[i]
-        y_velocity = dc / dt
-
-        v_width.append(x_velocity)
-        v_center.append(y_velocity)
-
-    plt.subplot(121)
-    plt.plot(time, width, label='width', color='red')
-    plt.plot(time, center, label='center', color='blue')
-    plt.legend(loc='upper_right')
-    plt.title('LLS, coordinates')
-    plt.xlabel("Time")
-    plt.ylabel("location")
-
-    plt.subplot(122)
-    plt.plot(time, v_width, label='v_width', color='red')
-    plt.plot(time, v_center, label='v_center', color='blue')
-    plt.legend(loc='upper_right')
-    plt.title('LLS, velocities')
-    plt.xlabel("Time")
-    plt.ylabel("velocity")
-
-    plt.tight_layout()
-    plt.show()
 
 
 #####################################################
