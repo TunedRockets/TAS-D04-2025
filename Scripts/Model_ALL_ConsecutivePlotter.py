@@ -33,7 +33,7 @@ def plot_LT(data: pd.DataFrame, name: str):
 
     plt.subplot(222)
     plt.plot(time, E)
-    plt.title('LT, x-coordinates')
+    plt.title('LT, err-coordinates')
     plt.xlabel("Time")
 
     plt.subplot(223)
@@ -43,13 +43,16 @@ def plot_LT(data: pd.DataFrame, name: str):
 
     plt.subplot(224)
     plt.plot(time, v_E)
-    plt.title('LT, y-velocities')
+    plt.title('LT, err-velocities')
     plt.xlabel("Time")
+
+    plt.tight_layout()
+    plt.show()
 
     for i in range(len(time)):
         err = E[i]
-        range = max(err) - min(err)
-        split = 0.2 * 0.5*range
+        range = max(abs(min(err)), max(abs(err)))
+        split = 0.2 * range
 
         split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
         V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
@@ -72,38 +75,132 @@ def plot_LT(data: pd.DataFrame, name: str):
             print("error")
 
     plt.subplot(231)
-    plt.plot(time, v_E)
-    plt.title('LT, x-coordinates')
-    plt.xlabel("Time")
+    plt.hist(v_E)
+    plt.title('LT, err')
+    plt.xlabel("V")
 
     plt.subplot(232)
-    plt.plot(time, V_1)
-    plt.title('LT, x-coordinates')
-    plt.xlabel("Time")
+    plt.hist(V_1)
+    plt.title('LT, split 1')
+    plt.xlabel("V")
 
     plt.subplot(233)
-    plt.plot(time, V_2)
-    plt.title('LT, x-velocities')
-    plt.xlabel("Time")
+    plt.hist(V_2)
+    plt.title('LT, split 2')
+    plt.xlabel("V")
 
     plt.subplot(234)
-    plt.plot(time, V_3)
-    plt.title('LT, y-velocities')
-    plt.xlabel("Time")
+    plt.hist(V_3)
+    plt.title('LT, split 3')
+    plt.xlabel("V")
 
     plt.subplot(235)
-    plt.plot(time, V_4)
-    plt.title('LT, y-velocities')
-    plt.xlabel("Time")
+    plt.hist(V_4)
+    plt.title('LT, split 4')
+    plt.xlabel("V")
 
     plt.subplot(236)
-    plt.plot(time, V_5)
-    plt.title('LT, y-velocities')
-    plt.xlabel("Time")
+    plt.hist(V_5)
+    plt.title('LT, split 5')
+    plt.xlabel("V")
+
+    plt.tight_layout()
+    plt.show()
 
 
 ########################################################
 def plot_LLS(data: pd.DataFrame, name: str):
+    time = data["time"]
+    width = data["width"]
+    center = data["center"]
+
+    v_width, v_center = [0], [0]
+    for i in range(len(time - 1)):
+        dt = time[i + 1] - time[i]
+
+        dw = width[i + 1] - width[i]
+        x_velocity = dw / dt
+        dc = center[i + 1] - center[i]
+        y_velocity = dc / dt
+
+        v_width.append(x_velocity)
+        v_center.append(y_velocity)
+
+    plt.subplot(121)
+    plt.plot(time, width, label='width', color='red')
+    plt.plot(time, center, label='center', color='blue')
+    plt.legend(loc='upper_right')
+    plt.title('LLS, coordinates')
+    plt.xlabel("Time")
+    plt.ylabel("location")
+
+    plt.subplot(122)
+    plt.plot(time, v_width, label='v_width', color='red')
+    plt.plot(time, v_center, label='v_center', color='blue')
+    plt.legend(loc='upper_right')
+    plt.title('LLS, velocities')
+    plt.xlabel("Time")
+    plt.ylabel("velocity")
+
+    plt.tight_layout()
+    plt.show()
+
+    for i in range(len(time)):
+        err = E[i]
+        range = max(abs(min(err)), max(abs(err)))
+        split = 0.2 * range
+
+        split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
+        V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
+        if abs(err) <= 1 * split:
+            split_1.append(err)
+            V_1.append(v_E[i])
+        elif abs(err) <= 2 * split:
+            split_2.append(err)
+            V_2.append(v_E[i])
+        elif abs(err) <= 3 * split:
+            split_3.append(err)
+            V_3.append(v_E[i])
+        elif abs(err) <= 4 * split:
+            split_4.append(err)
+            V_4.append(v_E[i])
+        elif abs(err) <= 5 * split:
+            split_5.append(err)
+            V_5.append(v_E[i])
+        else:
+            print("error")
+
+    plt.subplot(231)
+    plt.hist(v_E)
+    plt.title('LT, err')
+    plt.xlabel("V")
+
+    plt.subplot(232)
+    plt.hist(V_1)
+    plt.title('LT, split 1')
+    plt.xlabel("V")
+
+    plt.subplot(233)
+    plt.hist(V_2)
+    plt.title('LT, split 2')
+    plt.xlabel("V")
+
+    plt.subplot(234)
+    plt.hist(V_3)
+    plt.title('LT, split 3')
+    plt.xlabel("V")
+
+    plt.subplot(235)
+    plt.hist(V_4)
+    plt.title('LT, split 4')
+    plt.xlabel("V")
+
+    plt.subplot(236)
+    plt.hist(V_5)
+    plt.title('LT, split 5')
+    plt.xlabel("V")
+
+    #####
     time = data["time"]
     width = data["width"]
     center = data["center"]
