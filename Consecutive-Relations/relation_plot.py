@@ -1,0 +1,196 @@
+"""A genera data plotter in order to find how to synchronize later for future steps"""
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# import data_handler
+
+
+########################################################
+def plot_LT(data: pd.DataFrame, name: str):
+    time = data["time"]
+    x = data["x"]
+    E = data["error"]
+
+
+    v_x, v_E = [0], [0]
+    for i in range(len(time-1)):
+        dt = time[i+1] - time[i]
+
+        dx = x[i+1] - x[i]
+        x_velocity = dx/dt
+        dE = E[i+1] - E[i]
+        E_velocity = dE/dt
+
+        v_x.append(x_velocity)
+        v_E.append(E_velocity)
+
+
+    plt.subplot(221)
+    plt.plot(time, x)
+    plt.title('LT, x-coordinates')
+    plt.xlabel("Time")
+
+    plt.subplot(222)
+    plt.plot(time, E)
+    plt.title('LT, x-coordinates')
+    plt.xlabel("Time")
+
+    plt.subplot(223)
+    plt.plot(time, v_x)
+    plt.title('LT, x-velocities')
+    plt.xlabel("Time")
+
+    plt.subplot(224)
+    plt.plot(time, v_E)
+    plt.title('LT, y-velocities')
+    plt.xlabel("Time")
+
+    for i in range(len(time)):
+        err = E[i]
+        range = max(err) - min(err)
+        split = 0.2 * 0.5*range
+
+        split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
+        V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
+        if abs(err) <= 1 * split:
+            split_1.append(err)
+            V_1.append(v_E[i])
+        elif abs(err) <= 2 * split:
+            split_2.append(err)
+            V_2.append(v_E[i])
+        elif abs(err) <= 3 * split:
+            split_3.append(err)
+            V_3.append(v_E[i])
+        elif abs(err) <= 4 * split:
+            split_4.append(err)
+            V_4.append(v_E[i])
+        elif abs(err) <= 5 * split:
+            split_5.append(err)
+            V_5.append(v_E[i])
+        else:
+            print("error")
+
+    plt.subplot(231)
+    plt.plot(time, v_E)
+    plt.title('LT, x-coordinates')
+    plt.xlabel("Time")
+
+    plt.subplot(232)
+    plt.plot(time, V_1)
+    plt.title('LT, x-coordinates')
+    plt.xlabel("Time")
+
+    plt.subplot(233)
+    plt.plot(time, V_2)
+    plt.title('LT, x-velocities')
+    plt.xlabel("Time")
+
+    plt.subplot(234)
+    plt.plot(time, V_3)
+    plt.title('LT, y-velocities')
+    plt.xlabel("Time")
+
+    plt.subplot(235)
+    plt.plot(time, V_4)
+    plt.title('LT, y-velocities')
+    plt.xlabel("Time")
+
+    plt.subplot(236)
+    plt.plot(time, V_5)
+    plt.title('LT, y-velocities')
+    plt.xlabel("Time")
+
+
+########################################################
+def plot_LLS(data: pd.DataFrame, name: str):
+    time = data["time"]
+    width = data["width"]
+    center = data["center"]
+
+    v_width, v_center = [0], [0]
+    for i in range(len(time - 1)):
+        dt = time[i + 1] - time[i]
+
+        dw = width[i + 1] - width[i]
+        x_velocity = dw / dt
+        dc = center[i + 1] - center[i]
+        y_velocity = dc / dt
+
+        v_width.append(x_velocity)
+        v_center.append(y_velocity)
+
+    plt.subplot(121)
+    plt.plot(time, width, label='width', color='red')
+    plt.plot(time, center, label='center', color='blue')
+    plt.legend(loc='upper_right')
+    plt.title('LLS, coordinates')
+    plt.xlabel("Time")
+    plt.ylabel("location")
+
+    plt.subplot(122)
+    plt.plot(time, v_width, label='v_width', color='red')
+    plt.plot(time, v_center, label='v_center', color='blue')
+    plt.legend(loc='upper_right')
+    plt.title('LLS, velocities')
+    plt.xlabel("Time")
+    plt.ylabel("velocity")
+
+    plt.tight_layout()
+    plt.show()
+
+
+#####################################################
+def plot_camera(data: pd.DataFrame, name: str):
+    time = data["time"]
+    width = data["width"]
+    center = data["center"]
+
+    v_width, v_center = [0], [0]
+    for i in range(len(time - 1)):
+        dt = time[i + 1] - time[i]
+
+        dw = width[i + 1] - width[i]
+        x_velocity = dw / dt
+        dc = center[i + 1] - center[i]
+        y_velocity = dc / dt
+
+        v_width.append(x_velocity)
+        v_center.append(y_velocity)
+
+    plt.subplot(121)
+    plt.plot(time, width, label='width', color='red')
+    plt.plot(time, center, label='center', color='blue')
+    plt.legend(loc='upper_right')
+    plt.title('camera, coordinates')
+    plt.xlabel("Time")
+    plt.ylabel("location")
+
+    plt.subplot(122)
+    plt.plot(time, v_width, label='v_width', color='red')
+    plt.plot(time, v_center, label='v_center', color='blue')
+    plt.legend(loc='upper_right')
+    plt.title('camera, velocities')
+    plt.xlabel("Time")
+    plt.ylabel("velocity")
+
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+
+######################################################
+def main():
+    camera_data = pd.read_csv('camera_data.csv')
+    plot_camera(camera_data, 'camera')
+
+    LT_data = pd.read_csv('LT_data.csv')
+    plot_LT(LT_data, 'Laser Tracker')
+
+    LLS1_data = pd.read_csv('LLS1_data.csv')
+    plot_LLS(LLS1_data, 'LLS1')
+
+    LLS2_data = pd.read_csv('LLS2_data.csv')
+    plot_LLS(LLS2_data, 'LLS2')
