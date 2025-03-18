@@ -1,11 +1,18 @@
-#TODO
-import sys
-import os
-sys.path.insert(0, os.path.abspath('TAS-D04-2025'))
-sys.path.insert(0, os.path.abspath('TAS-D04-2025\Data-and-Data-Handling\Translating-Data-Required-Format'))
-import Scripts.constants as constants
-import Scripts.Handling_ALL_Functions as Handling_ALL_Functions
-# does this work?
+
+
+import Handling_ALL_Functions
+import pandas as pd
+
+def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
+    '''
+    joins the two dataframe columnwise from a given desync time\n
+    I.e. shifts frame two BACKWARDS by the desync.
+    '''
+
+    # frame 2 we want to shift:
+
+    
+
 
 
 

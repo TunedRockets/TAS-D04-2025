@@ -5,7 +5,7 @@ to test out stuff
 '''
 
 import Scripts.Handling_ALL_Functions as Handling_ALL_Functions
-import laser_tracker_data_importer
+import Scripts.Data_LT_importer as Data_LT_importer
 
 # Code to call the function multiple times.
 def repeat_function(func, n):
@@ -15,7 +15,7 @@ repeat_function(Handling_ALL_Functions.handle_LT, 3)
 
 
 # get cool data
-table = Handling_ALL_Functions.handle_LT(laser_tracker_data_importer._get_laser_tracker_raw(3))
+table = Handling_ALL_Functions.handle_LT(Data_LT_importer._get_laser_tracker_raw(3))
 
 print(table)
 
