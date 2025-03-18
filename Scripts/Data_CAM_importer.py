@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Load the Excel file
-CAM_file_path = 'Data\Data Sans Camera\Camera data\Cameradata Excel Format.xlsx'  # Replace with your Excel file path
+CAM_file_path = 'Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx'  # Replace with your Excel file path
 
 def CAM_exceltolist(CAM_file_path):
     # Read the Excel file into a dictionary where the keys are the sheet names
@@ -16,9 +16,8 @@ def CAM_exceltolist(CAM_file_path):
         # If the sheet name matches a specific pattern, for example, starts with "Sheet"
         if sheet_name.startswith("Sheet"):
             # Drop the first column (assuming the first column is always the first by index)
-            CAM_sheet_df = sheet_df.copy()
-            CAM_sheet_corrected = CAM_sheet_df.iloc[:, [2, 3, 4]] * 10 ** (-14)
-            CAM_sheets_data.append(CAM_sheet_corrected)
+            CAM_sheet_df = sheet_df.iloc[:, 0:]
+            CAM_sheets_data.append(CAM_sheet_df)
 
     # Now `CAM_sheets_data` contains a list of DataFrames for all sheets starting with "Sheet",
     # excluding the useless columns.
@@ -28,8 +27,6 @@ def CAM_exceltolist(CAM_file_path):
     #for i, sheet in enumerate(sheets_data):
     #    print(f"Sheet {i + 1}:")
     #    print(LT_sheet_df)
-
-    #arr[:, cols] *= factor
 
     return CAM_sheets_data
 
