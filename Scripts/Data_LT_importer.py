@@ -19,14 +19,14 @@ def LT_exceltolist(file_path):
             LT_sheet_df = sheet_df.iloc[:, 0:]
             LT_sheets_data.append(LT_sheet_df)
 
-    # Now `sheets_data` contains a list of DataFrames for all sheets starting with "Sheet",
-    # excluding their first column.
+    # Now `LT_sheets_data` contains a list of DataFrames for all sheets starting with "Sheet",
+    # excluding the useless columns.
     # You can access each sheet's data by index or iterate over the list.
 
     # Print the sheets without the first column
     #for i, sheet in enumerate(sheets_data):
     #    print(f"Sheet {i + 1}:")
-    #    print(sheet)
+    #    print(LT_sheet_df)
 
     return LT_sheets_data
 

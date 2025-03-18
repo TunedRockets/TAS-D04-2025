@@ -21,15 +21,13 @@ def LLS_exceltoarray(file_path):
             LLS_clean_sheet = np.delete(LLS_sheet_df, [1, 2, 3, 4, 5, 6, 10], axis=1)
             LLS_clean_sheets_data.append(LLS_clean_sheet)
 
-    # Now `sheets_data` contains a list of DataFrames for all sheets starting with "Sheet",
-    # excluding their first column.
+    # Now `LLS_clean_sheets_data` contains a list of DataFrames for all sheets starting with "Sheet",
+    # excluding the useless columns.
     # You can access each sheet's data by index or iterate over the list.
-    # Delete the columns that are not needed in each sheet
-  
         
     # Print the clean sheets
     #    print(f"clean sheet {i + 1}:")
-    #    print(clean_sheet)
+    #    print(LLS_clean_sheet)
     
 
     return LLS_clean_sheets_data
