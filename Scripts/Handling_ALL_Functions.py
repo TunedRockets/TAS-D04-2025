@@ -9,9 +9,9 @@ import pandas as pd
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath('TAS-D04-2025'))
 
-from Scripts.constants import z_ref
+
+from constants import z_ref
 
 ################################################################################################################
 """Functions for Laser Tracker"""
