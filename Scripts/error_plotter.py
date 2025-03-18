@@ -4,6 +4,11 @@ import pandas as pd
 
 
 # Plot the error of each sensor vs. Distance
+'''Note: It might be necessary to change the names of the errors when calling the DataFrame 'data'.
+    For example: In the below function, I call data['error_LLS_A'],
+    but the name in the DataFrame might not be the same!,
+    so it may be necessary to change it either in all functions 
+    or in the DataFrame where the data is stored!'''
 def error_vs_distance_plot(data: pd.DataFrame, title: str):
 
     '''I created a for loop to plot the errors of the four sensors vs. time,
@@ -48,6 +53,11 @@ def error_vs_distance_plot(data: pd.DataFrame, title: str):
 
 
 # Plot the error of each sensor vs. TIME
+'''Note: It might be necessary to change the names of the errors when calling the DataFrame 'data'.
+    For example: In the below function, I call data['error_LLS_A'],
+    but the name in the DataFrame might not be the same!,
+    so it may be necessary to change it either in all functions 
+    or in the DataFrame where the data is stored!'''
 def error_vs_time_plot(data: pd.DataFrame, title: str):
 
     '''I created a for loop to plot the errors of the four sensors vs. time,
@@ -89,10 +99,13 @@ def error_vs_time_plot(data: pd.DataFrame, title: str):
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     plt.show()
 
-    #TODO: Find mean and standard deviation of the errors
-    #todo: create a function to plot all errors in the same plot 
 
 # Plot every error line in the same plot vs. X distance
+'''Note: It might be necessary to change the names of the errors when calling the DataFrame 'data'.
+    For example: In the below function, I call data['error_LLS_A'],
+    but the name in the DataFrame might not be the same!,
+    so it may be necessary to change it either in all functions 
+    or in the DataFrame where the data is stored!'''
 def all_errors_vs_distance_plot(data: pd.DataFrame, title:str):
 
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -118,6 +131,9 @@ def all_errors_vs_distance_plot(data: pd.DataFrame, title:str):
     plt.show()
 
     # Plot every error line in the same plot vs. time
+    '''Note: It might be necessary to change either the names of the errors when calling data.
+    For example: in data['error_LLS_A'] the name in the dataframe might not be the same,
+    so it may be necessary to change it!'''
 def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
 
     fig, ax = plt.subplots(figsize=(10, 8))
