@@ -1,10 +1,36 @@
-def get_directory_camera_data(camera_tow_number):
-    """
-    Generates the directory for the camera data files as a function of the tow number
-    """
-    
-    path_start = "Raw data\Data Sans Camera\LLS\Straight lines"
-    path_extension = ".mat"
-    path_number = "\\" + str(LLS_tow_number) + "\\" + "LLS_" + str(LLS_type) + "_data"
-    directory = path_start + path_number + path_extension
-    return(directory)
+import pandas as pd
+
+# Load the Excel file
+CAM_file_path = 'Data\Data Sans Camera\Camera data\Cameradata Excel Format.xlsx'  # Replace with your Excel file path
+
+def CAM_exceltolist(CAM_file_path):
+    # Read the Excel file into a dictionary where the keys are the sheet names
+    # and the values are the dataframes for each sheet.
+    excel_data = pd.read_excel(CAM_file_path, sheet_name=None)
+
+    # Create an array (list of DataFrames) to store data for each sheet
+    CAM_sheets_data = []
+
+    # Iterate through the sheets and store them into the array
+    for sheet_name, sheet_df in excel_data.items():
+        # If the sheet name matches a specific pattern, for example, starts with "Sheet"
+        if sheet_name.startswith("Sheet"):
+            # Drop the first column (assuming the first column is always the first by index)
+            CAM_sheet_df = sheet_df.copy()
+            CAM_sheet_corrected = CAM_sheet_df.iloc[:, [2, 3, 4]] * 10 ** (-14)
+            CAM_sheets_data.append(CAM_sheet_corrected)
+
+    # Now `CAM_sheets_data` contains a list of DataFrames for all sheets starting with "Sheet",
+    # excluding the useless columns.
+    # You can access each sheet's data by index or iterate over the list.
+
+    # Print the sheets without the first column
+    #for i, sheet in enumerate(sheets_data):
+    #    print(f"Sheet {i + 1}:")
+    #    print(LT_sheet_df)
+
+    #arr[:, cols] *= factor
+
+    return CAM_sheets_data
+
+print(CAM_exceltolist(CAM_file_path))

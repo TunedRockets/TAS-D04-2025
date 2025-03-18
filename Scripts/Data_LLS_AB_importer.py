@@ -2,12 +2,12 @@ import pandas as pd
 import numpy as np
 
 # Load the Excel file
-file_path = 'Data\Data Sans Camera\LLS\Straight lines\All runs widths\LLS_Width_Before_After.xlsx'  # Replace with your Excel file path
+LLS_file_path = 'Data\Data Sans Camera\LLS\Straight lines\All runs widths\LLS_Width_Before_After.xlsx'  # Replace with your Excel file path
 
-def LLS_exceltoarray(file_path):
+def LLS_exceltoarray(LLS_file_path):
     # Read the Excel file into a dictionary where the keys are the sheet names
     # and the values are the dataframes for each sheet.
-    excel_data = pd.read_excel(file_path, sheet_name=None)
+    excel_data = pd.read_excel(LLS_file_path, sheet_name=None)
 
     # Create an array (list of DataFrames) to store data for each sheet
     LLS_clean_sheets_data = []
@@ -32,4 +32,4 @@ def LLS_exceltoarray(file_path):
 
     return LLS_clean_sheets_data
 
-print(LLS_exceltoarray(file_path))
+print(LLS_exceltoarray(LLS_file_path))
