@@ -91,7 +91,7 @@ import pandas as pd
 # Load the Excel file
 file_path = 'Data\Data Sans Camera\LLS\Straight lines\All runs widths\LLS_Width_Before_After.xlsx'  # Replace with your Excel file path
 
-def LT_exceltoarray(file_path):
+def LLS_exceltoarray(file_path):
     # Read the Excel file into a dictionary where the keys are the sheet names
     # and the values are the dataframes for each sheet.
     excel_data = pd.read_excel(file_path, sheet_name=None)
@@ -118,4 +118,7 @@ def LT_exceltoarray(file_path):
 
     return sheets_data
 
-print(LT_exceltoarray(file_path))
+def 
+
+print(LLS_exceltoarray(file_path))
+
