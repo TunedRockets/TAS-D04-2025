@@ -190,6 +190,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
         #if true the data already exists, return it:
         return data
     # else the data doesn't exist, grab it
+    print(f"No file with code {name} cached. Generating new data...")
     match sensor_type:
         case "LT":
             # Laser Tracker
