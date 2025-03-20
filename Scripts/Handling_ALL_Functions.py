@@ -193,7 +193,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
     name = type + "_" + str(tow)
 
     # check if file exists:
-    if data := _load_table(name) and not overwrite:
+    if not (type(data := _load_table(name)) == None or overwrite):
         #if true the data already exists, return it:
         return data
     # else the data doesn't exist, grab it
@@ -228,7 +228,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
 def main():
     
     # add testing code here
-    print(get_processed_data(2,"CAM"))
+    print(get_processed_data(2,"LT"))
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
