@@ -63,7 +63,8 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
     # gets rid of the metadata, so let's reintroduce it
     fol_col_names = follower.columns
     guide_col_names = guide.columns
-    col_names = set(fol_col_names).join(set(guide_col_names)) # hope this keeps order?
+    col_names = set(fol_col_names).union(set(guide_col_names)) # hope this keeps order?
+    # if not then change this
     joined.columns = list(col_names)  
 
     return joined
