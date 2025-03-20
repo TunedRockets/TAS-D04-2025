@@ -4,8 +4,8 @@ to test out stuff
 
 '''
 
-import Scripts.Handling_ALL_Functions as Handling_ALL_Functions
-import Scripts.Data_LT_importer as Data_LT_importer
+import Handling_ALL_Functions
+import Data_LT_importer
 
 # Code to call the function multiple times.
 def repeat_function(func, n):
