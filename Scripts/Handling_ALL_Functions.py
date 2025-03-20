@@ -1,7 +1,9 @@
 """
 For getting data from wherever we save it, and saving the data in that place
 
-not the sorting, importing, or parsing. 
+Everything is wrapped up in get_processed_data(), just use that and everything will just work :)
+
+
 """
 
 import numpy as np
@@ -16,7 +18,7 @@ import Data_CAM_importer
 ################################################################################################################
 """Functions for Laser Tracker"""
 
-def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
+def _handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     """"This function takes the processed data and
         creates new data points for each time stamp
         where each point in time has a corresponding
@@ -26,7 +28,7 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     columns = 6
     shape = (rows, columns)
     pandas_table = np.empty(shape)
-    error_y, error_z = error_LT(y, z, tow)
+    error_y, error_z = _error_LT(y, z, tow)
 
     for i in range(len(x)):
         pandas_table[i][0] = time_to_float(time[i])
@@ -42,7 +44,7 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
 
     return pandas_table
 
-def error_LT(y: list, z: list, tow_number)->list:
+def _error_LT(y: list, z: list, tow_number)->list:
     """"This function takes a given tow path
         and calculates the error between the
         actual path and the intended path"""
@@ -61,7 +63,7 @@ def error_LT(y: list, z: list, tow_number)->list:
 ################################################################################################################
 """Functions for Laser Line Scanner"""
 
-def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
+def _handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
     """"This function takes the processed data and
         creates new data points for each time stamp
         where each point in time has a corresponding
@@ -72,7 +74,7 @@ def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
     shape = (rows, columns)
     np_array = np.empty(shape)
     pandas_table = pd.DataFrame(np_array)
-    error_width = error_LLS(width)
+    error_width = _error_LLS(width)
 
     for i in range(len(time)):
         pandas_table[i][0] = (time[i])
@@ -85,7 +87,7 @@ def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
 
     return pandas_table
 
-def error_LLS(width: list)->list:
+def _error_LLS(width: list)->list:
     """"This function takes a given tow path
         and calculates the error between the
         actual width and the intended width"""
@@ -100,7 +102,7 @@ def error_LLS(width: list)->list:
 ################################################################################################################
 """Functions for Camera"""
 
-def handle_camera(time: list) -> pd.DataFrame:
+def _handle_camera(time: list) -> pd.DataFrame:
     rows = len(time)
     columns = 1
     shape = (rows, columns)
@@ -148,7 +150,7 @@ def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
 
 _save_path = "Processed data\\"
 
-def save_table(data_table:pd.DataFrame, short_name:str)-> None:
+def _save_table(data_table:pd.DataFrame, short_name:str)-> None:
     '''This function saves a pandas dataframe as
         a .pkl, it will be saved with the short name, 
         use that to access it'''
@@ -157,7 +159,7 @@ def save_table(data_table:pd.DataFrame, short_name:str)-> None:
     # note! this does not save headers or indexes. might need to change that depending on how we do
     return
 
-def load_table(short_name:str)->pd.DataFrame:
+def _load_table(short_name:str)->pd.DataFrame:
     '''This function reads a pkl and turns it into 
         a panda Dataframe. access it with the same name 
         used in the save_csv() function if file doesn't exist it returns none'''
@@ -191,7 +193,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
     name = type + "_" + str(tow)
 
     # check if file exists:
-    if data := load_table(name) and not overwrite:
+    if data := _load_table(name) and not overwrite:
         #if true the data already exists, return it:
         return data
     # else the data doesn't exist, grab it
@@ -199,26 +201,26 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
         case "LT":
             # Laser Tracker
             data = np.array(Data_LT_importer.LT_exceltolist()[tow]).T
-            processesed_data = handle_LT(*data[1:], tow)
-            save_table(processesed_data, name) # save the data
+            processesed_data = _handle_LT(*data[1:], tow)
+            _save_table(processesed_data, name) # save the data
             return processesed_data
         case "CAM":
             # Camera Data
             data = np.array(Data_CAM_importer.CAM_exceltolist()[tow]).T
-            processesed_data = handle_camera(*data[1:], tow)
-            save_table(processesed_data, name) # save the data
+            processesed_data = _handle_camera(*data[1:], tow)
+            _save_table(processesed_data, name) # save the data
             return processesed_data
         case "LLS1":
             # Laser Line Sensor 1
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow]).T
-            processesed_data = handle_LLS(*data)
-            save_table(processesed_data, name) # save the data
+            processesed_data = _handle_LLS(*data)
+            _save_table(processesed_data, name) # save the data
             return processesed_data
         case "LLS2":
             # Laser Line Sensor 2
             data = ... # ADD THE LLS2 DATA HERE
-            processesed_data = handle_LLS(*data)
-            save_table(processesed_data, name) # save the data
+            processesed_data = _handle_LLS(*data)
+            _save_table(processesed_data, name) # save the data
             return processesed_data
 
 ################################################################################################################
