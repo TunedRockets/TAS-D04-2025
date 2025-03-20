@@ -72,12 +72,12 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
 
     
     rows = len(time)
-    columns = 3
+    columns = 4
     shape = (rows, columns)
     pandas_table = np.empty(shape)
 
     for i in range(len(time)):
-        pandas_table[i][0] = (time[i])
+        pandas_table[i][0] = time_to_float(time[i])
         pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
         pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
         pandas_table[i][3] = (pandas_table[i][1]-6.36) # error (6.36 is the right width)
@@ -94,12 +94,12 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
 
 def _handle_camera(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
     rows = len(time)
-    columns = 1
+    columns = 3
     shape = (rows, columns)
     pandas_table = np.empty(shape)
 
     for i in range(len(time)):
-        pandas_table[i][0] = (time[i])
+        pandas_table[i][0] = time_to_float(time[i])
         pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
         pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
 
@@ -190,6 +190,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
         #if true the data already exists, return it:
         return data
     # else the data doesn't exist, grab it
+    print(f"No file with code {name} cached. Generating new data...")
     match sensor_type:
         case "LT":
             # Laser Tracker
@@ -200,19 +201,19 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
         case "CAM":
             # Camera Data
             data = np.array(Data_CAM_importer.CAM_exceltolist()[tow-1]).T
-            processesed_data = _handle_camera(*data[1:], tow)
+            processesed_data = _handle_camera(*data[:3])
             _save_table(processesed_data, name) # save the data
             return processesed_data
         case "LLS1":
             # Laser Line Sensor 1
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-2]).T
-            processesed_data = _handle_LLS(*data)
+            processesed_data = _handle_LLS(*data[:3])
             _save_table(processesed_data, name) # save the data
             return processesed_data
         case "LLS2":
             # Laser Line Sensor 2
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
-            processesed_data = _handle_LLS(*data)
+            processesed_data = _handle_LLS(*data[:3])
             _save_table(processesed_data, name) # save the data
             return processesed_data
 
@@ -220,7 +221,10 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 
 def main():
     # add testing code here
-    print(get_processed_data(7,"CAM"))
+    print(get_processed_data(7,"LT", True))
+    print(get_processed_data(7,"CAM", True))
+    print(get_processed_data(7,"LLS1", True))
+    print(get_processed_data(7,"LLS2", True))
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
