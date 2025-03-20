@@ -176,9 +176,9 @@ def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
     return None
 
 def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
-    '''This function loads the processed data, grabbing it from raw if it does not yet exist
-    the type specifies what data to grab. use the keys: "LT","LLS1","LLS2","CAM"
-    if overwrite is true, it will grab from the raw regardless if data exists.'''
+    '''This function loads the processed data, grabbing it from raw if it does not yet exist\n
+    the type specifies what data to grab. use the keys: "LT","LLS1","LLS2","CAM"\n
+    if overwrite is true, it will grab from the raw regardless if data exists or not.'''
 
     # generate consistent name:
     # first check if key is valid
@@ -226,7 +226,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
 def main():
     
     # add testing code here
-    print(get_processed_data(2,"LT"))
+    print(get_processed_data(2,"CAM"))
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
