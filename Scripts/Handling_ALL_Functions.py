@@ -175,7 +175,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
         case "LT":
             # Laser Tracker
             data = Data_LT_importer.LT_exceltolist()[tow]
-            processesed_data = handle_LT(*np.array(data).T)
+            processesed_data = handle_LT(*np.array(data).T, tow)
             save_table(processesed_data, name) # save the data
             return processesed_data
         case "CAM":
