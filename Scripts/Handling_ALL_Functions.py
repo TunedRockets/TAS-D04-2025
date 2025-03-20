@@ -177,27 +177,27 @@ def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
     data_table.to_csv(_save_path + name)
     return None
 
-def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
+def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     '''This function loads the processed data, grabbing it from raw if it does not yet exist\n
     the type specifies what data to grab. use the keys: "LT","LLS1","LLS2","CAM"\n
     if overwrite is true, it will grab from the raw regardless if data exists or not.'''
 
     # generate consistent name:
     # first check if key is valid
-    if type not in ["LT","LLS1","LLS2","CAM"]:
+    if sensor_type not in ["LT","LLS1","LLS2","CAM"]:
         raise KeyError("No such data exists")
     # then that tow exists:
     if tow not in range(1,32):
         raise IndexError("Tow ID out of range")
     # set the name
-    name = type + "_" + str(tow)
+    name = sensor_type + "_" + str(tow)
 
     # check if file exists:
     if not (type(data := _load_table(name)) == None or overwrite):
         #if true the data already exists, return it:
         return data
     # else the data doesn't exist, grab it
-    match type:
+    match sensor_type:
         case "LT":
             # Laser Tracker
             data = np.array(Data_LT_importer.LT_exceltolist()[tow]).T
