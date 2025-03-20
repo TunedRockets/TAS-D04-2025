@@ -63,57 +63,48 @@ def _error_LT(y: list, z: list, tow_number)->list:
 ################################################################################################################
 """Functions for Laser Line Scanner"""
 
-def _handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
+def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
     """"This function takes the processed data and
         creates new data points for each time stamp
         where each point in time has a corresponding
         width and its the center of the tow"""
     
+
+    
     rows = len(time)
     columns = 3
     shape = (rows, columns)
-    np_array = np.empty(shape)
-    pandas_table = pd.DataFrame(np_array)
-    error_width = _error_LLS(width)
+    pandas_table = np.empty(shape)
 
     for i in range(len(time)):
         pandas_table[i][0] = (time[i])
-        pandas_table[i][1] = (width[i])
-        pandas_table[i][2] = (center[i])
-        pandas_table[i][3] = (error_width[i])
+        pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
+        pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
+        pandas_table[i][3] = (pandas_table[i][1]-6.36) # error (6.36 is the right width)
     
-    # (Optional) Rename the columns to something more readable:
+    pandas_table = pd.DataFrame(pandas_table)
     pandas_table.columns = ["time", "width", "center","width error"]
 
     return pandas_table
 
-def _error_LLS(width: list)->list:
-    """"This function takes a given tow path
-        and calculates the error between the
-        actual width and the intended width"""
-    
-    error_width = []
 
-    for i in range(len(width)):
-        error_width.append(6.35 - width[i])
-
-    return error_width
 
 ################################################################################################################
 """Functions for Camera"""
 
-def _handle_camera(time: list) -> pd.DataFrame:
+def _handle_camera(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
     rows = len(time)
     columns = 1
     shape = (rows, columns)
-    np_array = np.empty(shape)
-    pandas_table = pd.DataFrame(np_array)
+    pandas_table = np.empty(shape)
 
     for i in range(len(time)):
-        pandas_table[i][0] = time[i]
+        pandas_table[i][0] = (time[i])
+        pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
+        pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
 
-    # (Optional) Rename the columns to something more readable:
-    pandas_table.columns = ["time",]
+    pandas_table = pd.DataFrame(pandas_table)
+    pandas_table.columns = ["time", "width", "center"]
 
     return pandas_table
 
@@ -202,25 +193,25 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     match sensor_type:
         case "LT":
             # Laser Tracker
-            data = np.array(Data_LT_importer.LT_exceltolist()[tow]).T
+            data = np.array(Data_LT_importer.LT_exceltolist()[tow-1]).T
             processesed_data = _handle_LT(*data[1:], tow)
             _save_table(processesed_data, name) # save the data
             return processesed_data
         case "CAM":
             # Camera Data
-            data = np.array(Data_CAM_importer.CAM_exceltolist()[tow]).T
+            data = np.array(Data_CAM_importer.CAM_exceltolist()[tow-1]).T
             processesed_data = _handle_camera(*data[1:], tow)
             _save_table(processesed_data, name) # save the data
             return processesed_data
         case "LLS1":
             # Laser Line Sensor 1
-            data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow]).T
+            data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-2]).T
             processesed_data = _handle_LLS(*data)
             _save_table(processesed_data, name) # save the data
             return processesed_data
         case "LLS2":
             # Laser Line Sensor 2
-            data = ... # ADD THE LLS2 DATA HERE
+            data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
             processesed_data = _handle_LLS(*data)
             _save_table(processesed_data, name) # save the data
             return processesed_data
@@ -229,7 +220,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 
 def main():
     # add testing code here
-    print(get_processed_data(7,"LT"))
+    print(get_processed_data(7,"CAM"))
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
