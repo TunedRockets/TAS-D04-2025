@@ -71,14 +71,16 @@ def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
     shape = (rows, columns)
     np_array = np.empty(shape)
     pandas_table = pd.DataFrame(np_array)
+    error_width = error_LLS(width)
 
     for i in range(len(time)):
         pandas_table[i][0] = (time[i])
         pandas_table[i][1] = (width[i])
         pandas_table[i][2] = (center[i])
+        pandas_table[i][3] = (error_width[i])
     
     # (Optional) Rename the columns to something more readable:
-    pandas_table.columns = ["time", "width", "center"]
+    pandas_table.columns = ["time", "width", "center","width error"]
 
     return pandas_table
 
