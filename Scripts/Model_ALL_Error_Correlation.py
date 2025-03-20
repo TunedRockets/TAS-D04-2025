@@ -71,6 +71,33 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
 
     return joined
 
+def find_x930(LT_x: list, LT_time):
+    """This function grabs a sample of the LT data where we know the tape is being layed down
+        and then calculates the distance between consective data points. Once the minimum
+        distance between data points has been found in the sample, then for data points after
+        the sample, if the distance between them is smaller than some factor times the minimum
+        distance found in the sample, then we know that the tape has been cut and xi = 930mm.
+        Then the coressponding time at xi is ti and this time can be used to sync the LT data with
+        other data sets"""
+
+    beta = 2
+    delta_x_values = []
+
+    for i in range(600,1300):
+        delta_x = abs(LT_x[i+1] - LT_x[i])
+        delta_x_values.append(delta_x)
+    
+    delta_x_min = min(delta_x_values)
+
+    for j in range(1300,len(LT_x)):
+        if abs(LT_x[j+1] - LT_x[j]) < (delta_x_min/beta):
+            xi = LT_x[j]
+            ti = LT_time[j]
+            break
+        
+    return xi, ti
+
+
 def least_squares_regression(x, y):
     """
     Performs least squares regression on two lists of error values.
