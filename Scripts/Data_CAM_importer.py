@@ -1,12 +1,10 @@
 import pandas as pd
 
-# Load the Excel file
-CAM_file_path = 'Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx'  # Replace with your Excel file path
-
-def CAM_exceltolist(CAM_file_path):
-    # Read the Excel file into a dictionary where the keys are the sheet names
-    # and the values are the dataframes for each sheet.
-    excel_data = pd.read_excel(CAM_file_path, sheet_name=None)
+def CAM_exceltolist():
+    """"Read the Camera Excel file into a dictionary where the keys are the sheet names
+    and the values are the dataframes for each sheet. """
+    
+    excel_data = pd.read_excel('Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx', sheet_name=None)
 
     # Create an array (list of DataFrames) to store data for each sheet
     CAM_sheets_data = []
@@ -30,4 +28,4 @@ def CAM_exceltolist(CAM_file_path):
 
     return CAM_sheets_data
 
-print(CAM_exceltolist(CAM_file_path))
+#print(CAM_exceltolist())
