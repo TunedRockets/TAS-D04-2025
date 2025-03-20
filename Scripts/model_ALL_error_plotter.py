@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+import Data_LT_importer
+
 
 # Plot the error of each sensor vs. Distance
 '''Note: It might be necessary to change the names of the errors when calling the DataFrame 'data'.
@@ -49,7 +51,6 @@ def error_vs_distance_plot(data: pd.DataFrame, title: str):
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     plt.show()
-
 
 
 # Plot the error of each sensor vs. TIME
@@ -157,11 +158,6 @@ def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
     # Show the plot
     plt.tight_layout()
     plt.show()
-
-
-
-
-
 
 
 # This is just a backup algorithm (hard-coded) in case the for loop doesn't work.

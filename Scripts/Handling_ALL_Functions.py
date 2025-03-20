@@ -9,9 +9,9 @@ import pandas as pd
 
 
 from constants import z_ref
-# import Data_LLS_AB_importer
+import Data_LLS_AB_importer
 import Data_LT_importer
-# import Data_CAM_importer
+import Data_CAM_importer
 
 ################################################################################################################
 """Functions for Laser Tracker"""
@@ -25,18 +25,19 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     rows = len(time)
     columns = 6
     shape = (rows, columns)
-    np_array = np.empty(shape)
-    pandas_table = pd.DataFrame(np_array)
+    pandas_table = np.empty(shape)
     error_y, error_z = error_LT(y, z, tow)
 
     for i in range(len(x)):
-        pandas_table[i][0] = time[i]
+        pandas_table[i][0] = time_to_float(time[i])
         pandas_table[i][1] = x[i]
         pandas_table[i][2] = y[i]
         pandas_table[i][3] = z[i]
         pandas_table[i][4] = error_y[i]
         pandas_table[i][5] = error_z[i]
     # (Optional) Rename the columns to something more readable:
+    pandas_table = pd.DataFrame(pandas_table)
+
     pandas_table.columns = ["time", "x", "y", "z", "y error", "z error"]
 
     return pandas_table
@@ -71,14 +72,16 @@ def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
     shape = (rows, columns)
     np_array = np.empty(shape)
     pandas_table = pd.DataFrame(np_array)
+    error_width = error_LLS(width)
 
     for i in range(len(time)):
         pandas_table[i][0] = (time[i])
         pandas_table[i][1] = (width[i])
         pandas_table[i][2] = (center[i])
+        pandas_table[i][3] = (error_width[i])
     
     # (Optional) Rename the columns to something more readable:
-    pandas_table.columns = ["time", "width", "center"]
+    pandas_table.columns = ["time", "width", "center","width error"]
 
     return pandas_table
 
@@ -114,7 +117,16 @@ def handle_camera(time: list) -> pd.DataFrame:
 
 ################################################################################################################
 
-'''linear algebra stuff'''
+'''extra stuff'''
+
+def time_to_float(date:str)->float:
+    """converts a string into a float of time"""
+    date = date.strip("'").split(" ")[1]
+    hour, minute, second = date.split(":")
+    return float(second) + float(minute) * 60 + float(hour) * 3600
+
+
+
 
 def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
     '''This function converts the coordinate into a new
@@ -164,9 +176,9 @@ def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
     return None
 
 def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
-    '''This function loads the processed data, grabbing it from raw if it does not yet exist
-    the type specifies what data to grab. use the keys: "LT","LLS1","LLS2","CAM"
-    if overwrite is true, it will grab from the raw regardless if data exists.'''
+    '''This function loads the processed data, grabbing it from raw if it does not yet exist\n
+    the type specifies what data to grab. use the keys: "LT","LLS1","LLS2","CAM"\n
+    if overwrite is true, it will grab from the raw regardless if data exists or not.'''
 
     # generate consistent name:
     # first check if key is valid
@@ -192,13 +204,13 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
             return processesed_data
         case "CAM":
             # Camera Data
-            data = ... # ADD THE CAM DATA HERE
-            processesed_data = handle_camera(*data)
+            data = np.array(Data_CAM_importer.CAM_exceltolist()[tow]).T
+            processesed_data = handle_camera(*data[1:], tow)
             save_table(processesed_data, name) # save the data
             return processesed_data
         case "LLS1":
             # Laser Line Sensor 1
-            data = ... # ADD THE LLS1 DATA HERE
+            data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow]).T
             processesed_data = handle_LLS(*data)
             save_table(processesed_data, name) # save the data
             return processesed_data
@@ -214,7 +226,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
 def main():
     
     # add testing code here
-    print(get_processed_data(2,"LT"))
+    print(get_processed_data(2,"CAM"))
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
