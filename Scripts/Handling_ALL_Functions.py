@@ -174,8 +174,8 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
     match type:
         case "LT":
             # Laser Tracker
-            data = Data_LT_importer.LT_exceltolist()[tow]
-            processesed_data = handle_LT(*np.array(data).T, tow)
+            data = Data_LT_importer.LT_exceltolist()[tow].drop(axis=1,index=0) # gets rid of index
+            processesed_data = handle_LT(*data, tow)
             save_table(processesed_data, name) # save the data
             return processesed_data
         case "CAM":
