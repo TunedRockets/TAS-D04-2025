@@ -4,7 +4,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import Scripts.Handling_ALL_Functions as Handling_ALL_Functions
+import Handling_ALL_Functions
 
 
 ########################################################
@@ -16,7 +16,7 @@ def plot_LT(data: pd.DataFrame, name: str):
 
 
     v_x, v_y, v_z = [0], [0], [0]
-    for i in range(len(time-1)):
+    for i in range(len(time)-1):
         dt = time[i+1] - time[i]
 
         dx = x[i+1] - x[i]
@@ -79,7 +79,7 @@ def plot_LLS(data: pd.DataFrame, name: str):
     center = data["center"]
 
     v_width, v_center = [0], [0]
-    for i in range(len(time - 1)):
+    for i in range(len(time) - 1):
         dt = time[i + 1] - time[i]
 
         dw = width[i + 1] - width[i]
@@ -117,7 +117,7 @@ def plot_camera(data: pd.DataFrame, name: str):
     center = data["center"]
 
     v_width, v_center = [0], [0]
-    for i in range(len(time - 1)):
+    for i in range(len(time)-1):
         dt = time[i + 1] - time[i]
 
         dw = width[i + 1] - width[i]
@@ -131,7 +131,7 @@ def plot_camera(data: pd.DataFrame, name: str):
     plt.subplot(121)
     plt.plot(time, width, label='width', color='red')
     plt.plot(time, center, label='center', color='blue')
-    plt.legend(loc='upper_right')
+    plt.legend(loc='upper right')
     plt.title('camera, coordinates')
     plt.xlabel("Time")
     plt.ylabel("location")
@@ -139,7 +139,7 @@ def plot_camera(data: pd.DataFrame, name: str):
     plt.subplot(122)
     plt.plot(time, v_width, label='v_width', color='red')
     plt.plot(time, v_center, label='v_center', color='blue')
-    plt.legend(loc='upper_right')
+    plt.legend(loc='upper right')
     plt.title('camera, velocities')
     plt.xlabel("Time")
     plt.ylabel("velocity")
@@ -153,14 +153,16 @@ def plot_camera(data: pd.DataFrame, name: str):
 
 ######################################################
 def main():
-    camera_data = pd.read_csv('camera_data.csv')
-    plot_camera(camera_data, 'camera')
+    tow_id = 2
+    plot_camera(Handling_ALL_Functions.get_processed_data(tow_id,"CAM"), 'camera')
 
-    LT_data = pd.read_csv('LT_data.csv')
-    plot_LT(LT_data, 'Laser Tracker')
+    plot_LT(Handling_ALL_Functions.get_processed_data(tow_id,"LT"), 'Laser Tracker')
 
-    LLS1_data = pd.read_csv('LLS1_data.csv')
-    plot_LLS(LLS1_data, 'LLS1')
+    plot_LLS(Handling_ALL_Functions.get_processed_data(tow_id,"LT"), 'Laser Line Scanner 1')
 
-    LLS2_data = pd.read_csv('LLS2_data.csv')
-    plot_LLS(LLS2_data, 'LLS2')
+    plot_LLS(Handling_ALL_Functions.get_processed_data(tow_id,"LT"), 'Laser Line Scanner 2')
+
+
+
+if __name__ == "__main__":
+    main()
