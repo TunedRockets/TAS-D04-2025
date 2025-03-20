@@ -29,9 +29,10 @@ def _handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     shape = (rows, columns)
     pandas_table = np.empty(shape)
     error_y, error_z = _error_LT(y, z, tow)
+    zero_time = time_to_float(time[0])
 
     for i in range(len(x)):
-        pandas_table[i][0] = time_to_float(time[i])
+        pandas_table[i][0] = time_to_float(time[i]) - zero_time
         pandas_table[i][1] = x[i]
         pandas_table[i][2] = y[i]
         pandas_table[i][3] = z[i]
@@ -75,9 +76,10 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
     columns = 4
     shape = (rows, columns)
     pandas_table = np.empty(shape)
+    zero_time = time_to_float(time[0])
 
     for i in range(len(time)):
-        pandas_table[i][0] = time_to_float(time[i])
+        pandas_table[i][0] = time_to_float(time[i]) - zero_time
         pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
         pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
         pandas_table[i][3] = (pandas_table[i][1]-6.36) # error (6.36 is the right width)
@@ -97,9 +99,10 @@ def _handle_camera(time: list, left_edge: list, right_edge: list) -> pd.DataFram
     columns = 3
     shape = (rows, columns)
     pandas_table = np.empty(shape)
+    zero_time = time_to_float(time[0])
 
     for i in range(len(time)):
-        pandas_table[i][0] = time_to_float(time[i])
+        pandas_table[i][0] = time_to_float(time[i]) - zero_time
         pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
         pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
 
