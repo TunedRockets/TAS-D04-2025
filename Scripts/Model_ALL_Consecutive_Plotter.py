@@ -5,6 +5,10 @@ import pandas as pd
 
 # import data_handler
 
+from Data_LLS_AB_importer import LLS_exceltoarray
+from Data_LT_importer import LT_exceltolist
+from Data_CAM_importer import CAM_exceltolist
+
 
 ########################################################
 def plot_LT(data: pd.DataFrame, name: str):
@@ -308,17 +312,18 @@ def plot_camera(data: pd.DataFrame, name: str):
 
 ######################################################
 def main():
-    camera_data = pd.read_csv('camera_data.csv')
+    CAM_file_path = 'Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx'
+    camera_data = CAM_exceltolist()
     plot_camera(camera_data, 'camera')
 
-    LT_data = pd.read_csv('LT_data.csv')
-    plot_LT(LT_data, 'Laser Tracker')
-
-    LLS1_data = pd.read_csv('LLS1_data.csv')
-    plot_LLS(LLS1_data, 'LLS1')
-
-    LLS2_data = pd.read_csv('LLS2_data.csv')
-    plot_LLS(LLS2_data, 'LLS2')
+#    LT_data = LT_exceltolist()
+#    plot_LT(LT_data, 'Laser Tracker')
+#
+#    LLS1_data = LLS_exceltoarray()
+#    plot_LLS(LLS1_data, 'LLS1')
+#
+#    LLS2_data = LLS_exceltoarray()
+#    plot_LLS(LLS2_data, 'LLS2')
 
 
 main()
