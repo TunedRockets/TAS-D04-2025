@@ -46,6 +46,12 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
                 # might break if index goes out of range...
             # continues until it's passed the right point.
             # i_f is now at the follower just beyond the time data
+
+            if abs(follower.iloc[i_f-1][0] - time) < abs(follower.iloc[i_f][0] - time):
+                i_f -= 1
+            # picks the closest one
+
+
             for j in range(1, follower.shape[1]-1):
                 joined[i][j + guide.shape[1]] = follower.iloc[i_f][j+1] # puts it in the row after the guide
     except IndexError:
@@ -55,7 +61,10 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
 
     joined = pd.DataFrame(joined)
     # gets rid of the metadata, so let's reintroduce it
-    joined.columns = ["time", "temp1", "temp2", "temp3", "temp4"]  
+    fol_col_names = follower.columns
+    guide_col_names = guide.columns
+    col_names = set(fol_col_names).join(set(guide_col_names)) # hope this keeps order?
+    joined.columns = list(col_names)  
 
     return joined
 

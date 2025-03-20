@@ -126,7 +126,7 @@ _save_path = "Processed data\\"
 
 def save_table(data_table:pd.DataFrame, short_name:str)-> None:
     '''This function saves a pandas dataframe as
-        a ., it will be saved with the short name, 
+        a .pkl, it will be saved with the short name, 
         use that to access it'''
     
     data_table.to_pickle(_save_path + short_name + ".pkl")
@@ -134,7 +134,7 @@ def save_table(data_table:pd.DataFrame, short_name:str)-> None:
     return
 
 def load_table(short_name:str)->pd.DataFrame:
-    '''This function reads a csv and turns it into 
+    '''This function reads a pkl and turns it into 
         a panda Dataframe. access it with the same name 
         used in the save_csv() function if file doesn't exist it returns none'''
     
