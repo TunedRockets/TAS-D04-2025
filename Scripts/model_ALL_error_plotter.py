@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import Data_LT_importer
+import Handling_ALL_Functions as hf
 
 
 # Plot the error of each sensor vs. Distance
@@ -159,6 +159,9 @@ def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
     plt.tight_layout()
     plt.show()
 
+
+data = hf.get_processed_data(1, "LT", overwrite=False)
+print(data)
 
 # This is just a backup algorithm (hard-coded) in case the for loop doesn't work.
 '''def error_vs_distance_plot(data: pd.DataFrame, title: str):
