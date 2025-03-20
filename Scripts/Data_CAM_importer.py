@@ -1,8 +1,9 @@
 import pandas as pd
 
 def CAM_exceltolist():
-    # Read the Excel file into a dictionary where the keys are the sheet names
-    # and the values are the dataframes for each sheet.
+    """"Read the Camera Excel file into a dictionary where the keys are the sheet names
+    and the values are the dataframes for each sheet. """
+    
     excel_data = pd.read_excel('Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx', sheet_name=None)
 
     # Create an array (list of DataFrames) to store data for each sheet
