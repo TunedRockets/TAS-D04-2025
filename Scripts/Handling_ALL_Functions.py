@@ -10,7 +10,7 @@ import pandas as pd
 
 from constants import z_ref
 # import Data_LLS_AB_importer
-# import Data_LT_importer
+import Data_LT_importer
 # import Data_CAM_importer
 
 ################################################################################################################
@@ -158,7 +158,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
 
     # generate consistent name:
     # first check if key is valid
-    if type not in ["LS","LLS1","LLS2","CAM"]:
+    if type not in ["LT","LLS1","LLS2","CAM"]:
         raise KeyError("No such data exists")
     # then that tow exists:
     if tow not in range(1,32):
@@ -174,8 +174,8 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
     match type:
         case "LT":
             # Laser Tracker
-            data = ... # ADD THE LT DATA HERE
-            processesed_data = handle_LT(*data)
+            data = Data_LT_importer.LT_exceltolist()[tow]
+            processesed_data = handle_LT(*np.array(data).T)
             save_table(processesed_data, name) # save the data
             return processesed_data
         case "CAM":
@@ -202,15 +202,7 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
 def main():
     
     # add testing code here
-    foo = pd.DataFrame([[1,1,1], [1,2,3], ["hello", "world", "!"]])
-    foo.index = ["ones", "range", "strings"]
-    foo.columns = [1,2,3]
-
-    print(foo)
-    save_table(foo, "test")
-
-    bar = load_table("blard")
-    print(bar)
+    print(get_processed_data(2,"LT"))
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
