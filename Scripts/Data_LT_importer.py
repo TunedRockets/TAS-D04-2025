@@ -1,8 +1,8 @@
 import pandas as pd
 
 def LT_exceltolist():
-    # Read the Excel file into a dictionary where the keys are the sheet names
-    # and the values are the dataframes for each sheet.
+    """Read the LT Excel file into a dictionary where the keys are the sheet names
+    and the values are the dataframes for each sheet."""
     excel_data = pd.read_excel('Data\Data Sans Camera\Laser tracker\Straight lines\All straight line mats\Excel_Version.xlsx', sheet_name=None)
 
     # Create an array (list of DataFrames) to store data for each sheet

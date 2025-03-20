@@ -82,6 +82,18 @@ def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
 
     return pandas_table
 
+def error_LLS(width: list)->list:
+    """"This function takes a given tow path
+        and calculates the error between the
+        actual width and the intended width"""
+    
+    error_width = []
+
+    for i in range(len(width)):
+        error_width.append(6.35 - width[i])
+
+    return error_width
+
 ################################################################################################################
 """Functions for Camera"""
 
