@@ -1,4 +1,4 @@
-"""A genera data plotter in order to find how to synchronize later for future steps"""
+"""A genera data plotter in order to find relations between consecutive steps"""
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -8,6 +8,7 @@ import pandas as pd
 
 ########################################################
 def plot_LT(data: pd.DataFrame, name: str):
+    '''plots the LT data'''
     time = data["time"]
     x = data["x"]
     E = data["error"]
@@ -25,7 +26,7 @@ def plot_LT(data: pd.DataFrame, name: str):
         v_x.append(x_velocity)
         v_E.append(E_velocity)
 
-
+    '''plots for the data itself'''
     plt.subplot(221)
     plt.plot(time, x)
     plt.title('LT, x-coordinates')
@@ -72,8 +73,9 @@ def plot_LT(data: pd.DataFrame, name: str):
             split_5.append(err)
             V_5.append(v_E[i])
         else:
-            print("error")
+            print("error: data point outside of splits")
 
+    '''plots for subsets of the data so I can see how relations in error-change change based on what the error is.'''
     plt.subplot(231)
     plt.hist(v_E)
     plt.title('LT, err')
@@ -126,6 +128,7 @@ def plot_LLS(data: pd.DataFrame, name: str):
         v_width.append(x_velocity)
         v_E.append(E_velocity)
 
+    '''plots for the data itself'''
     plt.subplot(121)
     plt.plot(time, width, label='width', color='red')
     plt.plot(time, E, label='center', color='blue')
@@ -168,78 +171,139 @@ def plot_LLS(data: pd.DataFrame, name: str):
             split_5.append(err)
             V_5.append(v_E[i])
         else:
-            print("error")
+            print("error: data point outside of splits")
 
+    '''plots for subsets of the data so I can see how relations in error-change change based on what the error is.'''
     plt.subplot(231)
     plt.hist(v_E)
-    plt.title('LT, err')
+    plt.title('LLS, err')
     plt.xlabel("V")
 
     plt.subplot(232)
     plt.hist(V_1)
-    plt.title('LT, split 1')
+    plt.title('LLS, split 1')
     plt.xlabel("V")
 
     plt.subplot(233)
     plt.hist(V_2)
-    plt.title('LT, split 2')
+    plt.title('LLS, split 2')
     plt.xlabel("V")
 
     plt.subplot(234)
     plt.hist(V_3)
-    plt.title('LT, split 3')
+    plt.title('LLS, split 3')
     plt.xlabel("V")
 
     plt.subplot(235)
     plt.hist(V_4)
-    plt.title('LT, split 4')
+    plt.title('LLS, split 4')
     plt.xlabel("V")
 
     plt.subplot(236)
     plt.hist(V_5)
-    plt.title('LT, split 5')
+    plt.title('LLS, split 5')
     plt.xlabel("V")
+
+    plt.tight_layout()
+    plt.show()
 
 
 #####################################################
 def plot_camera(data: pd.DataFrame, name: str):
     time = data["time"]
-    width = data["width"]
     center = data["center"]
+    E = data["error"]
 
-    v_width, v_center = [0], [0]
+    v_E, v_center = [0], [0]
     for i in range(len(time - 1)):
         dt = time[i + 1] - time[i]
 
-        dw = width[i + 1] - width[i]
-        x_velocity = dw / dt
+        dE = E[i + 1] - E[i]
+        E_velocity = dE / dt
         dc = center[i + 1] - center[i]
         y_velocity = dc / dt
 
-        v_width.append(x_velocity)
+        v_E.append(E_velocity)
         v_center.append(y_velocity)
 
+    '''plots for the data itself'''
     plt.subplot(121)
-    plt.plot(time, width, label='width', color='red')
+    plt.plot(time, E, label='width', color='red')
     plt.plot(time, center, label='center', color='blue')
     plt.legend(loc='upper_right')
-    plt.title('camera, coordinates')
+    plt.title('CAM, coordinates')
     plt.xlabel("Time")
     plt.ylabel("location")
 
     plt.subplot(122)
-    plt.plot(time, v_width, label='v_width', color='red')
+    plt.plot(time, v_E, label='v_width', color='red')
     plt.plot(time, v_center, label='v_center', color='blue')
     plt.legend(loc='upper_right')
-    plt.title('camera, velocities')
+    plt.title('CAM, velocities')
     plt.xlabel("Time")
     plt.ylabel("velocity")
 
     plt.tight_layout()
     plt.show()
 
+    for i in range(len(time)):
+        err = E[i]
+        range = max(abs(min(err)), max(abs(err)))
+        split = 0.2 * range
 
+        split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
+        V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
+        if abs(err) <= 1 * split:
+            split_1.append(err)
+            V_1.append(v_E[i])
+        elif abs(err) <= 2 * split:
+            split_2.append(err)
+            V_2.append(v_E[i])
+        elif abs(err) <= 3 * split:
+            split_3.append(err)
+            V_3.append(v_E[i])
+        elif abs(err) <= 4 * split:
+            split_4.append(err)
+            V_4.append(v_E[i])
+        elif abs(err) <= 5 * split:
+            split_5.append(err)
+            V_5.append(v_E[i])
+        else:
+            print("error: data point outside of splits")
 
+    '''plots for subsets of the data so I can see how relations in error-change change based on what the error is.'''
+    plt.subplot(231)
+    plt.hist(v_E)
+    plt.title('CAM, err')
+    plt.xlabel("V")
+
+    plt.subplot(232)
+    plt.hist(V_1)
+    plt.title('CAM, split 1')
+    plt.xlabel("V")
+
+    plt.subplot(233)
+    plt.hist(V_2)
+    plt.title('CAM, split 2')
+    plt.xlabel("V")
+
+    plt.subplot(234)
+    plt.hist(V_3)
+    plt.title('CAM, split 3')
+    plt.xlabel("V")
+
+    plt.subplot(235)
+    plt.hist(V_4)
+    plt.title('CAM, split 4')
+    plt.xlabel("V")
+
+    plt.subplot(236)
+    plt.hist(V_5)
+    plt.title('CAM, split 5')
+    plt.xlabel("V")
+
+    plt.tight_layout()
+    plt.show()
 
 
 ######################################################
@@ -255,3 +319,6 @@ def main():
 
     LLS2_data = pd.read_csv('LLS2_data.csv')
     plot_LLS(LLS2_data, 'LLS2')
+
+
+main()
