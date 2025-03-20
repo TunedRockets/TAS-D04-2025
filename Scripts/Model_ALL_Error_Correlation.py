@@ -162,7 +162,7 @@ def main():
 
     joined_data = join_data(data1, data2, 4)
 
-    plot_errors(error1, error2, error3, error4, error5, error6)
+    plot_errors(joined_data["error_one"], joined_data["error_B"], joined_data["error_IV"], joined_data["error_something"], joined_data["time"], joined_data["time"])
     
     # # get the data:
     # data_LS = Handling_ALL_Functions.get_processed_data(1, "LS")
