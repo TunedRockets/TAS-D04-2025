@@ -199,35 +199,30 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
             # Laser Tracker
             data = np.array(Data_LT_importer.LT_exceltolist()[tow-1]).T
             processesed_data = _handle_LT(*data[1:], tow)
-            _save_table(processesed_data, name) # save the data
-            return processesed_data
+
         case "CAM":
             # Camera Data
             data = np.array(Data_CAM_importer.CAM_exceltolist()[tow-1]).T
             processesed_data = _handle_camera(*data[:3])
-            _save_table(processesed_data, name) # save the data
-            return processesed_data
+
         case "LLS1":
             # Laser Line Sensor 1
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-2]).T
             processesed_data = _handle_LLS(*data[:3])
-            _save_table(processesed_data, name) # save the data
-            return processesed_data
+
         case "LLS2":
             # Laser Line Sensor 2
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
             processesed_data = _handle_LLS(*data[:3])
-            _save_table(processesed_data, name) # save the data
-            return processesed_data
+    _save_table(processesed_data, name) # save the data
+    return processesed_data
 
 ################################################################################################################
 
 def main():
     # add testing code here
-    print(get_processed_data(7,"LT", True))
-    print(get_processed_data(7,"CAM", True))
-    print(get_processed_data(7,"LLS1", True))
-    print(get_processed_data(7,"LLS2", True))
+    print(get_processed_data(7,"LT"))
+
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
