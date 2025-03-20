@@ -35,12 +35,12 @@ def _handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
         pandas_table[i][1] = x[i]
         pandas_table[i][2] = y[i]
         pandas_table[i][3] = z[i]
-        pandas_table[i][4] = error_y[i]
+        pandas_table[i][4] = error_y[i] # This is the y-error, it is just a better naming
         pandas_table[i][5] = error_z[i]
     # (Optional) Rename the columns to something more readable:
     pandas_table = pd.DataFrame(pandas_table)
 
-    pandas_table.columns = ["time", "x", "y", "z", "y error", "z error"]
+    pandas_table.columns = ["time", "x", "y", "z", "error_LT", "z error"]
 
     return pandas_table
 
