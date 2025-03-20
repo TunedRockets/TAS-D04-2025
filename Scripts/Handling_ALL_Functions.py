@@ -9,9 +9,9 @@ import pandas as pd
 
 
 from constants import z_ref
-# import Data_LLS_AB_importer
+import Data_LLS_AB_importer
 import Data_LT_importer
-# import Data_CAM_importer
+import Data_CAM_importer
 
 ################################################################################################################
 """Functions for Laser Tracker"""
@@ -25,18 +25,19 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     rows = len(time)
     columns = 6
     shape = (rows, columns)
-    np_array = np.empty(shape)
-    pandas_table = pd.DataFrame(np_array)
+    pandas_table = np.empty(shape)
     error_y, error_z = error_LT(y, z, tow)
 
     for i in range(len(x)):
-        pandas_table[i][0] = time[i]
+        pandas_table[i][0] = pd.to_timedelta(time[i].strip("'").split(" ")[1])
         pandas_table[i][1] = x[i]
         pandas_table[i][2] = y[i]
         pandas_table[i][3] = z[i]
         pandas_table[i][4] = error_y[i]
         pandas_table[i][5] = error_z[i]
     # (Optional) Rename the columns to something more readable:
+    pandas_table = pd.DataFrame(pandas_table)
+
     pandas_table.columns = ["time", "x", "y", "z", "y error", "z error"]
 
     return pandas_table
@@ -192,13 +193,13 @@ def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
             return processesed_data
         case "CAM":
             # Camera Data
-            data = ... # ADD THE CAM DATA HERE
-            processesed_data = handle_camera(*data)
+            data = np.array(Data_CAM_importer.CAM_exceltolist()[tow]).T
+            processesed_data = handle_camera(*data[1:], tow)
             save_table(processesed_data, name) # save the data
             return processesed_data
         case "LLS1":
             # Laser Line Sensor 1
-            data = ... # ADD THE LLS1 DATA HERE
+            data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow]).T
             processesed_data = handle_LLS(*data)
             save_table(processesed_data, name) # save the data
             return processesed_data

@@ -29,5 +29,3 @@ def LLS_exceltoarray():
     
 
     return LLS_clean_sheets_data
-
-print(LLS_exceltoarray())
