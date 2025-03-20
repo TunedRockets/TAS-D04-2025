@@ -29,7 +29,7 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     error_y, error_z = error_LT(y, z, tow)
 
     for i in range(len(x)):
-        pandas_table[i][0] = pd.to_timedelta(time[i].strip("'").split(" ")[1])
+        pandas_table[i][0] = time_to_float(time[i])
         pandas_table[i][1] = x[i]
         pandas_table[i][2] = y[i]
         pandas_table[i][3] = z[i]
@@ -117,7 +117,16 @@ def handle_camera(time: list) -> pd.DataFrame:
 
 ################################################################################################################
 
-'''linear algebra stuff'''
+'''extra stuff'''
+
+def time_to_float(date:str)->float:
+    """converts a string into a float of time"""
+    date = date.strip("'").split(" ")[1]
+    hour, minute, second = date.split(":")
+    return float(second) + float(minute) * 60 + float(hour) * 3600
+
+
+
 
 def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
     '''This function converts the coordinate into a new
