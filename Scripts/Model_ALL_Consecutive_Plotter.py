@@ -5,18 +5,21 @@ import pandas as pd
 
 # import data_handler
 
+from Handling_ALL_Functions import get_processed_data
+
 
 ########################################################
 def plot_LT(data: pd.DataFrame, name: str):
     '''plots the LT data'''
     time = data["time"]
     x = data["x"]
-    E = data["error"]
+    E = data["y error"]
+    print(f"time = {len(time)}, x = {len(x)}")
 
 
     v_x, v_E = [0], [0]
-    for i in range(len(time-1)):
-        dt = time[i+1] - time[i]
+    for i in range(len(time)-1):
+        dt = 0.01  # time[i+1] - time[i]
 
         dx = x[i+1] - x[i]
         x_velocity = dx/dt
@@ -50,26 +53,29 @@ def plot_LT(data: pd.DataFrame, name: str):
     plt.tight_layout()
     plt.show()
 
-    for i in range(len(time)):
-        err = E[i]
-        range = max(abs(min(err)), max(abs(err)))
-        split = 0.2 * range
+    err_range = max(E) - min(E)
+    minimum = min(E)
+    maximum = max(E)
+    split = 0.2
 
-        split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
-        V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
-        if abs(err) <= 1 * split:
+    split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
+    V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
+    for i in range(len(time)-1):
+        err = E[i]
+
+        if minimum <= err <= minimum + split * err_range:
             split_1.append(err)
             V_1.append(v_E[i])
-        elif abs(err) <= 2 * split:
+        elif minimum + split * err_range <= err <= minimum + 2 * split * err_range:
             split_2.append(err)
             V_2.append(v_E[i])
-        elif abs(err) <= 3 * split:
+        elif minimum + 2 * split * err_range <= err <= minimum + 3 * split * err_range:
             split_3.append(err)
             V_3.append(v_E[i])
-        elif abs(err) <= 4 * split:
+        elif minimum + 3 * split * err_range <= err <= minimum + 4 * split * err_range:
             split_4.append(err)
             V_4.append(v_E[i])
-        elif abs(err) <= 5 * split:
+        elif minimum + 4 * split * err_range <= err <= minimum + 5 * split * err_range:
             split_5.append(err)
             V_5.append(v_E[i])
         else:
@@ -77,32 +83,37 @@ def plot_LT(data: pd.DataFrame, name: str):
 
     '''plots for subsets of the data so I can see how relations in error-change change based on what the error is.'''
     plt.subplot(231)
-    plt.hist(v_E)
+    plt.hist(v_E, bins=100)
     plt.title('LT, err')
     plt.xlabel("V")
 
     plt.subplot(232)
-    plt.hist(V_1)
+    bins_needed = int(len(split_1)/50)
+    plt.hist(V_1, bins=bins_needed)
     plt.title('LT, split 1')
     plt.xlabel("V")
 
     plt.subplot(233)
-    plt.hist(V_2)
+    bins_needed = int(len(split_2)/20)
+    plt.hist(V_2, bins=bins_needed)
     plt.title('LT, split 2')
     plt.xlabel("V")
 
     plt.subplot(234)
-    plt.hist(V_3)
+    bins_needed = int(len(split_3)/2)
+    plt.hist(V_3, bins=bins_needed)
     plt.title('LT, split 3')
     plt.xlabel("V")
 
     plt.subplot(235)
-    plt.hist(V_4)
+    bins_needed = int(len(split_4)/2)
+    plt.hist(V_4, bins=bins_needed)
     plt.title('LT, split 4')
     plt.xlabel("V")
 
     plt.subplot(236)
-    plt.hist(V_5)
+    bins_needed = int(len(split_5)/2)
+    plt.hist(V_5, bins=bins_needed)
     plt.title('LT, split 5')
     plt.xlabel("V")
 
@@ -148,26 +159,29 @@ def plot_LLS(data: pd.DataFrame, name: str):
     plt.tight_layout()
     plt.show()
 
+    err_range = max(E) - min(E)
+    min = min(E)
+    max = max(E)
+    split = 0.2 * err_range
+
+    split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
+    V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
     for i in range(len(time)):
         err = E[i]
-        range = max(abs(min(err)), max(abs(err)))
-        split = 0.2 * range
 
-        split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
-        V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
-        if abs(err) <= 1 * split:
+        if min <= err <= min + split * err_range:
             split_1.append(err)
             V_1.append(v_E[i])
-        elif abs(err) <= 2 * split:
+        elif min + split * err_range <= err <= min + 2 * split * err_range:
             split_2.append(err)
             V_2.append(v_E[i])
-        elif abs(err) <= 3 * split:
+        elif min + 2 * split * err_range <= err <= min + 3 * split * err_range:
             split_3.append(err)
             V_3.append(v_E[i])
-        elif abs(err) <= 4 * split:
+        elif min + 3 * split * err_range <= err <= min + 4 * split * err_range:
             split_4.append(err)
             V_4.append(v_E[i])
-        elif abs(err) <= 5 * split:
+        elif min + 4 * split * err_range <= err <= min + 5 * split * err_range:
             split_5.append(err)
             V_5.append(v_E[i])
         else:
@@ -246,26 +260,29 @@ def plot_camera(data: pd.DataFrame, name: str):
     plt.tight_layout()
     plt.show()
 
+    err_range = max(E) - min(E)
+    min = min(E)
+    max = max(E)
+    split = 0.2 * err_range
+
+    split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
+    V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
     for i in range(len(time)):
         err = E[i]
-        range = max(abs(min(err)), max(abs(err)))
-        split = 0.2 * range
 
-        split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
-        V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
-        if abs(err) <= 1 * split:
+        if min <= err <= min + split * err_range:
             split_1.append(err)
             V_1.append(v_E[i])
-        elif abs(err) <= 2 * split:
+        elif min + split * err_range <= err <= min + 2 * split * err_range:
             split_2.append(err)
             V_2.append(v_E[i])
-        elif abs(err) <= 3 * split:
+        elif min + 2 * split * err_range <= err <= min + 3 * split * err_range:
             split_3.append(err)
             V_3.append(v_E[i])
-        elif abs(err) <= 4 * split:
+        elif min + 3 * split * err_range <= err <= min + 4 * split * err_range:
             split_4.append(err)
             V_4.append(v_E[i])
-        elif abs(err) <= 5 * split:
+        elif min + 4 * split * err_range <= err <= min + 5 * split * err_range:
             split_5.append(err)
             V_5.append(v_E[i])
         else:
@@ -308,17 +325,19 @@ def plot_camera(data: pd.DataFrame, name: str):
 
 ######################################################
 def main():
-    camera_data = pd.read_csv('camera_data.csv')
-    plot_camera(camera_data, 'camera')
-
-    LT_data = pd.read_csv('LT_data.csv')
+#    CAM_file_path = 'Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx'
+#    camera_data = CAM_exceltolist()
+#    plot_camera(camera_data, 'camera')
+#
+    LT_data = get_processed_data(1, "LT")
+    print(LT_data)
     plot_LT(LT_data, 'Laser Tracker')
-
-    LLS1_data = pd.read_csv('LLS1_data.csv')
-    plot_LLS(LLS1_data, 'LLS1')
-
-    LLS2_data = pd.read_csv('LLS2_data.csv')
-    plot_LLS(LLS2_data, 'LLS2')
+#
+#    LLS1_data = LLS_exceltoarray()
+#    plot_LLS(LLS1_data, 'LLS1')
+#
+#    LLS2_data = LLS_exceltoarray()
+#    plot_LLS(LLS2_data, 'LLS2')
 
 
 main()
