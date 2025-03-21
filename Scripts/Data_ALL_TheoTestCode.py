@@ -1,4 +1,5 @@
 " Nothing here yet but bro is cooking "
 
-print("Data_ALL_TheoTestCode.py has been loaded.")
-# %%
+from Handling_ALL_Functions import get_processed_data
+
+print(get_processed_data(29, "LLS1"))
