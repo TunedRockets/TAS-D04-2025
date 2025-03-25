@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 
-def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
+def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, shift)-> pd.DataFrame:
     '''
     joins the two dataframe columnwise from a given desync time\n
     I.e. shifts frame two BACKWARDS by the desync.\n
@@ -14,42 +14,36 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
     (also needs both frames to have a column called "time")\n
     otherwise it breaks
     '''
-
     # PREPROCCESING:
 
-    # info on frames
-    shape_1 = frame1.shape
-    shape_2 = frame2.shape
-
     # shifting the 2nd frame before the process starts:
-    frame2["time"] -= desync # numpy vectorization to the rescue
+    frame2["time"] -= shift # numpy vectorization to the rescue
 
-    # to make sure we only look at the correct parts, we trunctate all parts that only appear on one of the datasets:
+    # find the range of overlap between the data
     range_1 = min(frame1["time"]), max(frame1["time"])
     range_2 = min(frame2["time"]), max(frame2["time"])
     range_total = max(range_1[0],range_2[0]), min(range_1[1],range_2[1])
     if range_total[0] >= range_total[1]:
         raise IndexError("There is no overlap between the data")
-    #now get rid of anything not in the range
     
-    # find the indexes to get rid of:
-    
+    # find the indexes to get rid of and truncate:
+    start_index_1 = frame1[frame1['time'].gt(range_total[0])].index[0]
+    start_index_2 = frame2[frame2['time'].gt(range_total[0])].index[0]
+    end_index_1 = frame1[frame1['time'].ge(range_total[1])].index[0]
+    end_index_2 = frame2[frame2['time'].ge(range_total[1])].index[0]
+    frame1 = frame1.truncate(start_index_1,end_index_1)
+    frame2 = frame2.truncate(start_index_2,end_index_2)
 
-
-
-    frame1 = frame1.truncate()
-
+    # info on frames
+    shape_1 = frame1.shape
+    shape_2 = frame2.shape
 
     # the shape of the joined is going to be the min of the row and the combined of the columns
     # minus one because time is shared
     columns = shape_1[1] + shape_2[1] - 1
     rows = min(shape_1[0], shape_2[0])
 
-    
-
-
     # PROCESSING:
-
     joined = np.zeros((rows, columns))
     #set which frame is the guiding one:
     if shape_1[0] > shape_2[0]: # guiding is which one that guides the join process
@@ -82,11 +76,14 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
 
 
             for j in range(1, follower.shape[1]):
-                joined[i][j + guide.shape[1]] = follower.iloc[i_f][j+1] # puts it in the row after the guide
+                data_debug = follower.iloc[i_f][j]
+                join_index = j + guide.shape[1] - 1 # -1 due to the time being removed
+                joined[i][join_index] = data_debug  # puts it in the row after the guide
     except IndexError:
         # we probably ran out of datapoints in the follower :(
         # but that's fine
-        pass
+        # just remove the last line
+        joined = joined[:-1,:]
 
     joined = pd.DataFrame(joined)
     # gets rid of the metadata, so let's reintroduce it
@@ -222,8 +219,8 @@ def main():
     f1 = lambda x: np.exp(-(3*(x-2))**2/2.) # gaussian curve from ANA
     f2 = lambda x: 2*f1(x-1) # bigger curve shifted by 1
 
-    xx1 = np.linspace(2,6,100) 
-    xx2 = np.linspace(0,3,75)
+    xx1 = np.linspace(0,3,100) 
+    xx2 = np.linspace(2,6,75)
     yy1 = f1(xx1)
     yy2 = f2(xx2)
 
@@ -239,7 +236,7 @@ def main():
 
     # now try shifting
 
-    combined = join_data(data1,data2,0.5)
+    combined = join_data(data1,data2,1)
     print(combined)
     plt.plot(combined["time"],combined["value"])
     plt.plot(combined["time"],combined["shifted"])

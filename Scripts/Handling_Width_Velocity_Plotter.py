@@ -6,9 +6,9 @@ def Width_Velocity_Plotter(tow:int):
     width_velocities = [] # Set up list of velocities
     delta_width_list = []
     data = Handling_ALL_Functions.get_processed_data(tow, "LLS_B") # get data, first argument 1-31, second has to stay "LLSB"
-    widths = data.iloc[:,1] #gets just the width-column
-    times = data.iloc[:,0] #gets just the time-column
-    beta = 0.1
+    widths = data.iloc[:,1].values #gets just the width-column
+    times = data.iloc[:,0].values #gets just the time-column
+    beta = 1.5
 
 ###########################################################################################################
 
@@ -16,8 +16,20 @@ def Width_Velocity_Plotter(tow:int):
         delta_width = abs(widths[i+1] - widths[i])
         delta_width_list.append(delta_width)
     
-    delta_width_min = min(delta_width_list)
+        sorted_values = sorted(set(delta_width_list))  # Remove duplicates and sort
 
+        if len(sorted_values) > 1:
+            second_min = sorted_values[1]  # Second smallest value
+        else:
+            second_min = None  # No second minimum available
+
+    print("Second Minimum:", second_min)
+
+    delta_width_min = second_min
+    
+    width_stop = None
+    time_stop = None
+    
     for j in range(350,len(widths)):
         if abs(widths[j] - widths[j-1]) < (delta_width_min/beta):
             width_stop = widths[j-1]
@@ -44,4 +56,4 @@ def Width_Velocity_Plotter(tow:int):
     plt.show() 
 
 
-Width_Velocity_Plotter(1)
+Width_Velocity_Plotter(10)
