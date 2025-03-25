@@ -20,7 +20,7 @@ print(processed_data)
     or in the DataFrame where the data is stored!'''
 def statistical_values(data: pd.DataFrame):
     # Find the statistical values of the data
-    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_camera']]
+    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
     mean = []
     median = []
     std = []
