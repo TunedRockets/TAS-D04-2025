@@ -8,6 +8,7 @@ from Handling_ALL_Functions import get_processed_data
     Written by: Manuel Cruz, Diogo Ying.'''
 
 processed_data = get_processed_data(tow=1, sensor_type= "LLS_A", overwrite=False)
+processed_data.columns = ["time", "width", "center",  "error_LLS_A"]
 print(processed_data)
 
 
