@@ -1,15 +1,14 @@
-from Handling_ALL_Functions import get_processed_data
+import Handling_ALL_Functions
 import matplotlib.pyplot as plt
 #import numpy as np
 
 def Width_Velocity_Plotter(tow:int):
     width_velocities = [] # Set up list of velocities
     delta_width_list = []
-    data = get_processed_data(tow, "LLS2") # get data, first argument 1-31, second has to stay "LLS2"
+    data = Handling_ALL_Functions.get_processed_data(tow, "LLS_B") # get data, first argument 1-31, second has to stay "LLSB"
     widths = data.iloc[:,1] #gets just the width-column
     times = data.iloc[:,0] #gets just the time-column
-    beta = 1.2
-    
+    beta = 0.1
 
 ###########################################################################################################
 
@@ -21,8 +20,8 @@ def Width_Velocity_Plotter(tow:int):
 
     for j in range(350,len(widths)):
         if abs(widths[j] - widths[j-1]) < (delta_width_min/beta):
-            width_stop = widths[j]
-            time_stop = times[j]
+            width_stop = widths[j-1]
+            time_stop = times[j-1]
             break
 
     
