@@ -8,11 +8,11 @@ def Width_Velocity_Plotter(tow:int):
     data = Handling_ALL_Functions.get_processed_data(tow, "LLS_B") # get data, first argument 1-31, second has to stay "LLSB"
     widths = data.iloc[:,1].values #gets just the width-column
     times = data.iloc[:,0].values #gets just the time-column
-    beta = 1.5
+    beta = 2.5
 
 ###########################################################################################################
 
-    for i in range(200,350):
+    for i in range(200,300):
         delta_width = abs(widths[i+1] - widths[i])
         delta_width_list.append(delta_width)
     
@@ -30,7 +30,7 @@ def Width_Velocity_Plotter(tow:int):
     width_stop = None
     time_stop = None
     
-    for j in range(350,len(widths)):
+    for j in range(300,len(widths)):
         if abs(widths[j] - widths[j-1]) < (delta_width_min/beta):
             width_stop = widths[j-1]
             time_stop = times[j-1]
@@ -55,5 +55,5 @@ def Width_Velocity_Plotter(tow:int):
     plt.grid()
     plt.show() 
 
-
-Width_Velocity_Plotter(10)
+for k in range(1, 32):
+    Width_Velocity_Plotter(k)

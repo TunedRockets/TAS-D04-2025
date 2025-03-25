@@ -7,26 +7,48 @@ from Handling_ALL_Functions import get_processed_data
     and the function  to plot the histograms of the four type of errors
     Written by: Manuel Cruz, Diogo Ying.'''
 
+def get_all_sensor_data():
+    results_LLSA = []
+    results_LLSB = []
+    results_LT = []
+    results_CAM = []
 
-for i in range(1,33):
-    processed_data_LLSA = get_processed_data(tow=i, sensor_type= "LLS_A", overwrite=False)
-    processed_data_LLSA.columns = ["time", "width", "center",  "error_LLS_A"]
-    return processed_data_LLSA
+    # Process LLS_A sensor data
+    for i in range(1, 33):
+        processed_data_LLSA = get_processed_data(tow=i, sensor_type="LLS_A", overwrite=False)
+        processed_data_LLSA.columns = ["time", "width", "center", "error_LLS_A"]
+        results_LLSA.append(processed_data_LLSA)
 
-for j in range(1,33):
-    processed_data_LLSB = get_processed_data(tow=j, sensor_type= "LLS_B", overwrite=False)
-    processed_data_LLSB.columns = ["time", "width", "center",  "error_LLS_B"]
-    return processed_data_LLSB
+    # Process LLS_B sensor data
+    for j in range(1, 33):
+        processed_data_LLSB = get_processed_data(tow=j, sensor_type="LLS_B", overwrite=False)
+        processed_data_LLSB.columns = ["time", "width", "center", "error_LLS_B"]
+        results_LLSB.append(processed_data_LLSB)
 
-for k in range(1,33):
-    processed_data_LT = get_processed_data(tow=k, sensor_type= "LT", overwrite=False)
-    processed_data_LT.columns = ["time", "width", "center",  "error_LT"]
-    return processed_data_LT
+    # Process LT sensor data
+    for k in range(1, 33):
+        processed_data_LT = get_processed_data(tow=k, sensor_type="LT", overwrite=False)
+        processed_data_LT.columns = ["time", "width", "center", "error_LT"]
+        results_LT.append(processed_data_LT)
 
-for w in range(1,33):
-    processed_data_CAM = get_processed_data(tow=w, sensor_type= "CAM", overwrite=False)
-    processed_data_CAM.columns = ["time", "width", "center", "error_CAM"]
-    return processed_data_CAM
+    # Process CAM sensor data
+    for w in range(1, 33):
+        processed_data_CAM = get_processed_data(tow=w, sensor_type="CAM", overwrite=False)
+        processed_data_CAM.columns = ["time", "width", "center", "error_CAM"]
+        results_CAM.append(processed_data_CAM)
+
+    # Combine lists of DataFrames into one DataFrame per sensor type
+    df_LLSA = pd.concat(results_LLSA, ignore_index=True)
+    df_LLSB = pd.concat(results_LLSB, ignore_index=True)
+    df_LT = pd.concat(results_LT, ignore_index=True)
+    df_CAM = pd.concat(results_CAM, ignore_index=True)
+
+    return {
+        "LLS_A": df_LLSA,
+        "LLS_B": df_LLSB,
+        "LT": df_LT,
+        "CAM": df_CAM
+    }
 
 
 #Here we obtain the mean, median, standard deviation, minimum and maximum
