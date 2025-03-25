@@ -9,8 +9,8 @@ from sklearn.model_selection import train_test_split
 from Data_CAM_importer import CAM_exceltolist
 from Handling_ALL_Functions import get_processed_data
 
-# Prepare an empty list to store the second-to-last column from each tow
-columns_to_combine = []
+# Prepare an empty list to store (x_n, x_{n+1}) pairs for each tow
+all_pairs = []
 
 # Loop through tow numbers from 1 to 31
 for tow_number in range(1, 32):
@@ -20,15 +20,20 @@ for tow_number in range(1, 32):
     # Ensure that the returned object is a dataframe
     if not tow_data.empty and tow_data.shape[1] > 1:  # Ensure there are at least two columns
         # Extract the second-to-last column
-        second_to_last_column = tow_data.iloc[:, -2]
-        columns_to_combine.append(second_to_last_column.values)  # Convert to numpy array
+        second_to_last_column = tow_data.iloc[:, -1].values  # Convert to numpy array
 
-# Combine all extracted columns into a single numpy array
-combined_column_array = np.concatenate(columns_to_combine, axis=0)
+        # Create (x_n, x_{n+1}) pairs for the current tow
+        x_values = second_to_last_column[:-1]
+        y_values = second_to_last_column[1:]
 
-# Create (x_n, x_{n+1}) pairs
-x_values = combined_column_array[:-1]
-y_values = combined_column_array[1:]
+        # Append pairs as a list of tuples
+        all_pairs.extend(zip(x_values, y_values))
+
+# After processing all tows, convert collected pairs into numpy arrays
+all_pairs = np.array(all_pairs)
+x_values = all_pairs[:, 0]
+y_values = all_pairs[:, 1]
+
 
 # Train-Test Split
 
