@@ -116,14 +116,22 @@ def find_x930(LT_x: list, LT_time):
         delta_x_values.append(delta_x)
     
     delta_x_min = min(delta_x_values)
+    xi_list = []
+    ti_list = []
 
     for j in range(1300,len(LT_x)):
         if abs(LT_x[j+1] - LT_x[j]) < (delta_x_min/beta):
-            xi = LT_x[j]
-            ti = LT_time[j]
-            break
+            xi_list.append(LT_x[j])
+            ti_list.append(LT_time[j])
+            if abs(LT_x[j+2] - LT_x[j+1]) >= (delta_x_min/beta):
+                xi = xi_list[0]
+                ti = ti_list[0]
+                xn = LT_x[j+1]
+                tn = LT_time[j+1]
+                t = tn - ti
+                break
         
-    return xi, ti
+    return xi, t
 
 def camera_sync(cam_data: list, cam_time: list):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
