@@ -1,3 +1,16 @@
+#We input our current error, which we will call x
+# we calculate the mean of the next error, which we call y from the regression model
+#the value of x, the previous error, corresponds to a certain bin which contains a normal curve the randomness in the deviation of y 
+#we extract a random point from the normal curve 
+#we add this value to the before calculated mean
+
+#Note: we cant create a value of the mean or the histogram/normal curve of the devation for a certain data point of x(previous error), 
+#       because we don’t have enough data points at that precise point. This is why bins have been created: 
+#       this works, but will obtain a slight bias, because the deviation normal curve does not 
+#       correspond to the exact value of x, but only to the values around it
+
+    
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -62,13 +75,20 @@ plt.show()
 # Compute Deviations per Bin
 
 deviations_per_bin = []
+
 for i in range(num_bins):
     bin_start, bin_end = bin_edges[i], bin_edges[i + 1]
-    bin_y_values = y_sorted[bin_start:bin_end]
-    bin_mean = np.mean(bin_y_values)
-    deviations = bin_y_values - bin_mean
-    deviations_per_bin.append(deviations)
 
+    # Get x and y values in this bin
+    bin_x_values = x_sorted[bin_start:bin_end]
+    bin_y_values = y_sorted[bin_start:bin_end]
+
+    # Predict y-values using regression model
+    predicted_y_values = slope * bin_x_values + intercept
+
+    # Compute deviation (residuals) at each point
+    deviations = bin_y_values - predicted_y_values
+    deviations_per_bin.append(deviations)
 # Plot Histograms of Deviations per Bin
 
 
@@ -80,7 +100,7 @@ axes = axes.flatten()
 for i in range(num_bins):
     ax = axes[i]
     bin_devs = deviations_per_bin[i]
-    x_mean = x_binned[i]  # Mean x-value of the bin
+    bin_x_values = x_sorted[bin_edges[i]:bin_edges[i + 1]]
 
     # Histogram of deviations
     counts, bins, patches = ax.hist(bin_devs, bins=30, edgecolor='black', color='blue', density=True)
@@ -93,13 +113,16 @@ for i in range(num_bins):
     p_fit = stats.norm.pdf(x_fit, mu, std)
     ax.plot(x_fit, p_fit, 'r', linewidth=2)
 
-    # Annotate with μ, σ, and x̄
-    annotation = f"x_mean = {x_mean:.4f}\nμ = {mu:.4f}\nσ = {std:.4f}"
+    # Compute bin x-range
+    x_min = np.min(bin_x_values)
+    x_max = np.max(bin_x_values)
+
+    # Annotate with x bounds, μ and σ
+    annotation = f"x ∈ [{x_min:.2f}, {x_max:.2f}]\nμ = {mu:.4f}\nσ = {std:.4f}"
     ax.text(0.95, 0.95, annotation, transform=ax.transAxes,
             verticalalignment='top', horizontalalignment='right',
             fontsize=10, bbox=dict(facecolor='white'))
 
-    # Customize axes
     ax.set_title(f"Bin {i}")
     ax.set_xlabel("Deviation")
     ax.set_ylabel("Density")

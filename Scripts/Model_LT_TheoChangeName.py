@@ -1,5 +1,3 @@
-" Nothing here yet but bro is cooking "
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,7 +18,7 @@ for tow_number in range(1, 32):
     # Ensure that the returned object is a dataframe
     if not tow_data.empty and tow_data.shape[1] > 1:  # Ensure there are at least two columns
         # Extract the second-to-last column
-        second_to_last_column = tow_data.iloc[:, -1].values  # Convert to numpy array
+        second_to_last_column = tow_data.iloc[:, -2].values  # Convert to numpy array
 
         # Create (x_n, x_{n+1}) pairs for the current tow
         x_values = second_to_last_column[:-1]
