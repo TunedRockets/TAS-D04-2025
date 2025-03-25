@@ -9,7 +9,7 @@
 #       this works, but will obtain a slight bias, because the deviation normal curve does not 
 #       correspond to the exact value of x, but only to the values around it
 
-
+    
 
 import pandas as pd
 import numpy as np

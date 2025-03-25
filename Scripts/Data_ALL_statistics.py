@@ -9,49 +9,89 @@ def get_all_sensor_data():
     results_LT = []
     results_CAM = []
 
+    # ---------------------------
     # Process LLS_A sensor data
-    for i in range(1, 32):  # Iterate from 1 to 31
+    # ---------------------------
+    for i in range(1, 32):
         processed_data_LLSA = get_processed_data(tow=i, sensor_type="LLS_A", overwrite=False)
-        # If there are more than 4 columns, keep only the first 4.
+
+        # Debug prints
+        print(f"LLS_A raw data (tow={i}) shape:", processed_data_LLSA.shape)
+        print("LLS_A raw columns:", list(processed_data_LLSA.columns))
+        print(processed_data_LLSA.head(), "\n")
+
+        # If there are more than 4 columns, keep only the first 4
         if processed_data_LLSA.shape[1] > 4:
             processed_data_LLSA = processed_data_LLSA.iloc[:, :4]
-        # If only 3 columns, insert a column for "center" at index 2.
+        # If only 3 columns, insert a placeholder column at index 2 (assuming 'center' is missing)
         elif processed_data_LLSA.shape[1] == 3:
             processed_data_LLSA.insert(2, "temp", np.nan)
+
+        # Rename columns
         processed_data_LLSA.columns = ["time", "width", "center", "error_LLS_A"]
         results_LLSA.append(processed_data_LLSA)
 
+    # ---------------------------
     # Process LLS_B sensor data
+    # ---------------------------
     for j in range(1, 32):
         processed_data_LLSB = get_processed_data(tow=j, sensor_type="LLS_B", overwrite=False)
+
+        # Debug prints
+        print(f"LLS_B raw data (tow={j}) shape:", processed_data_LLSB.shape)
+        print("LLS_B raw columns:", list(processed_data_LLSB.columns))
+        print(processed_data_LLSB.head(), "\n")
+
         if processed_data_LLSB.shape[1] > 4:
             processed_data_LLSB = processed_data_LLSB.iloc[:, :4]
+        # If only 3 columns, insert a placeholder at index 1 (assuming 'width' is missing)
         elif processed_data_LLSB.shape[1] == 3:
-            processed_data_LLSB.insert(2, "temp", np.nan)
+            processed_data_LLSB.insert(1, "temp", np.nan)
+
         processed_data_LLSB.columns = ["time", "width", "center", "error_LLS_B"]
         results_LLSB.append(processed_data_LLSB)
 
+    # ---------------------------
     # Process LT sensor data
+    # ---------------------------
     for k in range(1, 32):
         processed_data_LT = get_processed_data(tow=k, sensor_type="LT", overwrite=False)
+
+        # Debug prints
+        print(f"LT raw data (tow={k}) shape:", processed_data_LT.shape)
+        print("LT raw columns:", list(processed_data_LT.columns))
+        print(processed_data_LT.head(), "\n")
+
         if processed_data_LT.shape[1] > 4:
             processed_data_LT = processed_data_LT.iloc[:, :4]
+        # If only 3 columns, insert a placeholder at index 1 (assuming 'width' is missing)
         elif processed_data_LT.shape[1] == 3:
-            processed_data_LT.insert(2, "temp", np.nan)
+            processed_data_LT.insert(1, "temp", np.nan)
+
         processed_data_LT.columns = ["time", "width", "center", "error_LT"]
         results_LT.append(processed_data_LT)
 
+    # ---------------------------
     # Process CAM sensor data
+    # ---------------------------
     for w in range(1, 32):
         processed_data_CAM = get_processed_data(tow=w, sensor_type="CAM", overwrite=False)
+
+        # Debug prints
+        print(f"CAM raw data (tow={w}) shape:", processed_data_CAM.shape)
+        print("CAM raw columns:", list(processed_data_CAM.columns))
+        print(processed_data_CAM.head(), "\n")
+
         if processed_data_CAM.shape[1] > 4:
             processed_data_CAM = processed_data_CAM.iloc[:, :4]
+        # If only 3 columns, insert a placeholder at index 2 (assuming 'center' is missing)
         elif processed_data_CAM.shape[1] == 3:
             processed_data_CAM.insert(2, "temp", np.nan)
+
         processed_data_CAM.columns = ["time", "width", "center", "error_CAM"]
         results_CAM.append(processed_data_CAM)
 
-    # Combine the lists of DataFrames into one DataFrame per sensor type
+    # Combine into one DataFrame per sensor type
     df_LLSA = pd.concat(results_LLSA, ignore_index=True)
     df_LLSB = pd.concat(results_LLSB, ignore_index=True)
     df_LT   = pd.concat(results_LT, ignore_index=True)
@@ -95,16 +135,21 @@ def plot_histograms(data: pd.DataFrame, title: str):
     for i, error in enumerate(errors):
         row = i // 2
         col = i % 2
-        ax[row, col].hist(error, bins=20, color='skyblue', edgecolor='black')
+        ax[row, col].hist(error, bins=40, color='skyblue', edgecolor='black')
         ax[row, col].set_title(titles[i])
         ax[row, col].set_xlabel(errors_names[i])
         ax[row, col].set_ylabel('Frequency')
 
+        # Calculate the mean of the error data
+        mean_val = error.mean()
+        ax[row, col].axvline(mean_val, color='red', linestyle='-', label='Mean')
+        ax[row, col].legend()
+
 def main():
-    # Get all sensor data (from tow 1 to 31)
+    # Gather data
     sensor_data = get_all_sensor_data()
 
-    # Create a combined DataFrame from the error columns
+    # Create a combined DataFrame of errors
     df_error = pd.concat([
         sensor_data["LLS_A"]["error_LLS_A"].reset_index(drop=True),
         sensor_data["LLS_B"]["error_LLS_B"].reset_index(drop=True),
@@ -113,7 +158,7 @@ def main():
     ], axis=1)
     df_error.columns = ["error_LLS_A", "error_LLS_B", "error_LT", "error_CAM"]
 
-    # Calculate and print statistical values
+    # Compute stats
     mean, median, std, minimum, maximum = statistical_values(df_error)
     print("Mean:", mean)
     print("Median:", median)
@@ -121,7 +166,7 @@ def main():
     print("Min:", minimum)
     print("Max:", maximum)
 
-    # Plot histograms for the error values
+    # Plot histograms
     plot_histograms(df_error, "Sensor Error Histograms")
     plt.show()
 
