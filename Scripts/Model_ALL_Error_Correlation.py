@@ -77,7 +77,7 @@ def find_x930(LT_x: list, LT_time):
     """This function grabs a sample of the LT data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
-        the sample, if the distance between them is smaller than some factor times the minimum
+        the sample, if the distance between them is smaller than some factor beta times the minimum
         distance found in the sample, then we know that the tape has been cut and xi = 930mm.
         Then the coressponding time at xi is ti and this time can be used to sync the LT data with
         other data sets"""
@@ -100,6 +100,8 @@ def find_x930(LT_x: list, LT_time):
     return xi, ti
 
 "Sam is working here"
+cam_Data = Handling_ALL_Functions.get_processed_data(3, "CAM")
+print(cam_Data)
 
 def least_squares_regression(x, y):
     """
@@ -164,8 +166,6 @@ def plot_errors(error1, error2, error3, error4, error5, error6):
     plt.show()
 
 def main():
-
-
     
     # testing the shifting thing
     f1 = lambda x: np.exp(-(3*(x-2))**2/2.) # gaussian curve from ANA
