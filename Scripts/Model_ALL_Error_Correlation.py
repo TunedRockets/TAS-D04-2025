@@ -105,9 +105,31 @@ def find_x930(LT_x: list, LT_time):
         
     return xi, ti
 
-"Sam is working here"
-cam_Data = Handling_ALL_Functions.get_processed_data(3, "CAM")
-print(cam_Data)
+def camera_sync(cam_data: list, cam_time: list):
+    """This function grabs a sample of the CAM data where we know the tape is being layed down
+        and then calculates the distance between consective data points. Once the minimum
+        distance between data points has been found in the sample, then for data points after
+        the sample, if the distance between them is smaller than some factor beta times the minimum
+        distance found in the sample, then we know that the tape has been cut and xi = 930mm.
+        Then the coressponding time at xi is ti and this time can be used to sync the CAM data with
+        other data sets"""
+
+    beta = 2
+    delta_center_values = []
+
+    for i in range(100,200):
+        delta_center = abs(cam_data[i+1] - cam_data[i])
+        delta_center_values.append(delta_center)
+    
+    delta_center_min = min(delta_center_values)
+
+    for j in range(200,len(cam_data)):
+        if abs(cam_data[j+1] - cam_data[j]) < (delta_center_min/beta):
+            ci = cam_data[j]
+            ti = cam_time[j]
+            break
+        
+    return ci, ti
 
 def least_squares_regression(x, y):
     """
