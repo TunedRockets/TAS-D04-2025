@@ -7,9 +7,12 @@ from Handling_ALL_Functions import get_processed_data
     and the function  to plot the histograms of the four type of errors
     Written by: Manuel Cruz, Diogo Ying.'''
 
-processed_data = get_processed_data(tow=1, sensor_type= "LLS_A", overwrite=False)
-processed_data.columns = ["time", "width", "center",  "error_LLS_A"]
-print(processed_data)
+
+for i in range(1,33):
+    processed_data = get_processed_data(tow=i, sensor_type= "LLS_A", overwrite=False)
+    processed_data.columns = ["time", "width", "center",  "error_LLS_A"]
+    print(processed_data)
+
 
 
 #Here we obtain the mean, median, standard deviation, minimum and maximum
