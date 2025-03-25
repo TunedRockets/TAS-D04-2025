@@ -178,7 +178,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 
     # generate consistent name:
     # first check if key is valid
-    if sensor_type not in ["LT","LLS1","LLS2","CAM"]:
+    if sensor_type not in ["LT","LLS_A","LLS_B","CAM"]:
         raise KeyError("No such data exists")
     # then that tow exists:
     if tow not in range(1,32):
@@ -205,12 +205,12 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
             data = np.array(Data_CAM_importer.CAM_exceltolist()[tow-1]).T
             processesed_data = _handle_camera(*data[:3])
 
-        case "LLS1":
+        case "LLS_A":
             # Laser Line Sensor 1
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-2]).T
             processesed_data = _handle_LLS(*data[:3])
 
-        case "LLS2":
+        case "LLS_B":
             # Laser Line Sensor 2
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
             processesed_data = _handle_LLS(*data[:3])
