@@ -176,14 +176,22 @@ def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
     return None
 
 def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
-    '''This function loads the processed data, grabbing it from raw if it does not yet exist\n
-    the type specifies what data to grab. use the keys: "LT","LLS1","LLS2","CAM"\n
-    if overwrite is true, it will grab from the raw regardless if data exists or not.'''
+    '''
+    This function handles ALL the grabbing and processing of the raw data\n
+    call this and it will do all the stuff for you, no other functions needed\n
+    the function parameters are:\n
+    \n
+    tow:int, the index of the tow from 1 to 32\n
+    sensor_type:str, the type of data to get. valid keys are: "LT","LLS1","LLS2","CAM"\n
+    overwrite:bool (optional), If this is true, the function will ignore the cache\n
+    and reprocess the raw data. False by default. only do this if something in the processing\n
+    has changed, or if the raw data has changed. 
+    '''
 
     # generate consistent name:
     # first check if key is valid
     if sensor_type not in ["LT","LLS1","LLS2","CAM"]:
-        raise KeyError("No such data exists")
+        raise KeyError("sensor_type Key was invalid: No such data exists")
     # then that tow exists:
     if tow not in range(1,32):
         raise IndexError("Tow ID out of range")
@@ -226,7 +234,6 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 def main():
     # add testing code here
     print(get_processed_data(7,"LT"))
-
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
