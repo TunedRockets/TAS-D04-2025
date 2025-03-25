@@ -86,7 +86,7 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
         pandas_table[i][0] = time_to_float(time[i]) - zero_time
         pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
         pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
-        pandas_table[i][3] = (pandas_table[i][1]-6.36) # error (6.36 is the right width)
+        pandas_table[i][3] = (pandas_table[i][1]-6.35) # error (6.35 is the right width)
     
     pandas_table = pd.DataFrame(pandas_table)
     pandas_table.columns = ["time", "width", "center","width error"]
@@ -233,7 +233,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 
 def main():
     # add testing code here
-    print(get_processed_data(7,"LT"))
+    print(get_processed_data(7,"CAM"))
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
