@@ -22,8 +22,7 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
     columns = shape_1[1] + shape_2[1] - 1
     rows = min(shape_1[0], shape_2[0])
 
-    joined = np.empty((rows, columns))
-
+    joined = np.zeros((rows, columns))
     #set which frame is the guiding one:
     if shape_1[0] > shape_2[0]: # guiding is which one that guides the join process
         guide = frame2
@@ -54,7 +53,7 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
             # picks the closest one
 
 
-            for j in range(1, follower.shape[1]-1):
+            for j in range(1, follower.shape[1]):
                 joined[i][j + guide.shape[1]] = follower.iloc[i_f][j+1] # puts it in the row after the guide
     except IndexError:
         # we probably ran out of datapoints in the follower :(
@@ -63,11 +62,14 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
 
     joined = pd.DataFrame(joined)
     # gets rid of the metadata, so let's reintroduce it
-    fol_col_names = follower.columns
-    guide_col_names = guide.columns
-    col_names = set(fol_col_names).union(set(guide_col_names)) # hope this keeps order?
+    fol_col_names = list(follower.columns)
+    guide_col_names = list(guide.columns)
+    col_names = ['time'] + guide_col_names[1:] + fol_col_names[1:]
+    # combines them (and excludes first column which is time)
+
+
     # if not then change this
-    joined.columns = list(col_names)  
+    joined.columns = col_names  
 
     return joined
 
@@ -75,7 +77,7 @@ def find_x930(LT_x: list, LT_time):
     """This function grabs a sample of the LT data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
-        the sample, if the distance between them is smaller than some factor times the minimum
+        the sample, if the distance between them is smaller than some factor beta times the minimum
         distance found in the sample, then we know that the tape has been cut and xi = 930mm.
         Then the coressponding time at xi is ti and this time can be used to sync the LT data with
         other data sets"""
@@ -97,6 +99,31 @@ def find_x930(LT_x: list, LT_time):
         
     return xi, ti
 
+def camera_sync(cam_data: list, cam_time: list):
+    """This function grabs a sample of the CAM data where we know the tape is being layed down
+        and then calculates the distance between consective data points. Once the minimum
+        distance between data points has been found in the sample, then for data points after
+        the sample, if the distance between them is smaller than some factor beta times the minimum
+        distance found in the sample, then we know that the tape has been cut and xi = 930mm.
+        Then the coressponding time at xi is ti and this time can be used to sync the CAM data with
+        other data sets"""
+
+    beta = 2
+    delta_center_values = []
+
+    for i in range(100,200):
+        delta_center = abs(cam_data[i+1] - cam_data[i])
+        delta_center_values.append(delta_center)
+    
+    delta_center_min = min(delta_center_values)
+
+    for j in range(200,len(cam_data)):
+        if abs(cam_data[j+1] - cam_data[j]) < (delta_center_min/beta):
+            ci = cam_data[j]
+            ti = cam_time[j]
+            break
+        
+    return ci, ti
 
 def least_squares_regression(x, y):
     """
@@ -161,35 +188,33 @@ def plot_errors(error1, error2, error3, error4, error5, error6):
     plt.show()
 
 def main():
-
-
     
-    # Generating random test data
-    np.random.seed(42) 
-    data_size = 100  
+    # testing the shifting thing
+    f1 = lambda x: np.exp(-(3*(x-2))**2/2.) # gaussian curve from ANA
+    f2 = lambda x: 2*f1(x-1) # bigger curve shifted by 1
 
-    data1 = pd.DataFrame({
-        'time': range(data_size),
-        'error_something': np.random.uniform(0.01, 0.02, data_size),
-        'error_IV': np.random.uniform(0.01, 0.02, data_size)})
+    xx1 = np.linspace(0,5,100) # same timeframe but different number of points
+    xx2 = np.linspace(0,5,75)
+    yy1 = f1(xx1)
+    yy2 = f2(xx2)
 
-    data_size = 80
-    data2 = pd.DataFrame({
-        'time': range(0, 2*data_size, 2),
-        'error_one': np.random.uniform(0.01, 0.02, data_size),
-        'error_B': np.random.uniform(0.01, 0.02, data_size),})
-
-    joined_data = join_data(data1, data2, 4)
-
-    plot_errors(joined_data["error_one"], joined_data["error_B"], joined_data["error_IV"], joined_data["error_something"], joined_data["time"], joined_data["time"])
+    data1 = pd.DataFrame(np.array([xx1,yy1]).T)
+    data2 = pd.DataFrame(np.array([xx2,yy2]).T)
+    data1.columns = ["time", "value"]
+    data2.columns = ["time", "shifted"]
     
-    # # get the data:
-    # data_LS = Handling_ALL_Functions.get_processed_data(1, "LS")
-    print(joined_data)
+    # plot the different data:
+    # plt.plot(data1["time"],data1["value"])
+    # plt.plot(data2["time"],data2["shifted"])
+    # plt.show()
 
+    # now try shifting
 
-
-
+    combined = join_data(data1,data2,1)
+    print(combined)
+    plt.plot(combined["time"],combined["value"])
+    plt.plot(combined["time"],combined["shifted"])
+    plt.show()
 
 
 

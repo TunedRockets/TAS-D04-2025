@@ -2,8 +2,12 @@
 For getting data from wherever we save it, and saving the data in that place
 
 Everything is wrapped up in get_processed_data(), just use that and everything will just work :)
-
-
+╔═══════════════════════════════════════════════════════╗
+║                                                       ║
+║  USE GET PROCESSED DATA AND IT DEALS WITH EVERYTHING! ║
+║  NO NEED TO DO ANITHING ELSE, IT FIXES EVERYTHING!    ║
+║                                                       ║
+╚═══════════════════════════════════════════════════════╝
 """
 
 import numpy as np
@@ -82,7 +86,7 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
         pandas_table[i][0] = time_to_float(time[i]) - zero_time
         pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
         pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
-        pandas_table[i][3] = (pandas_table[i][1]-6.36) # error (6.36 is the right width)
+        pandas_table[i][3] = (pandas_table[i][1]-6.35) # error (6.35 is the right width)
     
     pandas_table = pd.DataFrame(pandas_table)
     pandas_table.columns = ["time", "width", "center","width error"]
@@ -172,14 +176,22 @@ def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
     return None
 
 def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
-    '''This function loads the processed data, grabbing it from raw if it does not yet exist\n
-    the type specifies what data to grab. use the keys: "LT","LLS1","LLS2","CAM"\n
-    if overwrite is true, it will grab from the raw regardless if data exists or not.'''
+    '''
+    This function handles ALL the grabbing and processing of the raw data\n
+    call this and it will do all the stuff for you, no other functions needed\n
+    the function parameters are:\n
+    \n
+    tow:int, the index of the tow from 1 to 32\n
+    sensor_type:str, the type of data to get. valid keys are: "LT","LLS1","LLS2","CAM"\n
+    overwrite:bool (optional), If this is true, the function will ignore the cache\n
+    and reprocess the raw data. False by default. only do this if something in the processing\n
+    has changed, or if the raw data has changed.
+    '''
 
     # generate consistent name:
     # first check if key is valid
     if sensor_type not in ["LT","LLS_A","LLS_B","CAM"]:
-        raise KeyError("No such data exists")
+        raise KeyError("sensor_type Key was invalid: No such data exists")
     # then that tow exists:
     if tow not in range(1,32):
         raise IndexError("Tow ID out of range")
