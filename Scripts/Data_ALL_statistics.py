@@ -62,12 +62,12 @@ def plot_histograms(data: pd.DataFrame, title: str):
     # Created lists for the parameters I need in the for loop, because we cannot say 
     # for e.g. data['error_LLS_A'] in a for loop (it has to have an associated number)
     # and in lists you can refer to strings and so on as a number (the index)!
-    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_camera']]
-    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT','error_camera']
+    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
+    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT','error_CAM']
     titles = ['Error LLS A vs. time', 
               'Error LLS B vs. time',
               'Error Laser Tracker vs. time',
-              'Error camera vs. time']
+              'Error Camera vs. time']
     
     # Algorithm to make the code more readable than hard-code every plot (see below)
     for i, error in enumerate(errors):
