@@ -9,10 +9,24 @@ from Handling_ALL_Functions import get_processed_data
 
 
 for i in range(1,33):
-    processed_data = get_processed_data(tow=i, sensor_type= "LLS_A", overwrite=False)
-    processed_data.columns = ["time", "width", "center",  "error_LLS_A"]
-    print(processed_data)
+    processed_data_LLSA = get_processed_data(tow=i, sensor_type= "LLS_A", overwrite=False)
+    processed_data_LLSA.columns = ["time", "width", "center",  "error_LLS_A"]
+    return processed_data_LLSA
 
+for j in range(1,33):
+    processed_data_LLSB = get_processed_data(tow=j, sensor_type= "LLS_B", overwrite=False)
+    processed_data_LLSB.columns = ["time", "width", "center",  "error_LLS_B"]
+    return processed_data_LLSB
+
+for k in range(1,33):
+    processed_data_LT = get_processed_data(tow=k, sensor_type= "LT", overwrite=False)
+    processed_data_LT.columns = ["time", "width", "center",  "error_LT"]
+    return processed_data_LT
+
+for w in range(1,33):
+    processed_data_CAM = get_processed_data(tow=w, sensor_type= "CAM", overwrite=False)
+    processed_data_CAM.columns = ["time", "width", "center", "error_CAM"]
+    return processed_data_CAM
 
 
 #Here we obtain the mean, median, standard deviation, minimum and maximum
