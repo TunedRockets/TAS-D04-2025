@@ -70,18 +70,38 @@ for i in range(num_bins):
 # Plot Histograms of Deviations per Bin
 
 rows, cols = 4, 5
-fig, axes = plt.subplots(rows, cols, figsize=(20, 12))
+fig, axes = plt.subplots(rows, cols, figsize=(20, 10))
 fig.suptitle("Histograms of Deviations per Bin (Training Data)", fontsize=16)
 axes = axes.flatten()
 
 for i in range(num_bins):
     ax = axes[i]
-    ax.hist(deviations_per_bin[i], bins=30, alpha=0.7, edgecolor='black', color='blue')
+    bin_devs = deviations_per_bin[i]
+    x_mean = x_binned[i]  # Mean x-value of the bin
+
+    # Histogram of deviations
+    counts, bins, patches = ax.hist(bin_devs, bins=30, edgecolor='black', color='blue', density=True)
+
+    # Fit normal distribution to the deviations
+    mu, std = stats.norm.fit(bin_devs)
+
+    # Generate and plot normal PDF
+    x_fit = np.linspace(min(bin_devs), max(bin_devs), 100)
+    p_fit = stats.norm.pdf(x_fit, mu, std)
+    ax.plot(x_fit, p_fit, 'r--', linewidth=2)
+
+    # Annotate with μ, σ, and x̄
+    annotation = f"x_mean = {x_mean:.4f}\nμ = {mu:.4f}\nσ = {std:.4f}"
+    ax.text(0.95, 0.95, annotation, transform=ax.transAxes,
+            verticalalignment='top', horizontalalignment='right',
+            fontsize=10, bbox=dict(facecolor='white'))
+
+    # Customize axes
     ax.set_title(f"Bin {i}")
     ax.set_xlabel("Deviation")
-    ax.set_ylabel("Frequency")
+    ax.set_ylabel("Density")
     ax.grid(True)
 
-
-plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+# Final layout adjustments
+plt.tight_layout(rect=[0, 0, 1, 1])
 plt.show()
