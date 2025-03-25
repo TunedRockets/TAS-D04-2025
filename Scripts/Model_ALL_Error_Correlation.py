@@ -114,6 +114,15 @@ def camera_sync(cam_data: list, cam_time: list):
         Then the coressponding time at xi is ti and this time can be used to sync the CAM data with
         other data sets"""
 
+    # Compute center velocities
+    center_velocities = []
+    for i in range(len(centers) - 1):  # Adjust to avoid index error
+        h = times[i + 1] - times[i]  # Time step
+        center_velocity = (centers[i + 1] - centers[i]) / h  # Velocity approximation
+        center_velocities.append(center_velocity)
+
+
+
     beta = 2
     delta_center_values = []
 
