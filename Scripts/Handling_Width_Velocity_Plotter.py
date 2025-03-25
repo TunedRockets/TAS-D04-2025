@@ -6,7 +6,7 @@ import pandas as pd
 def Width_Velocity_Plotter(tow:int):
     width_velocities = [] # Set up list of velocities
     delta_width_list = []
-    data = Handling_ALL_Functions.get_processed_data(tow, "LLS_B") # get data, first argument 1-31, second has to stay "LLSB"
+    data = Handling_ALL_Functions.get_processed_data(tow, "LLS_B") # get data, first argument 1-31, second has to stay "LLS_B"
     widths = data.iloc[:,1].values #gets just the width-column
     times = data.iloc[:,0].values #gets just the time-column
     beta = 2.5
