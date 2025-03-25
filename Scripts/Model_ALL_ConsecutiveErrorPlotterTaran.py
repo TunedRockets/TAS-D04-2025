@@ -89,7 +89,7 @@ for i in range(num_bins):
     # Generate and plot normal PDF
     x_fit = np.linspace(min(bin_devs), max(bin_devs), 100)
     p_fit = stats.norm.pdf(x_fit, mu, std)
-    ax.plot(x_fit, p_fit, 'r--', linewidth=2)
+    ax.plot(x_fit, p_fit, 'r', linewidth=2)
 
     # Annotate with μ, σ, and x̄
     annotation = f"x_mean = {x_mean:.4f}\nμ = {mu:.4f}\nσ = {std:.4f}"
@@ -106,3 +106,32 @@ for i in range(num_bins):
 # Final layout adjustments
 plt.tight_layout(rect=[0, 0, 1, 1])
 plt.show()
+
+
+#-------------------------
+#summarize all data
+#-------------------------
+
+bin_stats = []
+
+for i in range(num_bins):
+    bin_devs = deviations_per_bin[i]
+    x_mean = x_binned[i]
+    y_mean = y_binned[i]
+    mu, std = stats.norm.fit(bin_devs)
+    variance = std**2
+
+    bin_stats.append({
+        "x_mean": x_mean,
+        "y_mean": y_mean,
+        "deviation_mean": mu,
+        "deviation_variance": variance
+})
+
+# Convert to DataFrame for easy viewing
+bin_stats_df = pd.DataFrame(bin_stats)
+
+# Display the table
+print(bin_stats_df)
+
+
