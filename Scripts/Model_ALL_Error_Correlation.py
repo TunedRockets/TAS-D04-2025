@@ -22,8 +22,7 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
     columns = shape_1[1] + shape_2[1] - 1
     rows = min(shape_1[0], shape_2[0])
 
-    joined = np.empty((rows, columns))
-
+    joined = np.zeros((rows, columns))
     #set which frame is the guiding one:
     if shape_1[0] > shape_2[0]: # guiding is which one that guides the join process
         guide = frame2
@@ -63,11 +62,14 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
 
     joined = pd.DataFrame(joined)
     # gets rid of the metadata, so let's reintroduce it
-    fol_col_names = follower.columns
-    guide_col_names = guide.columns
-    col_names = set(fol_col_names).union(set(guide_col_names)) # hope this keeps order?
+    fol_col_names = list(follower.columns)
+    guide_col_names = list(guide.columns)
+    col_names = ['time'] + guide_col_names[1:] + fol_col_names[1:]
+    # combines them (and excludes first column which is time)
+
+
     # if not then change this
-    joined.columns = list(col_names)  
+    joined.columns = col_names  
 
     return joined
 
@@ -97,6 +99,7 @@ def find_x930(LT_x: list, LT_time):
         
     return xi, ti
 
+"Sam is working here"
 
 def least_squares_regression(x, y):
     """
@@ -164,32 +167,32 @@ def main():
 
 
     
-    # Generating random test data
-    np.random.seed(42) 
-    data_size = 100  
+    # testing the shifting thing
+    f1 = lambda x: np.exp(-(3*(x-2))**2/2.) # gaussian curve from ANA
+    f2 = lambda x: 2*f1(x-1) # bigger curve shifted by 1
 
-    data1 = pd.DataFrame({
-        'time': range(data_size),
-        'error_something': np.random.uniform(0.01, 0.02, data_size),
-        'error_IV': np.random.uniform(0.01, 0.02, data_size)})
+    xx1 = np.linspace(0,5,100) # same timeframe but different number of points
+    xx2 = np.linspace(0,5,75)
+    yy1 = f1(xx1)
+    yy2 = f2(xx2)
 
-    data_size = 80
-    data2 = pd.DataFrame({
-        'time': range(0, 2*data_size, 2),
-        'error_one': np.random.uniform(0.01, 0.02, data_size),
-        'error_B': np.random.uniform(0.01, 0.02, data_size),})
-
-    joined_data = join_data(data1, data2, 4)
-
-    plot_errors(joined_data["error_one"], joined_data["error_B"], joined_data["error_IV"], joined_data["error_something"], joined_data["time"], joined_data["time"])
+    data1 = pd.DataFrame(np.array([xx1,yy1]).T)
+    data2 = pd.DataFrame(np.array([xx2,yy2]).T)
+    data1.columns = ["time", "value"]
+    data2.columns = ["time", "shifted"]
     
-    # # get the data:
-    # data_LS = Handling_ALL_Functions.get_processed_data(1, "LS")
-    print(joined_data)
+    # plot the different data:
+    # plt.plot(data1["time"],data1["value"])
+    # plt.plot(data2["time"],data2["shifted"])
+    # plt.show()
 
+    # now try shifting
 
-
-
+    combined = join_data(data1,data2,1)
+    print(combined)
+    plt.plot(combined["time"],combined["value"])
+    plt.plot(combined["time"],combined["shifted"])
+    plt.show()
 
 
 
