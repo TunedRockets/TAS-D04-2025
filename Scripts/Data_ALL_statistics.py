@@ -7,7 +7,7 @@ from Handling_ALL_Functions import get_processed_data
     and the function  to plot the histograms of the four type of errors
     Written by: Manuel Cruz, Diogo Ying.'''
 
-processed_data = get_processed_data(tow=1, sensor_type= "LLS1", overwrite=False)
+processed_data = get_processed_data(tow=1, sensor_type= "LLS_A", overwrite=False)
 print(processed_data)
 
 
