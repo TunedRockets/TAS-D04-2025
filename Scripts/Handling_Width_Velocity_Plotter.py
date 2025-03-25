@@ -71,7 +71,6 @@ def scan_for_min(t_len:float, times:list, values:list)->tuple:
                 debug2 = times[i]
             sums.append(sum_x)
     except IndexError:
-        print(f"DEBUG, {j=:}")
         pass # now we're at the end so no point going further
 
     minimum = min(sums)
