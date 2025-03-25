@@ -13,7 +13,7 @@ def plot_LT(data: pd.DataFrame, name: str):
     '''plots the LT data'''
     time = data["time"]
     x = data["x"]
-    E = data["y error"]
+    E = data["error_LT"]
     print(f"time = {len(time)}, x = {len(x)}")
 
 
@@ -88,13 +88,13 @@ def plot_LT(data: pd.DataFrame, name: str):
     plt.xlabel("V")
 
     plt.subplot(232)
-    bins_needed = int(len(split_1)/50)
+    bins_needed = int(len(split_1)/5)
     plt.hist(V_1, bins=bins_needed)
     plt.title('LT, split 1')
     plt.xlabel("V")
 
     plt.subplot(233)
-    bins_needed = int(len(split_2)/20)
+    bins_needed = int(len(split_2)/2)
     plt.hist(V_2, bins=bins_needed)
     plt.title('LT, split 2')
     plt.xlabel("V")
@@ -125,10 +125,10 @@ def plot_LT(data: pd.DataFrame, name: str):
 def plot_LLS(data: pd.DataFrame, name: str):
     time = data["time"]
     width = data["width"]
-    E = data["error"]
+    E = data["width error"]
 
     v_width, v_E = [0], [0]
-    for i in range(len(time - 1)):
+    for i in range(len(time)-1):
         dt = time[i + 1] - time[i]
 
         dw = width[i + 1] - width[i]
@@ -143,7 +143,7 @@ def plot_LLS(data: pd.DataFrame, name: str):
     plt.subplot(121)
     plt.plot(time, width, label='width', color='red')
     plt.plot(time, E, label='center', color='blue')
-    plt.legend(loc='upper_right')
+    plt.legend(loc='upper right')
     plt.title('LLS, coordinates')
     plt.xlabel("Time")
     plt.ylabel("location")
@@ -151,7 +151,7 @@ def plot_LLS(data: pd.DataFrame, name: str):
     plt.subplot(122)
     plt.plot(time, v_width, label='v_width', color='red')
     plt.plot(time, v_E, label='v_center', color='blue')
-    plt.legend(loc='upper_right')
+    plt.legend(loc='upper right')
     plt.title('LLS, velocities')
     plt.xlabel("Time")
     plt.ylabel("velocity")
@@ -160,28 +160,28 @@ def plot_LLS(data: pd.DataFrame, name: str):
     plt.show()
 
     err_range = max(E) - min(E)
-    min = min(E)
-    max = max(E)
-    split = 0.2 * err_range
+    minimum = min(E)
+    maximum = max(E)
+    split = 0.2
 
     split_1, split_2, split_3, split_4, split_5 = [], [], [], [], []
     V_1, V_2, V_3, V_4, V_5 = [], [], [], [], []
-    for i in range(len(time)):
+    for i in range(len(time) - 1):
         err = E[i]
 
-        if min <= err <= min + split * err_range:
+        if minimum <= err <= minimum + split * err_range:
             split_1.append(err)
             V_1.append(v_E[i])
-        elif min + split * err_range <= err <= min + 2 * split * err_range:
+        elif minimum + split * err_range <= err <= minimum + 2 * split * err_range:
             split_2.append(err)
             V_2.append(v_E[i])
-        elif min + 2 * split * err_range <= err <= min + 3 * split * err_range:
+        elif minimum + 2 * split * err_range <= err <= minimum + 3 * split * err_range:
             split_3.append(err)
             V_3.append(v_E[i])
-        elif min + 3 * split * err_range <= err <= min + 4 * split * err_range:
+        elif minimum + 3 * split * err_range <= err <= minimum + 4 * split * err_range:
             split_4.append(err)
             V_4.append(v_E[i])
-        elif min + 4 * split * err_range <= err <= min + 5 * split * err_range:
+        elif minimum + 4 * split * err_range <= err <= minimum + 5 * split * err_range:
             split_5.append(err)
             V_5.append(v_E[i])
         else:
@@ -189,32 +189,37 @@ def plot_LLS(data: pd.DataFrame, name: str):
 
     '''plots for subsets of the data so I can see how relations in error-change change based on what the error is.'''
     plt.subplot(231)
-    plt.hist(v_E)
+    plt.hist(v_E, bins=30)
     plt.title('LLS, err')
     plt.xlabel("V")
 
     plt.subplot(232)
-    plt.hist(V_1)
+    bins_needed = int(len(split_1) / 2)
+    plt.hist(V_1, bins=bins_needed)
     plt.title('LLS, split 1')
     plt.xlabel("V")
 
     plt.subplot(233)
-    plt.hist(V_2)
+    bins_needed = int(len(split_2) / 5)
+    plt.hist(V_2, bins=bins_needed)
     plt.title('LLS, split 2')
     plt.xlabel("V")
 
     plt.subplot(234)
-    plt.hist(V_3)
+    bins_needed = int(len(split_3) / 10)
+    plt.hist(V_3, bins=bins_needed)
     plt.title('LLS, split 3')
     plt.xlabel("V")
 
     plt.subplot(235)
-    plt.hist(V_4)
+    bins_needed = int(len(split_4) / 5)
+    plt.hist(V_4, bins=bins_needed)
     plt.title('LLS, split 4')
     plt.xlabel("V")
 
     plt.subplot(236)
-    plt.hist(V_5)
+    bins_needed = int(len(split_5) / 2)
+    plt.hist(V_5, bins=bins_needed)
     plt.title('LLS, split 5')
     plt.xlabel("V")
 
@@ -329,12 +334,13 @@ def main():
 #    camera_data = CAM_exceltolist()
 #    plot_camera(camera_data, 'camera')
 #
-    LT_data = get_processed_data(1, "LT")
-    print(LT_data)
-    plot_LT(LT_data, 'Laser Tracker')
-#
-#    LLS1_data = LLS_exceltoarray()
-#    plot_LLS(LLS1_data, 'LLS1')
+#    LT_data = get_processed_data(2, "LT")
+#    # print(LT_data)
+#    plot_LT(LT_data, 'Laser Tracker')
+
+    LLS1_data = get_processed_data(2, "LLS1")
+    print(LLS1_data)
+    plot_LLS(LLS1_data, 'LLS1')
 #
 #    LLS2_data = LLS_exceltoarray()
 #    plot_LLS(LLS2_data, 'LLS2')
