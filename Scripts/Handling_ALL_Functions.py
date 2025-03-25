@@ -233,7 +233,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 
 def main():
     # add testing code here
-    print(get_processed_data(7,"LT"))
+    print(get_processed_data(7,"LLS_A"))
 
 
 if __name__ == "__main__":
