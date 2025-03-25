@@ -28,7 +28,7 @@ def Width_Velocity_Plotter(tow:int):
 
     delta_width_min = second_min
     
-    index_stop, time_stop = scan_for_min(t_len, frame, datatype)    
+    index_stop, time_stop = scan_for_min(1, times, delta_width_list)    
     
 
     print(time_stop)
@@ -50,12 +50,10 @@ def Width_Velocity_Plotter(tow:int):
     plt.show() 
 
 
-def scan_for_min(t_len:float, frame:pd.Dataframe, datatype:str)->tuple:
+def scan_for_min(t_len:float, times:list, values:list)->tuple:
     '''finds the minimum range for the given length and returns the index and time where the minimum starts\n
     also makes the diffference absolute to cope with negative values'''
 
-    values = frame[datatype]
-    times = frame["time"]
     sums = []
     try:
         for i in range(len(values)):
