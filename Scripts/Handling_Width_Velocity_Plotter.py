@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 #import numpy as np
 
-def Width_Velocity_Plotter(tow:int):
+def LLS_sync(tow:int, sensor_type:str, overwrite=False):
     width_velocities = [] # Set up list of velocities
     delta_width_list = []
-    data = Handling_ALL_Functions.get_processed_data(tow, "LLS_B") # get data, first argument 1-31, second has to stay "LLS_B"
+    data = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite) # get data, first argument 1-31, second has to stay "LLS_B"
     widths = data.iloc[:,1].values #gets just the width-column
     times = data.iloc[:,0].values #gets just the time-column
     beta = 2.5
@@ -80,7 +80,7 @@ def scan_for_min(t_len:float, times:list, values:list)->tuple:
 def main():
 
     for k in range(1, 32):
-        Width_Velocity_Plotter(k)
+        LLS_sync(k, "LLS_A")
 
 if __name__ == "__main__":
     main()
