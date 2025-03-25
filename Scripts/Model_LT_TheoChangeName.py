@@ -1,3 +1,5 @@
+" Nothing here yet but bro is cooking "
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,24 +7,30 @@ from scipy.optimize import curve_fit
 import scipy.stats as stats
 from sklearn.model_selection import train_test_split
 from Data_CAM_importer import CAM_exceltolist
-from scipy.stats import linregress
+from Handling_ALL_Functions import get_processed_data
 
-# Load and Prepare Data
+# Prepare an empty list to store the second-to-last column from each tow
+columns_to_combine = []
 
-# Load Excel data using custom importer
-CAM_file_path = r'Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx'
-all_sheets_data = CAM_exceltolist(CAM_file_path)
+# Loop through tow numbers from 1 to 31
+for tow_number in range(1, 32):
+    # Get processed data for the current tow and "LT" type
+    tow_data = get_processed_data(tow_number, "LT")
 
-# Extract 5th column (index 4) from all sheets and combine
-fifth_column_arrays = [
-    sheet_df.iloc[:, 4].dropna().to_numpy() for sheet_df in all_sheets_data
-]
-combined_fifth_column_array = np.concatenate(fifth_column_arrays, axis=0)
+    # Ensure that the returned object is a dataframe
+    if not tow_data.empty and tow_data.shape[1] > 1:  # Ensure there are at least two columns
+        # Extract the second-to-last column
+        second_to_last_column = tow_data.iloc[:, -2]
+        columns_to_combine.append(second_to_last_column.values)  # Convert to numpy array
+
+# Combine all extracted columns into a single numpy array
+combined_column_array = np.concatenate(columns_to_combine, axis=0)
 
 # Create (x_n, x_{n+1}) pairs
-x_values = combined_fifth_column_array[:-1]
-y_values = combined_fifth_column_array[1:]
+x_values = combined_column_array[:-1]
+y_values = combined_column_array[1:]
 
+# Train-Test Split
 
 # Split into training and testing ( 50% train, 50% test)
 x_train, x_test, y_train, y_test = train_test_split(
@@ -30,6 +38,7 @@ x_train, x_test, y_train, y_test = train_test_split(
 )
 
 # Binning and Averaging on Training Data
+
 num_bins = 20
 
 # Sort training x-values and reorder y-values accordingly
@@ -44,14 +53,11 @@ bin_edges = np.linspace(0, len(x_sorted), num_bins + 1, dtype=int)
 x_binned = [np.mean(x_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
 y_binned = [np.mean(y_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
 
-#scatter Plot with Binned Averages and regression model
-slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
-print(r_value)
+# catter Plot with Binned Averages
 
 plt.figure(figsize=(8, 6))
 plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Data")
 plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
-plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
 plt.xlabel("X (Train)")
 plt.ylabel("Y (Train)")
 plt.title("Scatter Plot with Equal-Count Binning (Train Data)")
@@ -135,5 +141,3 @@ bin_stats_df = pd.DataFrame(bin_stats)
 
 # Display the table
 print(bin_stats_df)
-
-
