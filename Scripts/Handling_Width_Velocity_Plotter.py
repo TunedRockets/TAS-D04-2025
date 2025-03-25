@@ -28,7 +28,7 @@ def Width_Velocity_Plotter(tow:int):
 
     delta_width_min = second_min
     
-    time_stop = scan_for_min(t_len, frame, datatype)    
+    index_stop, time_stop = scan_for_min(t_len, frame, datatype)    
     
 
     print(time_stop)
