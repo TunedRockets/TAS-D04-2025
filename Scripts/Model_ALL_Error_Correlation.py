@@ -100,6 +100,8 @@ def find_x930(LT_x: list, LT_time):
     return xi, ti
 
 "Sam is working here"
+cam_Data = Handling_ALL_Functions.get_processed_data(3, "CAM")
+print(cam_Data)
 
 def least_squares_regression(x, y):
     """
