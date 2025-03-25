@@ -17,10 +17,6 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
     shape_1 = frame1.shape
     shape_2 = frame2.shape
 
-    # shifting the 2nd frame before the process starts:
-    frame2["time"] -= desync # numpy vectorization to the rescue
-
-
     # the shape of the joined is going to be the min of the row and the combined of the columns
     # minus one because time is shared
     columns = shape_1[1] + shape_2[1] - 1
@@ -58,9 +54,7 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
 
 
             for j in range(1, follower.shape[1]):
-                data_debug = follower.iloc[i_f][j]
-                join_index = j + guide.shape[1] - 1 # -1 due to the time being removed
-                joined[i][join_index] = data_debug  # puts it in the row after the guide
+                joined[i][j + guide.shape[1]] = follower.iloc[i_f][j+1] # puts it in the row after the guide
     except IndexError:
         # we probably ran out of datapoints in the follower :(
         # but that's fine
@@ -113,15 +107,6 @@ def camera_sync(cam_data: list, cam_time: list):
         distance found in the sample, then we know that the tape has been cut and xi = 930mm.
         Then the coressponding time at xi is ti and this time can be used to sync the CAM data with
         other data sets"""
-
-    # Compute center velocities
-    center_velocities = []
-    for i in range(len(centers) - 1):  # Adjust to avoid index error
-        h = times[i + 1] - times[i]  # Time step
-        center_velocity = (centers[i + 1] - centers[i]) / h  # Velocity approximation
-        center_velocities.append(center_velocity)
-
-
 
     beta = 2
     delta_center_values = []
@@ -208,8 +193,8 @@ def main():
     f1 = lambda x: np.exp(-(3*(x-2))**2/2.) # gaussian curve from ANA
     f2 = lambda x: 2*f1(x-1) # bigger curve shifted by 1
 
-    xx1 = np.linspace(0,5,100) 
-    xx2 = np.linspace(1,6,75)
+    xx1 = np.linspace(0,5,100) # same timeframe but different number of points
+    xx2 = np.linspace(0,5,75)
     yy1 = f1(xx1)
     yy2 = f2(xx2)
 
