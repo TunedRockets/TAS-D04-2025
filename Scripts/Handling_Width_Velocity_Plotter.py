@@ -52,6 +52,7 @@ def Width_Velocity_Plotter(tow:int):
     plt.title("Width velocity")
     plt.xlabel("Time [s]")
     plt.ylabel("Rate of change of tow width [m/s]")
+    plt.plot(time_stop,0, "-o")
     plt.grid()
     plt.show() 
 

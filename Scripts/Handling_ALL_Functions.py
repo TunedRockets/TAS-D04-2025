@@ -191,10 +191,10 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     # generate consistent name:
     # first check if key is valid
     if sensor_type not in ["LT","LLS_A","LLS_B","CAM"]:
-        raise KeyError("sensor_type Key was invalid: No such data exists")
+        raise KeyError(f"the Key {sensor_type} was invalid: No such data exists")
     # then that tow exists:
     if tow not in range(1,32):
-        raise IndexError("Tow ID out of range")
+        raise IndexError(f"Tow ID {tow} is out of range")
     # set the name
     name = sensor_type + "_" + str(tow)
 
