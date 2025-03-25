@@ -11,6 +11,10 @@ def Width_Velocity_Plotter(tow:int):
     times = data.iloc[:,0].values #gets just the time-column
     beta = 2.5
 
+    for i in range(len(widths)-1):
+        width_velocities.append(widths[i+1] - widths[i])
+    width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
+
     ###########################################################################################################
 
     for i in range(200,300):
@@ -28,7 +32,7 @@ def Width_Velocity_Plotter(tow:int):
 
     delta_width_min = second_min
     
-    index_stop, time_stop = scan_for_min(1, times, delta_width_list)    
+    index_stop, time_stop = scan_for_min(1, times, width_velocities)    
     
 
     print(time_stop)
@@ -36,12 +40,12 @@ def Width_Velocity_Plotter(tow:int):
 
 
 
-    #Loop over all the data points and store results
-    for i in range(len(widths)-1): 
-        width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
-        width_velocities.append(width_velocity)
+    # #Loop over all the data points and store results
+    # for i in range(len(widths)-1): 
+    #     width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
+    #     width_velocities.append(width_velocity)
 
-    plt.plot(times[:-1], width_velocities, label="width_velocities", color="red")
+    plt.plot(times, width_velocities, label="width_velocities", color="red")
     plt.title("Width velocity")
     plt.xlabel("Time [s]")
     plt.ylabel("Rate of change of tow width [m/s]")
@@ -61,10 +65,13 @@ def scan_for_min(t_len:float, times:list, values:list)->tuple:
             j = i
             
             while times[j] <= times[i] + t_len:
-                sum_x += abs(values[j])
+                sum_x += values[j]**2
                 j+=1
+                debug1 = times[j]
+                debug2 = times[i]
             sums.append(sum_x)
     except IndexError:
+        print(f"DEBUG, {j=:}")
         pass # now we're at the end so no point going further
 
     minimum = min(sums)
