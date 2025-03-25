@@ -137,32 +137,31 @@ def main():
 
 
     
-    # Generating random test data
-    np.random.seed(42) 
-    data_size = 100  
+    # testing the shifting thing
+    f1 = lambda x: np.exp(-(3*(x-2))**2/2.) # gaussian curve from ANA
+    f2 = lambda x: 2*f1(x-1) # bigger curve shifted by 1
 
-    data1 = pd.DataFrame({
-        'time': range(data_size),
-        'error_something': np.random.uniform(0.01, 0.02, data_size),
-        'error_IV': np.random.uniform(0.01, 0.02, data_size)})
+    xx1 = np.linspace(0,5,100) # same timeframe but different number of points
+    xx2 = np.linspace(0,5,75)
+    yy1 = f1(xx1)
+    yy2 = f2(xx2)
 
-    data_size = 80
-    data2 = pd.DataFrame({
-        'time': range(0, 2*data_size, 2),
-        'error_one': np.random.uniform(0.01, 0.02, data_size),
-        'error_B': np.random.uniform(0.01, 0.02, data_size),})
-
-    joined_data = join_data(data1, data2, 4)
-
-    plot_errors(joined_data["error_one"], joined_data["error_B"], joined_data["error_IV"], joined_data["error_something"], joined_data["time"], joined_data["time"])
+    data1 = pd.DataFrame(np.array([xx1,yy1]).T)
+    data2 = pd.DataFrame(np.array([xx2,yy2]).T)
+    data1.columns = ["time", "value"]
+    data2.columns = ["time", "shifted"]
     
-    # # get the data:
-    # data_LS = Handling_ALL_Functions.get_processed_data(1, "LS")
-    print(joined_data)
+    # plot the different data:
+    plt.plot(data1["time"],data1["value"])
+    plt.plot(data2["time"],data2["shifted"])
+    plt.show()
 
+    # now try shifting
 
-
-
+    combined = join_data(data1,data2,1)
+    
+    plt.plot(combined["time"],combined["value"])
+    plt.plot(data2["time"],data2["shifted"])
 
 
 
