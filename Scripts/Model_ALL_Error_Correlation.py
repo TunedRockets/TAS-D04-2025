@@ -10,17 +10,45 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
     '''
     joins the two dataframe columnwise from a given desync time\n
     I.e. shifts frame two BACKWARDS by the desync.\n
-    assumes time is at index 0 in the rows
+    assumes time is at index 0 in the columns\n
+    (also needs both frames to have a column called "time")\n
+    otherwise it breaks
     '''
+
+    # PREPROCCESING:
 
     # info on frames
     shape_1 = frame1.shape
     shape_2 = frame2.shape
 
+    # shifting the 2nd frame before the process starts:
+    frame2["time"] -= desync # numpy vectorization to the rescue
+
+    # to make sure we only look at the correct parts, we trunctate all parts that only appear on one of the datasets:
+    range_1 = min(frame1["time"]), max(frame1["time"])
+    range_2 = min(frame2["time"]), max(frame2["time"])
+    range_total = max(range_1[0],range_2[0]), min(range_1[1],range_2[1])
+    if range_total[0] >= range_total[1]:
+        raise IndexError("There is no overlap between the data")
+    #now get rid of anything not in the range
+    
+    # find the indexes to get rid of:
+    
+
+
+
+    frame1 = frame1.truncate()
+
+
     # the shape of the joined is going to be the min of the row and the combined of the columns
     # minus one because time is shared
     columns = shape_1[1] + shape_2[1] - 1
     rows = min(shape_1[0], shape_2[0])
+
+    
+
+
+    # PROCESSING:
 
     joined = np.zeros((rows, columns))
     #set which frame is the guiding one:
@@ -71,6 +99,7 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
     # if not then change this
     joined.columns = col_names  
 
+
     return joined
 
 def find_x930(LT_x: list, LT_time):
@@ -99,9 +128,31 @@ def find_x930(LT_x: list, LT_time):
         
     return xi, ti
 
-"Sam is working here"
-cam_Data = Handling_ALL_Functions.get_processed_data(3, "CAM")
-print(cam_Data)
+def camera_sync(cam_data: list, cam_time: list):
+    """This function grabs a sample of the CAM data where we know the tape is being layed down
+        and then calculates the distance between consective data points. Once the minimum
+        distance between data points has been found in the sample, then for data points after
+        the sample, if the distance between them is smaller than some factor beta times the minimum
+        distance found in the sample, then we know that the tape has been cut and xi = 930mm.
+        Then the coressponding time at xi is ti and this time can be used to sync the CAM data with
+        other data sets"""
+
+    beta = 2
+    delta_center_values = []
+
+    for i in range(100,200):
+        delta_center = abs(cam_data[i+1] - cam_data[i])
+        delta_center_values.append(delta_center)
+    
+    delta_center_min = min(delta_center_values)
+
+    for j in range(200,len(cam_data)):
+        if abs(cam_data[j+1] - cam_data[j]) < (delta_center_min/beta):
+            ci = cam_data[j]
+            ti = cam_time[j]
+            break
+        
+    return ci, ti
 
 def least_squares_regression(x, y):
     """
@@ -171,8 +222,8 @@ def main():
     f1 = lambda x: np.exp(-(3*(x-2))**2/2.) # gaussian curve from ANA
     f2 = lambda x: 2*f1(x-1) # bigger curve shifted by 1
 
-    xx1 = np.linspace(0,5,100) # same timeframe but different number of points
-    xx2 = np.linspace(0,5,75)
+    xx1 = np.linspace(2,6,100) 
+    xx2 = np.linspace(0,3,75)
     yy1 = f1(xx1)
     yy2 = f2(xx2)
 
@@ -188,7 +239,7 @@ def main():
 
     # now try shifting
 
-    combined = join_data(data1,data2,1)
+    combined = join_data(data1,data2,0.5)
     print(combined)
     plt.plot(combined["time"],combined["value"])
     plt.plot(combined["time"],combined["shifted"])
