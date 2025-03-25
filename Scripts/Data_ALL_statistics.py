@@ -1,10 +1,14 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from Handling_ALL_Functions import get_processed_data
 
 '''Here you can find the code to get meaningful statistical values 
     and the function  to plot the histograms of the four type of errors
     Written by: Manuel Cruz, Diogo Ying.'''
+
+processed_data = get_processed_data(tow=1, sensor_type= "LLS1", overwrite=False)
+print(processed_data)
 
 
 #Here we obtain the mean, median, standard deviation, minimum and maximum
