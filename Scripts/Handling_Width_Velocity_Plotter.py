@@ -67,8 +67,6 @@ def scan_for_min(t_len:float, times:list, values:list)->tuple:
             while times[j] <= times[i] + t_len:
                 sum_x += values[j]**2
                 j+=1
-                debug1 = times[j]
-                debug2 = times[i]
             sums.append(sum_x)
     except IndexError:
         pass # now we're at the end so no point going further
