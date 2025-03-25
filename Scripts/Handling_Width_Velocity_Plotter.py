@@ -1,5 +1,6 @@
 import Handling_ALL_Functions
 import matplotlib.pyplot as plt
+import pandas as pd
 #import numpy as np
 
 def Width_Velocity_Plotter(tow:int):
@@ -10,7 +11,7 @@ def Width_Velocity_Plotter(tow:int):
     times = data.iloc[:,0].values #gets just the time-column
     beta = 2.5
 
-###########################################################################################################
+    ###########################################################################################################
 
     for i in range(200,300):
         delta_width = abs(widths[i+1] - widths[i])
@@ -56,5 +57,35 @@ def Width_Velocity_Plotter(tow:int):
     plt.grid()
     plt.show() 
 
-for k in range(1, 32):
-    Width_Velocity_Plotter(k)
+
+def scan_for_min(t_len:float, frame:pd.Dataframe, datatype:str)->tuple:
+    '''finds the minimum range for the given length and returns the index and time where the minimum starts'''
+
+    values = frame[datatype]
+    times = frame["time"]
+    sums = []
+    try:
+        for i in range(len(values)):
+            sum_x = 0
+            j = i
+            
+            while times[j] <= times[i] + t_len:
+                sum_x += values[j]
+                j+=1
+            sums.append(sum_x)
+    except IndexError:
+        pass # now we're at the end so no point going further
+
+    minimum = min(sums)
+    min_index = sums.index(minimum)
+
+    return min_index, times[min_index]
+
+
+def main():
+
+    for k in range(1, 32):
+        Width_Velocity_Plotter(k)
+
+if __name__ == "__main__":
+    main()
