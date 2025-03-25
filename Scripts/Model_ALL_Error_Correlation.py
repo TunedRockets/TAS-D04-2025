@@ -22,8 +22,7 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
     columns = shape_1[1] + shape_2[1] - 1
     rows = min(shape_1[0], shape_2[0])
 
-    joined = np.empty((rows, columns))
-
+    joined = np.zeros((rows, columns))
     #set which frame is the guiding one:
     if shape_1[0] > shape_2[0]: # guiding is which one that guides the join process
         guide = frame2
@@ -63,11 +62,14 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
 
     joined = pd.DataFrame(joined)
     # gets rid of the metadata, so let's reintroduce it
-    fol_col_names = follower.columns
-    guide_col_names = guide.columns
-    col_names = set(fol_col_names).union(set(guide_col_names)) # hope this keeps order?
+    fol_col_names = list(follower.columns)
+    guide_col_names = list(guide.columns)
+    col_names = ['time'] + guide_col_names[1:] + fol_col_names[1:]
+    # combines them (and excludes first column which is time)
+
+
     # if not then change this
-    joined.columns = list(col_names)  
+    joined.columns = col_names  
 
     return joined
 
@@ -179,16 +181,17 @@ def main():
     data2.columns = ["time", "shifted"]
     
     # plot the different data:
-    plt.plot(data1["time"],data1["value"])
-    plt.plot(data2["time"],data2["shifted"])
-    plt.show()
+    # plt.plot(data1["time"],data1["value"])
+    # plt.plot(data2["time"],data2["shifted"])
+    # plt.show()
 
     # now try shifting
 
     combined = join_data(data1,data2,1)
-    
+    print(combined)
     plt.plot(combined["time"],combined["value"])
-    plt.plot(data2["time"],data2["shifted"])
+    plt.plot(combined["time"],combined["shifted"])
+    plt.show()
 
 
 
