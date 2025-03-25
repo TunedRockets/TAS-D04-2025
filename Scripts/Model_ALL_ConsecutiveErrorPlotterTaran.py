@@ -69,6 +69,7 @@ for i in range(num_bins):
 
 # Plot Histograms of Deviations per Bin
 
+
 rows, cols = 4, 5
 fig, axes = plt.subplots(rows, cols, figsize=(20, 10))
 fig.suptitle("Histograms of Deviations per Bin (Training Data)", fontsize=16)
