@@ -82,9 +82,7 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
 
 
             for j in range(1, follower.shape[1]):
-                data_debug = follower.iloc[i_f][j]
-                join_index = j + guide.shape[1] - 1 # -1 due to the time being removed
-                joined[i][join_index] = data_debug  # puts it in the row after the guide
+                joined[i][j + guide.shape[1]] = follower.iloc[i_f][j+1] # puts it in the row after the guide
     except IndexError:
         # we probably ran out of datapoints in the follower :(
         # but that's fine

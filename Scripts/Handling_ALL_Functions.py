@@ -2,12 +2,12 @@
 For getting data from wherever we save it, and saving the data in that place
 
 Everything is wrapped up in get_processed_data(), just use that and everything will just work :)
-╔═══════════════════════════════════════════════════════╗ 
+╔═══════════════════════════════════════════════════════╗
 ║                                                       ║
 ║  USE GET PROCESSED DATA AND IT DEALS WITH EVERYTHING! ║
 ║  NO NEED TO DO ANITHING ELSE, IT FIXES EVERYTHING!    ║
 ║                                                       ║
-╚═══════════════════════════════════════════════════════╝ 
+╚═══════════════════════════════════════════════════════╝
 """
 
 import numpy as np
@@ -185,12 +185,12 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     sensor_type:str, the type of data to get. valid keys are: "LT","LLS1","LLS2","CAM"\n
     overwrite:bool (optional), If this is true, the function will ignore the cache\n
     and reprocess the raw data. False by default. only do this if something in the processing\n
-    has changed, or if the raw data has changed. 
+    has changed, or if the raw data has changed.
     '''
 
     # generate consistent name:
     # first check if key is valid
-    if sensor_type not in ["LT","LLS1","LLS2","CAM"]:
+    if sensor_type not in ["LT","LLS_A","LLS_B","CAM"]:
         raise KeyError("sensor_type Key was invalid: No such data exists")
     # then that tow exists:
     if tow not in range(1,32):
@@ -217,12 +217,12 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
             data = np.array(Data_CAM_importer.CAM_exceltolist()[tow-1]).T
             processesed_data = _handle_camera(*data[:3])
 
-        case "LLS1":
+        case "LLS_A":
             # Laser Line Sensor 1
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-2]).T
             processesed_data = _handle_LLS(*data[:3])
 
-        case "LLS2":
+        case "LLS_B":
             # Laser Line Sensor 2
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
             processesed_data = _handle_LLS(*data[:3])
@@ -233,7 +233,8 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 
 def main():
     # add testing code here
-    print(get_processed_data(7,"CAM"))
+    print(get_processed_data(7,"LLS_A"))
+
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else

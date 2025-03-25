@@ -1,10 +1,15 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from Handling_ALL_Functions import get_processed_data
 
 '''Here you can find the code to get meaningful statistical values 
     and the function  to plot the histograms of the four type of errors
     Written by: Manuel Cruz, Diogo Ying.'''
+
+processed_data = get_processed_data(tow=1, sensor_type= "LLS_A", overwrite=False)
+processed_data.columns = ["time", "width", "center",  "error_LLS_A"]
+print(processed_data)
 
 
 #Here we obtain the mean, median, standard deviation, minimum and maximum
@@ -16,7 +21,7 @@ import numpy as np
     or in the DataFrame where the data is stored!'''
 def statistical_values(data: pd.DataFrame):
     # Find the statistical values of the data
-    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_camera']]
+    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
     mean = []
     median = []
     std = []
@@ -58,12 +63,12 @@ def plot_histograms(data: pd.DataFrame, title: str):
     # Created lists for the parameters I need in the for loop, because we cannot say 
     # for e.g. data['error_LLS_A'] in a for loop (it has to have an associated number)
     # and in lists you can refer to strings and so on as a number (the index)!
-    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_camera']]
-    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT','error_camera']
+    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
+    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT','error_CAM']
     titles = ['Error LLS A vs. time', 
               'Error LLS B vs. time',
               'Error Laser Tracker vs. time',
-              'Error camera vs. time']
+              'Error Camera vs. time']
     
     # Algorithm to make the code more readable than hard-code every plot (see below)
     for i, error in enumerate(errors):
