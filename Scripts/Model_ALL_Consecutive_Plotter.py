@@ -338,9 +338,9 @@ def main():
 #    # print(LT_data)
 #    plot_LT(LT_data, 'Laser Tracker')
 
-    LLS1_data = get_processed_data(2, "LLS1")
+    LLS1_data = get_processed_data(2, "LLS_A")
     print(LLS1_data)
-    plot_LLS(LLS1_data, 'LLS1')
+    plot_LLS(LLS1_data, 'LLS_A')
 #
 #    LLS2_data = LLS_exceltoarray()
 #    plot_LLS(LLS2_data, 'LLS2')
