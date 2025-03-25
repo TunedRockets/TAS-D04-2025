@@ -6,8 +6,6 @@ import numpy as np
     and the function  to plot the histograms of the four type of errors
     Written by: Manuel Cruz, Diogo Ying.'''
 
-# TODO: find the statistical values (mean, median, std, min, max) of the data
-# TODO: Create histograms of the four error types
 
 #Here we obtain the mean, median, standard deviation, minimum and maximum
 # of the four error types.

@@ -4,18 +4,14 @@ to test out stuff
 
 '''
 
-import Scripts.Handling_ALL_Functions as Handling_ALL_Functions
-import Scripts.Data_LT_importer as Data_LT_importer
+import Handling_ALL_Functions
 
-# Code to call the function multiple times.
-def repeat_function(func, n):
-    for i in range(n):
-        func()
-repeat_function(Handling_ALL_Functions.handle_LT, 3)
+# code to get all the data into .pkl
+# runs all the data and overwrites
 
+codes = ["LT","LLS1","LLS2","CAM"]
+tows = range(1,32)
 
-# get cool data
-table = Handling_ALL_Functions.handle_LT(Data_LT_importer._get_laser_tracker_raw(3))
-
-print(table)
-
+for code in codes:
+    for tow in tows:
+        Handling_ALL_Functions.get_processed_data(tow,code, True)

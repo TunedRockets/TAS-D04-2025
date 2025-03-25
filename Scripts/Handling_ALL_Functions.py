@@ -1,7 +1,13 @@
 """
 For getting data from wherever we save it, and saving the data in that place
 
-not the sorting, importing, or parsing. 
+Everything is wrapped up in get_processed_data(), just use that and everything will just work :)
+╔═══════════════════════════════════════════════════════╗ 
+║                                                       ║
+║  USE GET PROCESSED DATA AND IT DEALS WITH EVERYTHING! ║
+║  NO NEED TO DO ANITHING ELSE, IT FIXES EVERYTHING!    ║
+║                                                       ║
+╚═══════════════════════════════════════════════════════╝ 
 """
 
 import numpy as np
@@ -9,14 +15,14 @@ import pandas as pd
 
 
 from constants import z_ref
-# import Data_LLS_AB_importer
-# import Data_LT_importer
-# import Data_CAM_importer
+import Data_LLS_AB_importer
+import Data_LT_importer
+import Data_CAM_importer
 
 ################################################################################################################
 """Functions for Laser Tracker"""
 
-def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
+def _handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     """"This function takes the processed data and
         creates new data points for each time stamp
         where each point in time has a corresponding
@@ -25,23 +31,25 @@ def handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
     rows = len(time)
     columns = 6
     shape = (rows, columns)
-    np_array = np.empty(shape)
-    pandas_table = pd.DataFrame(np_array)
-    error_y, error_z = error_LT(y, z, tow)
+    pandas_table = np.empty(shape)
+    error_y, error_z = _error_LT(y, z, tow)
+    zero_time = time_to_float(time[0])
 
     for i in range(len(x)):
-        pandas_table[i][0] = time[i]
+        pandas_table[i][0] = time_to_float(time[i]) - zero_time
         pandas_table[i][1] = x[i]
         pandas_table[i][2] = y[i]
         pandas_table[i][3] = z[i]
-        pandas_table[i][4] = error_y[i]
+        pandas_table[i][4] = error_y[i] # This is the y-error, it is just a better naming
         pandas_table[i][5] = error_z[i]
     # (Optional) Rename the columns to something more readable:
-    pandas_table.columns = ["time", "x", "y", "z", "y error", "z error"]
+    pandas_table = pd.DataFrame(pandas_table)
+
+    pandas_table.columns = ["time", "x", "y", "z", "error_LT", "z error"]
 
     return pandas_table
 
-def error_LT(y: list, z: list, tow_number)->list:
+def _error_LT(y: list, z: list, tow_number)->list:
     """"This function takes a given tow path
         and calculates the error between the
         actual path and the intended path"""
@@ -60,49 +68,65 @@ def error_LT(y: list, z: list, tow_number)->list:
 ################################################################################################################
 """Functions for Laser Line Scanner"""
 
-def handle_LLS(time: list, width: list, center: list) -> pd.DataFrame:
+def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
     """"This function takes the processed data and
         creates new data points for each time stamp
         where each point in time has a corresponding
         width and its the center of the tow"""
     
+
+    
+    rows = len(time)
+    columns = 4
+    shape = (rows, columns)
+    pandas_table = np.empty(shape)
+    zero_time = time_to_float(time[0])
+
+    for i in range(len(time)):
+        pandas_table[i][0] = time_to_float(time[i]) - zero_time
+        pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
+        pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
+        pandas_table[i][3] = (pandas_table[i][1]-6.36) # error (6.36 is the right width)
+    
+    pandas_table = pd.DataFrame(pandas_table)
+    pandas_table.columns = ["time", "width", "center","width error"]
+
+    return pandas_table
+
+
+
+################################################################################################################
+"""Functions for Camera"""
+
+def _handle_camera(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
     rows = len(time)
     columns = 3
     shape = (rows, columns)
-    np_array = np.empty(shape)
-    pandas_table = pd.DataFrame(np_array)
+    pandas_table = np.empty(shape)
+    zero_time = time_to_float(time[0])
 
     for i in range(len(time)):
-        pandas_table[i][0] = (time[i])
-        pandas_table[i][1] = (width[i])
-        pandas_table[i][2] = (center[i])
-    
-    # (Optional) Rename the columns to something more readable:
+        pandas_table[i][0] = time_to_float(time[i]) - zero_time
+        pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
+        pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
+
+    pandas_table = pd.DataFrame(pandas_table)
     pandas_table.columns = ["time", "width", "center"]
 
     return pandas_table
 
 ################################################################################################################
-"""Functions for Camera"""
 
-def handle_camera(time: list) -> pd.DataFrame:
-    rows = len(time)
-    columns = 1
-    shape = (rows, columns)
-    np_array = np.empty(shape)
-    pandas_table = pd.DataFrame(np_array)
+'''extra stuff'''
 
-    for i in range(len(time)):
-        pandas_table[i][0] = time[i]
+def time_to_float(date:str)->float:
+    """converts a string into a float of time"""
+    date = date.strip("'").split(" ")[1]
+    hour, minute, second = date.split(":")
+    return float(second) + float(minute) * 60 + float(hour) * 3600
 
-    # (Optional) Rename the columns to something more readable:
-    pandas_table.columns = ["time",]
 
-    return pandas_table
 
-################################################################################################################
-
-'''linear algebra stuff'''
 
 def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
     '''This function converts the coordinate into a new
@@ -124,17 +148,17 @@ def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
 
 _save_path = "Processed data\\"
 
-def save_table(data_table:pd.DataFrame, short_name:str)-> None:
+def _save_table(data_table:pd.DataFrame, short_name:str)-> None:
     '''This function saves a pandas dataframe as
-        a ., it will be saved with the short name, 
+        a .pkl, it will be saved with the short name, 
         use that to access it'''
     
     data_table.to_pickle(_save_path + short_name + ".pkl")
     # note! this does not save headers or indexes. might need to change that depending on how we do
     return
 
-def load_table(short_name:str)->pd.DataFrame:
-    '''This function reads a csv and turns it into 
+def _load_table(short_name:str)->pd.DataFrame:
+    '''This function reads a pkl and turns it into 
         a panda Dataframe. access it with the same name 
         used in the save_csv() function if file doesn't exist it returns none'''
     
@@ -151,66 +175,58 @@ def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
     data_table.to_csv(_save_path + name)
     return None
 
-def get_processed_data(tow:int, type:str, overwrite=False)->pd.DataFrame:
-    '''This function loads the processed data, grabbing it from raw if it does not yet exist
-    the type specifies what data to grab. use the keys: "LT","LLS1","LLS2","CAM"
-    if overwrite is true, it will grab from the raw regardless if data exists.'''
+def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
+    '''This function loads the processed data, grabbing it from raw if it does not yet exist\n
+    the type specifies what data to grab. use the keys: "LT","LLS1","LLS2","CAM"\n
+    if overwrite is true, it will grab from the raw regardless if data exists or not.'''
 
     # generate consistent name:
     # first check if key is valid
-    if type not in ["LS","LLS1","LLS2","CAM"]:
+    if sensor_type not in ["LT","LLS1","LLS2","CAM"]:
         raise KeyError("No such data exists")
     # then that tow exists:
     if tow not in range(1,32):
         raise IndexError("Tow ID out of range")
     # set the name
-    name = type + "_" + str(tow)
+    name = sensor_type + "_" + str(tow)
 
     # check if file exists:
-    if data := load_table(name) and not overwrite:
+    data = _load_table(name)
+
+    if data is not None and not overwrite:
         #if true the data already exists, return it:
         return data
     # else the data doesn't exist, grab it
-    match type:
+    print(f"No file with code {name} cached. Generating new data...")
+    match sensor_type:
         case "LT":
             # Laser Tracker
-            data = ... # ADD THE LT DATA HERE
-            processesed_data = handle_LT(*data)
-            save_table(processesed_data, name) # save the data
-            return processesed_data
+            data = np.array(Data_LT_importer.LT_exceltolist()[tow-1]).T
+            processesed_data = _handle_LT(*data[1:], tow)
+
         case "CAM":
             # Camera Data
-            data = ... # ADD THE CAM DATA HERE
-            processesed_data = handle_camera(*data)
-            save_table(processesed_data, name) # save the data
-            return processesed_data
+            data = np.array(Data_CAM_importer.CAM_exceltolist()[tow-1]).T
+            processesed_data = _handle_camera(*data[:3])
+
         case "LLS1":
             # Laser Line Sensor 1
-            data = ... # ADD THE LLS1 DATA HERE
-            processesed_data = handle_LLS(*data)
-            save_table(processesed_data, name) # save the data
-            return processesed_data
+            data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-2]).T
+            processesed_data = _handle_LLS(*data[:3])
+
         case "LLS2":
             # Laser Line Sensor 2
-            data = ... # ADD THE LLS2 DATA HERE
-            processesed_data = handle_LLS(*data)
-            save_table(processesed_data, name) # save the data
-            return processesed_data
+            data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
+            processesed_data = _handle_LLS(*data[:3])
+    _save_table(processesed_data, name) # save the data
+    return processesed_data
 
 ################################################################################################################
 
 def main():
-    
     # add testing code here
-    foo = pd.DataFrame([[1,1,1], [1,2,3], ["hello", "world", "!"]])
-    foo.index = ["ones", "range", "strings"]
-    foo.columns = [1,2,3]
+    print(get_processed_data(7,"LT"))
 
-    print(foo)
-    save_table(foo, "test")
-
-    bar = load_table("blard")
-    print(bar)
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
