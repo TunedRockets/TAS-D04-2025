@@ -53,7 +53,7 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, desync)-> pd.DataFrame:
             # picks the closest one
 
 
-            for j in range(1, follower.shape[1]-1):
+            for j in range(1, follower.shape[1]):
                 joined[i][j + guide.shape[1]] = follower.iloc[i_f][j+1] # puts it in the row after the guide
     except IndexError:
         # we probably ran out of datapoints in the follower :(
