@@ -5,6 +5,7 @@ from scipy.optimize import curve_fit
 import scipy.stats as stats
 from sklearn.model_selection import train_test_split
 from Data_CAM_importer import CAM_exceltolist
+from scipy.stats import linregress
 
 # Load and Prepare Data
 
@@ -22,7 +23,6 @@ combined_fifth_column_array = np.concatenate(fifth_column_arrays, axis=0)
 x_values = combined_fifth_column_array[:-1]
 y_values = combined_fifth_column_array[1:]
 
-# Train-Test Split
 
 # Split into training and testing ( 50% train, 50% test)
 x_train, x_test, y_train, y_test = train_test_split(
@@ -30,7 +30,6 @@ x_train, x_test, y_train, y_test = train_test_split(
 )
 
 # Binning and Averaging on Training Data
-
 num_bins = 20
 
 # Sort training x-values and reorder y-values accordingly
@@ -45,11 +44,14 @@ bin_edges = np.linspace(0, len(x_sorted), num_bins + 1, dtype=int)
 x_binned = [np.mean(x_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
 y_binned = [np.mean(y_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
 
-# catter Plot with Binned Averages
+#scatter Plot with Binned Averages and regression model
+slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
+print(r_value)
 
 plt.figure(figsize=(8, 6))
 plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Data")
 plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
+plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
 plt.xlabel("X (Train)")
 plt.ylabel("Y (Train)")
 plt.title("Scatter Plot with Equal-Count Binning (Train Data)")
