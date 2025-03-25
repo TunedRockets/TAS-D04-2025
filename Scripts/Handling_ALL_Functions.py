@@ -182,7 +182,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     the function parameters are:\n
     \n
     tow:int, the index of the tow from 1 to 32\n
-    sensor_type:str, the type of data to get. valid keys are: "LT","LLS1","LLS2","CAM"\n
+    sensor_type:str, the type of data to get. valid keys are: "LT","LLS_A","LLS_B","CAM"\n
     overwrite:bool (optional), If this is true, the function will ignore the cache\n
     and reprocess the raw data. False by default. only do this if something in the processing\n
     has changed, or if the raw data has changed.
