@@ -4,6 +4,10 @@ import pandas as pd
 
 import Handling_ALL_Functions as hf
 
+#TODO: Change all functions. It is only possible to plot one graph per function call
+#TODO: Make each function only to plot one error vs time/distance
+#TODO: We need to call the function four times for the four error types.
+
 
 # Plot the error of each sensor vs. Distance
 '''Note: It might be necessary to change the names of the errors when calling the DataFrame 'data'.
@@ -61,6 +65,8 @@ def error_vs_distance_plot(data: pd.DataFrame, title: str):
     or in the DataFrame where the data is stored!'''
 def error_vs_time_plot(data: pd.DataFrame, title: str):
 
+
+    fig, ax = plt.subplots(figsize=(8, 5))
     '''I created a for loop to plot the errors of the four sensors vs. time,
         so that I don't have to write so much code.
         Written by: Manuel Cruz'''
@@ -148,7 +154,7 @@ def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
         error_camera = camera '''
 
     ax.plot(data['Time'], data['error_LLS_A'])
-    ax.plot(data['Time'], data['error_LLS_b'])
+    ax.plot(data['Time'], data['error_LLS_B'])
     ax.plot(data['Time'], data['error_LT'])
     ax.plot(data['Time'], data['error_camera'])
 
@@ -162,6 +168,8 @@ def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
 
 data = hf.get_processed_data(1, "LT", overwrite=False)
 print(data)
+
+
 
 # This is just a backup algorithm (hard-coded) in case the for loop doesn't work.
 '''def error_vs_distance_plot(data: pd.DataFrame, title: str):
