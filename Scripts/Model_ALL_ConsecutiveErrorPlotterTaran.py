@@ -146,7 +146,7 @@ for i in range(num_bins):
     bin_x_values = x_sorted[bin_start:bin_end]
     y_mean = y_binned[i]
     mu, std = stats.norm.fit(bin_devs)
-    variance = std**2
+    variance = std**2   
     count = bin_end - bin_start  # Number of points in this bin
 
     # Get min and max x for this bin
