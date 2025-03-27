@@ -203,6 +203,7 @@ def create_cache()->None:
     for code in codes:
         for tow in tows:
             get_processed_data(tow,code, True)
+    print("Cache created!")
 
 def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     '''
