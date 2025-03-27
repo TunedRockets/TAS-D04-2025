@@ -382,9 +382,9 @@ def get_synced_data(tow:int, *args:str)->pd.DataFrame:
 
 def main():
 
-    for k in range(1, 32):
-        print(k)
-        LLS_sync(k, "LLS_A")
+    #for k in range(1, 32):
+        #print(k)
+        LLS_sync(1, "LLS_A")
 
 if __name__ == "__main__":
     main()
