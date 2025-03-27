@@ -58,7 +58,7 @@ def get_all_sensor_data():
     # Process CAM sensor data
     # ---------------------------
     for w in range(1, 32):
-        processed_data_CAM = get_processed_data(tow=w, sensor_type="CAM", overwrite=True)
+        processed_data_CAM = get_processed_data(tow=w, sensor_type="CAM", overwrite=False)
 
         processed_data_CAM = processed_data_CAM[["time", "error_CAM"]]
         results_CAM.append(processed_data_CAM)
@@ -134,7 +134,10 @@ def main():
     mean, median, std, minimum, maximum = statistical_values(df_error)
 
 
-    labels = ["LLS A", "LLS B", "LT", "CAM"]
+    labels = ["Tape Width Before Compression", 
+              "Tape Width After Compression", 
+              "Robot Position", 
+              "Tape Lateral Movement"]
 
     for i, label in enumerate(labels):
         print(f"{label}:")

@@ -204,7 +204,7 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
         t = 40*t
     if sensor_type == "LLS_A":
         t = 25*t
-    index_stop, time_stop = scan_for_min(t, times, width_velocities, 3.5, 5.5)    
+    index_stop, time_stop = scan_for_min(t, times, width_velocities, 4.5, 7)    
     
 
     print(time_stop)
@@ -257,7 +257,7 @@ def scan_for_min(t_len:float, times:list, values:list, start_time:float, end_tim
 
     return min_index, times[min_index+ti]
 
-def camera_sync(cam_data: list, cam_time: list):
+def camera_sync(tow:int, sensor_type:str, overwrite=False):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
@@ -266,22 +266,55 @@ def camera_sync(cam_data: list, cam_time: list):
         Then the coressponding time at xi is ti and this time can be used to sync the CAM data with
         other data sets"""
 
-    beta = 2
-    delta_center_values = []
+    center_velocities = [] # Set up list of velocities
+    delta_center_list = []
+    data = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite) # get data, first argument 1-31, second has to stay "LLS_B"
+    centers = data.iloc[:,1].values #gets just the width-column
+    times = data.iloc[:,0].values #gets just the time-column
+    beta = 2.5
 
-    for i in range(100,200):
-        delta_center = abs(cam_data[i+1] - cam_data[i])
-        delta_center_values.append(delta_center)
+    for i in range(len(centers)-1):
+        center_velocities.append(centers[i+1] - centers[i])
+    center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
+
+    ###########################################################################################################
+
+    for i in range(200,300):
+        delta_center = abs(centers[i+1] - centers[i])
+        delta_center_list.append(delta_center)
     
-    delta_center_min = min(delta_center_values)
+        sorted_values = sorted(set(delta_center_list))  # Remove duplicates and sort
 
-    for j in range(200,len(cam_data)):
-        if abs(cam_data[j+1] - cam_data[j]) < (delta_center_min/beta):
-            ci = cam_data[j]
-            ti = cam_time[j]
-            break
-        
-    return ci, ti
+        if len(sorted_values) > 1:
+            second_min = sorted_values[1]  # Second smallest value
+        else:
+            second_min = None  # No second minimum available
+
+    print("Second Minimum:", second_min)
+
+    delta_center_min = second_min
+    
+    xi, t = find_x930(Handling_ALL_Functions.get_processed_data(1, "LT")["x"], Handling_ALL_Functions.get_processed_data(1, "LT")["time"])
+    index_stop, time_stop = scan_for_min(t, times, center_velocities, 3.5, 5.5)    
+    
+
+    print(time_stop)
+    ##########################################################################################################
+
+
+
+    # #Loop over all the data points and store results
+    # for i in range(len(widths)-1): 
+    #     width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
+    #     width_velocities.append(width_velocity)
+
+    plt.plot(times, center_velocities, label="center_velocities", color="red")
+    plt.title("center velocity")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Rate of change of tow center [m/s]")
+    plt.plot(time_stop,0, "-o")
+    plt.grid()
+    plt.show() 
 
 def least_squares_regression(x, y):
     """
@@ -385,10 +418,9 @@ def get_synced_data(tow:int, *args:str)->pd.DataFrame:
     return ...
 
 def main():
-
-    #for k in range(1, 32):
-        #print(k)
-        LLS_sync(1, "LLS_A")
+    for k in range(1,32):
+        print(k)
+        camera_sync(k, "CAM")
 
 if __name__ == "__main__":
     main()
