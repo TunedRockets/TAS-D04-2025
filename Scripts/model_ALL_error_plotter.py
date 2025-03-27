@@ -111,8 +111,10 @@ def error_vs_time_plot(df_lls_a, df_lls_b, df_lt, df_cam, title: str):
         ax[row, col].plot(times[i], errors[i])
         ax[row, col].set_title(titles[i])
         ax[row, col].set_xlabel('Time (s)')
-        ax[row, col].set_ylabel_
+        ax[row, col].set_ylabel('Error')
 
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.show()
 
 
 # Plot every error line in the same plot vs. X distance
@@ -174,7 +176,7 @@ def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
     plt.show()
 
 
-tow = 2
+tow = 3
 
 # Load and rename error columns as needed
 df_lls_a = get_processed_data(tow, 'LLS_A').rename(columns={'width error': 'error_LLS_A'})
@@ -186,6 +188,7 @@ df_cam   = get_processed_data(tow, 'CAM')
 
 # Now call the function
 error_vs_time_plot(df_lls_a, df_lls_b, df_lt, df_cam, title=f"Errors vs Time for Tow {tow}")
+
 
 
 
