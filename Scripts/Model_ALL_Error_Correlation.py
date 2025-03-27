@@ -182,29 +182,12 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
         width_velocities.append(widths[i+1] - widths[i])
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
 
-    ###########################################################################################################
-
-    for i in range(200,300):
-        delta_width = abs(widths[i+1] - widths[i])
-        delta_width_list.append(delta_width)
-    
-        sorted_values = sorted(set(delta_width_list))  # Remove duplicates and sort
-
-        if len(sorted_values) > 1:
-            second_min = sorted_values[1]  # Second smallest value
-        else:
-            second_min = None  # No second minimum available
-
-    print("Second Minimum:", second_min)
-
-    delta_width_min = second_min
-    
     xi, t = find_x930(Handling_ALL_Functions.get_processed_data(1, "LT")["x"], Handling_ALL_Functions.get_processed_data(1, "LT")["time"])
     if sensor_type == "LLS_B":
         t = 40*t
     if sensor_type == "LLS_A":
         t = 25*t
-    index_stop, time_stop = scan_for_min(t, times, width_velocities, 4.5, 7)    
+    index_stop, time_stop = scan_for_min(t, times, width_velocities, 3.5, 5.5)    
     
 
     print(time_stop)
@@ -276,23 +259,6 @@ def camera_sync(tow:int, sensor_type:str, overwrite=True):
         center_velocities.append(centers[i+1] - centers[i])
     center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
 
-    ###########################################################################################################
-
-    for i in range(100,250):
-        delta_center = abs(centers[i+1] - centers[i])
-        delta_center_list.append(delta_center)
-    
-        sorted_values = sorted(set(delta_center_list))  # Remove duplicates and sort
-
-        if len(sorted_values) > 1:
-            second_min = sorted_values[1]  # Second smallest value
-        else:
-            second_min = None  # No second minimum available
-
-    print("Second Minimum:", second_min)
-
-    delta_center_min = second_min
-    
     xi, t = find_x930(Handling_ALL_Functions.get_processed_data(1, "LT")["x"], Handling_ALL_Functions.get_processed_data(1, "LT")["time"])
     index_stop, time_stop = scan_for_min(t, times, center_velocities, 3.5, 5.5)    
     
