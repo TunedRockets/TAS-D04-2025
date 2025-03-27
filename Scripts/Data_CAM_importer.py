@@ -3,7 +3,7 @@ import pandas as pd
 # Load the Excel file
 CAM_file_path = 'Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx'  # Replace with your Excel file path
 
-def CAM_exceltolist(CAM_file_path):
+def CAM_exceltolist():
     # Read the Excel file into a dictionary where the keys are the sheet names
     # and the values are the dataframes for each sheet.
     excel_data = pd.read_excel(CAM_file_path, sheet_name=None)
