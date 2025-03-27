@@ -17,10 +17,17 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import scipy.stats as stats
 from sklearn.model_selection import train_test_split
-from Data_CAM_importer import CAM_exceltolist
 from scipy.stats import linregress
 
 # Load and Prepare Data
+def CAM_exceltolist(file_path):
+    excel_data = pd.read_excel(file_path, sheet_name=None)
+    CAM_sheets_data = []
+    for sheet_name, sheet_df in excel_data.items():
+        if sheet_name.startswith("Sheet"):
+            CAM_sheet_df = sheet_df.iloc[:, 0:]
+            CAM_sheets_data.append(CAM_sheet_df)
+    return CAM_sheets_data
 
 # Load Excel data using custom importer
 CAM_file_path = r'Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx'
