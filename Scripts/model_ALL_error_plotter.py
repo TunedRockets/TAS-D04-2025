@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 import Handling_ALL_Functions as hf
+from Handling_ALL_Functions import get_processed_data
 
 #TODO: Change all functions. It is only possible to plot one graph per function call
 #TODO: Make each function only to plot one error vs time/distance
@@ -26,7 +27,7 @@ def error_vs_distance_plot(data: pd.DataFrame, title: str):
     ''' error_LLS_A = LLS A
         error_LLS_B = LLS B
         error_LT = Laser tracker 
-        error_camera = camera'''
+        error_CAM = camera'''
     
     # Create a 2x2 grid (ax) to subplots
     fig, ax = plt.subplots(2, 2, figsize=(10, 8))  
@@ -35,8 +36,8 @@ def error_vs_distance_plot(data: pd.DataFrame, title: str):
     # Created lists for the parameters I need in the for loop, because we cannot say 
     # for e.g. data['error_LLS_A'] in a for loop (it has to have an associated number)
     # and in lists you can refer to strings and so on as a number (the index)! 
-    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_camera']]
-    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT','error_camera']
+    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
+    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT','error_CAM']
     titles = ['Error LLS A vs. X position', 
               'Error LLS B vs. X position',
               'Error Laser Tracker vs. X position',
@@ -57,7 +58,7 @@ def error_vs_distance_plot(data: pd.DataFrame, title: str):
     plt.show()
 
 
-# Plot the error of each sensor vs. TIME
+# Plot the error of each sensor vs. time
 '''Note: It might be necessary to change the names of the errors when calling the DataFrame 'data'.
     For example: In the below function, I call data['error_LLS_A'],
     but the name in the DataFrame might not be the same!,
@@ -76,7 +77,7 @@ def error_vs_time_plot(data: pd.DataFrame, title: str):
     ''' error_LLS_A = LLS A
         error_LLS_B = LLS B
         error_LT = Laser tracker 
-        error_camera = camera'''
+        error_CAM = camera'''
     
     # Create a 2x2 grid (ax) to subplots
     fig, ax = plt.subplots(2, 2, figsize=(10, 8))  
@@ -85,8 +86,12 @@ def error_vs_time_plot(data: pd.DataFrame, title: str):
     # Created lists for the parameters I need in the for loop, because we cannot say 
     # for e.g. data['error_LLS_A'] in a for loop (it has to have an associated number)
     # and in lists you can refer to strings and so on as a number (the index)!
-    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_camera']]
-    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT','error_camera']
+    errors = [data['error_LLS_A'], 
+        data['error_LLS_B'], 
+        data['error_LT'], 
+        data['error_CAM']]
+    
+    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT','error_CAM']
     titles = ['Error LLS A vs. time', 
               'Error LLS B vs. time',
               'Error Laser Tracker vs. time',
@@ -100,7 +105,7 @@ def error_vs_time_plot(data: pd.DataFrame, title: str):
         # Just plotting and creating titles and labels for the plots
         ax[row, col].plot(data['time'], error)
         ax[row, col].set_title(titles[i])
-        ax[row, col].set_xlabel('Time')
+        ax[row, col].set_xlabel('time')
         ax[row, col].set_ylabel(errors_names[i])
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
@@ -123,12 +128,12 @@ def all_errors_vs_distance_plot(data: pd.DataFrame, title:str):
     ''' error_LLS_A = LLS A
         error_LLS_B = LLS B
         error_LT = Laser tracker 
-        error_camera = camera '''
+        error_CAM = camera '''
 
     ax.plot(data['distance'], data['error_LLS_A'])
     ax.plot(data['distance'], data['error_LLS_b'])
     ax.plot(data['distance'], data['error_LT'])
-    ax.plot(data['distance'], data['error_camera'])
+    ax.plot(data['distance'], data['error_CAM'])
 
     # Identify every line in the plot
     ax.legend()
@@ -145,18 +150,18 @@ def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
 
     fig, ax = plt.subplots(figsize=(10, 8))
     ax.set_title('All errors vs. time')  # Set main title for the figure
-    ax.set_xlabel('Time')
+    ax.set_xlabel('time')
     ax.set_ylabel('Error')
 
     ''' error_LLS_A = LLS A
         error_LLS_B = LLS B
         error_LT = Laser tracker 
-        error_camera = camera '''
+        error_CAM = camera '''
 
-    ax.plot(data['Time'], data['error_LLS_A'])
-    ax.plot(data['Time'], data['error_LLS_B'])
-    ax.plot(data['Time'], data['error_LT'])
-    ax.plot(data['Time'], data['error_camera'])
+    ax.plot(data['time'], data['error_LLS_A'])
+    ax.plot(data['time'], data['error_LLS_B'])
+    ax.plot(data['time'], data['error_LT'])
+    ax.plot(data['time'], data['error_CAM'])
 
     # Identify every line in the plot
     ax.legend()
@@ -166,8 +171,32 @@ def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
     plt.show()
 
 
-data = hf.get_processed_data(1, "LT", overwrite=False)
-print(data)
+tow = 1
+df_combined = pd.DataFrame()
+
+# LLS A
+df_lls_a = get_processed_data(tow, 'LLS_A')
+df_lls_a = df_lls_a.rename(columns={'width error': 'error_LLS_A'})
+df_combined['time'] = df_lls_a['time']
+df_combined['error_LLS_A'] = df_lls_a['error_LLS_A']
+
+# LLS B
+df_lls_b = get_processed_data(tow, 'LLS_B')
+df_lls_b = df_lls_b.rename(columns={'width error': 'error_LLS_B'})
+df_combined['error_LLS_B'] = df_lls_b['error_LLS_B']
+
+# Laser Tracker
+df_lt = get_processed_data(tow, 'LT')
+df_combined['error_LT'] = df_lt['error_LT']
+
+# Camera
+df_cam = get_processed_data(tow, 'CAM')
+df_combined['error_CAM'] = df_cam['error_CAM']
+
+
+# Now call the function
+error_vs_time_plot(df_combined, title=f"Errors vs Time for Tow {tow}")
+
 
 
 
@@ -178,12 +207,12 @@ print(data)
     error_LLS_A = LLS A
         error_LLS_B = LLS B
         error_LT = Laser tracker 
-        error_camera = camera
+        error_CAM = camera
     
     error_LLS_A = data['error_LLS_A']
     error_LLS_B = data['error_LLS_B']
     error_LT = data['error_LT']
-    error_camera = data['error_camera']
+    error_CAM = data['error_CAM']
 
     fig, ax = plt.subplots()
 
@@ -206,7 +235,7 @@ print(data)
     ax[1, 0].set_ylabel('Error Laser Tracker')
 
     # Plot the error of camera vs. distance
-    ax[1, 1].plot(data['distance'], error_camera)
+    ax[1, 1].plot(data['distance'], error_CAM)
     ax[1, 1].set_title('Error camera vs. distance')
     ax[1, 1].set_xlabel('X Position')
     ax[1, 1].set_ylabel('Error camera')
@@ -217,7 +246,7 @@ print(data)
 
         ax[row, col].plot(data['time'], error)
         ax[row, col].set_title(titles[i])
-        ax[row, col].set_xlabel('Time')
+        ax[row, col].set_xlabel('time')
         ax[row, col].set_ylabel(errors_names[i])
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])

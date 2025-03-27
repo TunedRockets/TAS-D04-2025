@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from Handling_ALL_Functions import get_processed_data
 
-""" Written by Manuel and Diogo, this python imports the processed data from handling all functions and makes the different error plots for the sensors"""
+""" Written by Manuel and Diogo, this python imports the processed data from 
+    Handling_ALL_Functions and makes the different error plots for the sensors"""
 
 def get_all_sensor_data():
     results_LLSA = []
@@ -16,11 +17,6 @@ def get_all_sensor_data():
     # ---------------------------
     for i in range(1, 32):
         processed_data_LLSA = get_processed_data(tow=i, sensor_type="LLS_A", overwrite=False)
-
-        # Debug prints
-        print(f"LLS_A raw data (tow={i}) shape:", processed_data_LLSA.shape)
-        print("LLS_A raw columns:", list(processed_data_LLSA.columns))
-        print(processed_data_LLSA.head(), "\n")
 
         # If there are more than 4 columns, keep only the first 4
         if processed_data_LLSA.shape[1] > 4:
@@ -39,10 +35,6 @@ def get_all_sensor_data():
     for j in range(1, 32):
         processed_data_LLSB = get_processed_data(tow=j, sensor_type="LLS_B", overwrite=False)
 
-        # Debug prints
-        print(f"LLS_B raw data (tow={j}) shape:", processed_data_LLSB.shape)
-        print("LLS_B raw columns:", list(processed_data_LLSB.columns))
-        print(processed_data_LLSB.head(), "\n")
 
         if processed_data_LLSB.shape[1] > 4:
             processed_data_LLSB = processed_data_LLSB.iloc[:, :4]
@@ -59,18 +51,7 @@ def get_all_sensor_data():
     for k in range(1, 32):
         processed_data_LT = get_processed_data(tow=k, sensor_type="LT", overwrite=False)
 
-        # Debug prints
-        print(f"LT raw data (tow={k}) shape:", processed_data_LT.shape)
-        print("LT raw columns:", list(processed_data_LT.columns))
-        print(processed_data_LT.head(), "\n")
-
-        if processed_data_LT.shape[1] > 4:
-            processed_data_LT = processed_data_LT.iloc[:, :4]
-        # If only 3 columns, insert a placeholder at index 1 (assuming 'width' is missing)
-        elif processed_data_LT.shape[1] == 3:
-            processed_data_LT.insert(1, "temp", np.nan)
-
-        processed_data_LT.columns = ["time", "width", "center", "error_LT"]
+        processed_data_LT = processed_data_LT[["time", "error_LT"]]
         results_LT.append(processed_data_LT)
 
     # ---------------------------
@@ -79,18 +60,7 @@ def get_all_sensor_data():
     for w in range(1, 32):
         processed_data_CAM = get_processed_data(tow=w, sensor_type="CAM", overwrite=False)
 
-        # Debug prints
-        print(f"CAM raw data (tow={w}) shape:", processed_data_CAM.shape)
-        print("CAM raw columns:", list(processed_data_CAM.columns))
-        print(processed_data_CAM.head(), "\n")
-
-        if processed_data_CAM.shape[1] > 4:
-            processed_data_CAM = processed_data_CAM.iloc[:, :4]
-        # If only 3 columns, insert a placeholder at index 2 (assuming 'center' is missing)
-        elif processed_data_CAM.shape[1] == 3:
-            processed_data_CAM.insert(2, "temp", np.nan)
-
-        processed_data_CAM.columns = ["time", "width", "center", "error_CAM"]
+        processed_data_CAM = processed_data_CAM[["time", "error_CAM"]]
         results_CAM.append(processed_data_CAM)
 
     # Combine into one DataFrame per sensor type
@@ -162,11 +132,23 @@ def main():
 
     # Compute stats
     mean, median, std, minimum, maximum = statistical_values(df_error)
-    print("Mean:", mean)
-    print("Median:", median)
-    print("Standard Deviation:", std)
-    print("Min:", minimum)
-    print("Max:", maximum)
+
+
+    labels = ["Tape Width Before Compression", 
+              "Tape Width After Compression", 
+              "Robot Position", 
+              "Tape Lateral Movement"]
+
+    for i, label in enumerate(labels):
+        print(f"{label}:")
+        print(f"  Mean: {mean[i]}")
+        print(f"  Median: {median[i]}")
+        print(f"  Std Dev: {std[i]}")
+        print(f"  Min: {minimum[i]}")
+        print(f"  Max: {maximum[i]}")
+        print()
+
+
 
     # Plot histograms
     plot_histograms(df_error, "Sensor Error Histograms")
