@@ -12,7 +12,8 @@ Everything is wrapped up in get_processed_data(), just use that and everything w
 
 import numpy as np
 import pandas as pd
-
+import glob
+import os
 
 from constants import z_ref
 import Data_LLS_AB_importer
@@ -174,6 +175,31 @@ def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
     data_table.to_csv(_save_path + name)
     return None
 
+def purge_cache(confirmation:bool = False)->None:
+    '''gets rid of all the files in the cache.\n
+    Warning! don't do this unless you're sure you want to\n
+    you will have to generate all the data again'''
+
+    print("purging cache...")
+    if confirmation != True:
+        raise PermissionError("You did not give confirmation for purging the cache. are you sure you want to do this?")
+
+    files = glob.glob(_save_path + "*")
+    for file in files:
+        if os.path.isfile(file):
+            os.remove(file)
+    print("cache purged")
+
+def create_cache()->None:
+    """runs through all the datatypes and generates the cache, will take some time"""
+    print("Let there be cache...")
+    codes = ["LT","LLS_A","LLS_B","CAM"]
+    tows = range(1,32)
+
+    for code in codes:
+        for tow in tows:
+            get_processed_data(tow,code, True)
+
 def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     '''
     This function handles ALL the grabbing and processing of the raw data\n
@@ -233,6 +259,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 def main():
     # add testing code here
     print(get_processed_data(1,"LT"))
+    pass
 
 
 if __name__ == "__main__":
