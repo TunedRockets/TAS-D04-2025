@@ -17,6 +17,15 @@ from scipy import stats
 from sklearn.model_selection import train_test_split
 from scipy.stats import linregress
 from Data_CAM_importer import CAM_exceltolist
+def CAM_exceltolist(file_path):
+    excel_data = pd.read_excel(file_path, sheet_name=None)
+    CAM_sheets_data = []
+    for sheet_name, sheet_df in excel_data.items():
+        if sheet_name.startswith("Sheet"):
+            CAM_sheet_df = sheet_df.iloc[:, 0:]
+            CAM_sheets_data.append(CAM_sheet_df)
+    return CAM_sheets_data
+
 
 def load_and_prepare_data(file_path, column_index=4): #CHANGE USED COLUMN
     all_sheets_data = CAM_exceltolist(file_path)  #USE different data loader
@@ -26,7 +35,7 @@ def load_and_prepare_data(file_path, column_index=4): #CHANGE USED COLUMN
     combined_array = np.concatenate(column_arrays, axis=0)
     x_values = combined_array[:-1]
     y_values = combined_array[1:]
-    return train_test_split(x_values, y_values, test_size=0.7, random_state=42)
+    return train_test_split(x_values, y_values, test_size=0.3, random_state=42)
 
 def bin_data(x_train, y_train, num_bins):
     sorted_indices = np.argsort(x_train)
@@ -170,4 +179,4 @@ bin_stats_df = summarize_bins(x_sorted, y_binned, bin_edges, deviations_per_bin)
 x_input = 0.3
 prediction_df = predict_next_error(x_input, slope, intercept, x_sorted, bin_edges, deviations_per_bin, 99)
 print("Prediction result:")
-print(prediction_df)
+print(prediction_df)    
