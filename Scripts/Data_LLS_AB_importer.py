@@ -16,7 +16,7 @@ def LLS_exceltoarray():
         if sheet_name.startswith("Run"):
             # Drop the first column (assuming the first column is always the first by index)
             LLS_sheet_df = sheet_df.iloc[:, 0:]
-            LLS_clean_sheet = np.delete(LLS_sheet_df, [1, 2, 3, 4, 5, 6, 10], axis=1)
+            LLS_clean_sheet = np.delete(LLS_sheet_df, [1, 2, 3, 4, 5, 6, 9], axis=1)
             LLS_clean_sheets_data.append(LLS_clean_sheet)
 
     # Now `LLS_clean_sheets_data` contains a list of DataFrames for all sheets starting with "Sheet",
