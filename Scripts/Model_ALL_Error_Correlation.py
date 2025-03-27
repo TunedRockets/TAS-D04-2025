@@ -240,7 +240,7 @@ def scan_for_min(t_len:float, times:list, values:list, start_time:float, end_tim
 
     return min_index, times[min_index+ti]
 
-def camera_sync(tow:int, sensor_type:str, overwrite=True):
+def camera_sync(tow:int, sensor_type:str, overwrite=False):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
