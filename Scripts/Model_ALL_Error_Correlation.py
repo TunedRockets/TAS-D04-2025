@@ -99,6 +99,37 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, shift)-> pd.DataFrame:
 
     return joined
 
+def _test_join_function():
+    '''just a function to test that joining works correctly'''
+     # testing the shifting thing
+    f1 = lambda x: np.exp(-(3*(x-2))**2/2.) # gaussian curve from ANA
+    f2 = lambda x: 2*f1(x-1) # bigger curve shifted by 1
+
+    xx1 = np.linspace(0,3,100) 
+    xx2 = np.linspace(2,6,75)
+    yy1 = f1(xx1)
+    yy2 = f2(xx2)
+
+    data1 = pd.DataFrame(np.array([xx1,yy1]).T)
+    data2 = pd.DataFrame(np.array([xx2,yy2]).T)
+    data1.columns = ["time", "value"]
+    data2.columns = ["time", "shifted"]
+    
+    # plot the different data:
+    # plt.plot(data1["time"],data1["value"])
+    # plt.plot(data2["time"],data2["shifted"])
+    # plt.show()
+
+    # now try shifting
+
+    combined = join_data(data1,data2,1)
+    print(combined)
+    plt.plot(combined["time"],combined["value"])
+    plt.plot(combined["time"],combined["shifted"])
+    plt.show()
+
+
+
 def find_x930(LT_x: list, LT_time):
     """This function grabs a sample of the LT data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
@@ -235,33 +266,8 @@ def plot_errors(error1, error2, error3, error4, error5, error6):
 
 
 def main():
-    
-    # testing the shifting thing
-    f1 = lambda x: np.exp(-(3*(x-2))**2/2.) # gaussian curve from ANA
-    f2 = lambda x: 2*f1(x-1) # bigger curve shifted by 1
-
-    xx1 = np.linspace(0,3,100) 
-    xx2 = np.linspace(2,6,75)
-    yy1 = f1(xx1)
-    yy2 = f2(xx2)
-
-    data1 = pd.DataFrame(np.array([xx1,yy1]).T)
-    data2 = pd.DataFrame(np.array([xx2,yy2]).T)
-    data1.columns = ["time", "value"]
-    data2.columns = ["time", "shifted"]
-    
-    # plot the different data:
-    # plt.plot(data1["time"],data1["value"])
-    # plt.plot(data2["time"],data2["shifted"])
-    # plt.show()
-
-    # now try shifting
-
-    combined = join_data(data1,data2,1)
-    print(combined)
-    plt.plot(combined["time"],combined["value"])
-    plt.plot(combined["time"],combined["shifted"])
-    plt.show()
+    pass
+   
 
 
 
