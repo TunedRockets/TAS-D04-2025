@@ -166,20 +166,19 @@ def find_x930(LT_x: list, LT_time: list):
     xi = xi_list[index_delta_xi_min]
     ti = ti_list[index_delta_xi_min]
     t_width = (ti_list[k] - ti_list[0])/3 # The time seems to be off by a factor of 3 in the data?
-    print(t_width)
 
     # Plot the data
-    plt.figure(figsize=(8, 5))
-    plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
     # Mark the detected tape cut point
-    plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
+    # plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
     # Labels and legend
-    plt.xlabel("Time [s]")
-    plt.ylabel("X Position [mm]")
-    plt.title("X vs Time with Tape Cut Detection")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    # plt.xlabel("Time [s]")
+    # plt.ylabel("X Position [mm]")
+    # plt.title("X vs Time with Tape Cut Detection")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
 
     return xi, t_width
 
@@ -193,14 +192,16 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
         width_velocities.append(widths[i+1] - widths[i])
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
 
-    print(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"])
-    xi, t = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
+    xi, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
     if sensor_type == "LLS_B":
-        t = 1*t
+        t_width = 2*t_width
+        start_time = 4
+        end_time = 5.5
     if sensor_type == "LLS_A":
-        t = 1*t
-    index_stop, time_stop = scan_for_min(t, times, width_velocities, 0, 6)    
-    print(time_stop)
+        t_width = 1.5*t_width
+        start_time = 4
+        end_time = 5.5
+    index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time)    
 
     ##########################################################################################################
 
@@ -217,42 +218,48 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
     plt.grid()
     plt.show() 
 
-def scan_for_min(t_len:float, times:list, values:list, start_time:float, end_time:float)->tuple:
-    '''finds the minimum range for the given length and returns the index and time where the minimum starts\n
-    also makes the diffference absolute to cope with negative values\n
-    only looks between the start and end times'''
-
-    # Check for the simple error:
+def scan_for_min(t_len: float, times: list, values: list, start_time: float, end_time: float) -> tuple:
+    """Finds the minimum squared sum over a given time window.
+    
+    Returns the index and time where the minimum starts.
+    Handles negative values by taking absolute differences.
+    Only considers values between start_time and end_time.
+    """
+    
+    # Check if the given time range is valid
     if end_time - start_time < t_len:
-        raise ValueError(f"Start and end times too close, {end_time - start_time:.2f} for the given t_len, {t_len:.2f}")
-
+        raise ValueError(f"Start and end times too close: {end_time - start_time:.2f}, required: {t_len:.2f}")
+    
+    # Find the index where the start_time begins
+    ti = 0
+    while ti < len(times) and times[ti] < start_time:
+        ti += 1
 
     sums = []
-    # run up the data to the start
-    ti=0
-    while times[ti] < start_time:
-        ti+= 1
-    
+    min_sum = float('inf')
+    min_index = -1
 
-    try:
-        for i in range(ti, len(values)):
-            sum_x = 0
-            j = i
+    for i in range(ti, len(values)):
+        if times[i] + t_len > end_time:
+            break  # Ensure we stay within the time range
 
-            if times[i] + t_len > end_time:
-                break # makes sure to not include the endstop
-            
-            while times[j] <= times[i] + t_len:
-                sum_x += values[j]**2
-                j+=1
-            sums.append(sum_x)
-    except IndexError:
-        pass # now we're at the end so no point going further
+        sum_x = 0
+        j = i
+        while j < len(values) and times[j] <= times[i] + t_len:
+            sum_x += values[j] ** 2
+            j += 1
 
-    minimum = min(sums)
-    min_index = sums.index(minimum)
+        sums.append(sum_x)
 
-    return min_index, times[min_index+ti]
+        # Keep track of the minimum sum
+        if sum_x < min_sum:
+            min_sum = sum_x
+            min_index = i  # Store the absolute index in `times`
+
+    if min_index == -1:
+        raise ValueError("No valid range found within the specified time window.")
+
+    return min_index, times[min_index]
 
 def camera_sync(tow:int, sensor_type:str, overwrite=False):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
@@ -264,20 +271,20 @@ def camera_sync(tow:int, sensor_type:str, overwrite=False):
         other data sets"""
 
     center_velocities = [] # Set up list of velocities
-    delta_center_list = []
-    centers = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["center"] #gets just the center-column
+    centers = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["center"] #gets just the width-column
     times = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["time"] #gets just the time-column
-    beta = 2.5
+
 
     for i in range(len(centers)-1):
         center_velocities.append(centers[i+1] - centers[i])
     center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
 
-    xi, t = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
-    index_stop, time_stop = scan_for_min(t, times, center_velocities, 3, 6)    
-    
+    xi, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
+    t_width = 1.5*t_width
+    start_time = 4.5
+    end_time = 5.75
+    index_stop, time_stop = scan_for_min(t_width, times, center_velocities, start_time, end_time)    
 
-    print(time_stop)
     ##########################################################################################################
 
 
@@ -397,9 +404,9 @@ def get_synced_data(tow:int, *args:str)->pd.DataFrame:
     return ...
 
 def main():
-    for k in range(2,32):
+    for k in range(1,32):
         print(k)
-        LLS_sync(k, "LLS_B")
+        camera_sync(k, "CAM")
 
 if __name__ == "__main__":
     main()
