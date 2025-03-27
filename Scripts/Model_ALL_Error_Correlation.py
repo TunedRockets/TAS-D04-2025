@@ -257,7 +257,7 @@ def scan_for_min(t_len:float, times:list, values:list, start_time:float, end_tim
 
     return min_index, times[min_index+ti]
 
-def camera_sync(tow:int, sensor_type:str, overwrite=False):
+def camera_sync(tow:int, sensor_type:str, overwrite=True):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
@@ -268,9 +268,8 @@ def camera_sync(tow:int, sensor_type:str, overwrite=False):
 
     center_velocities = [] # Set up list of velocities
     delta_center_list = []
-    data = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite) # get data, first argument 1-31, second has to stay "LLS_B"
-    centers = data.iloc[:,1].values #gets just the width-column
-    times = data.iloc[:,0].values #gets just the time-column
+    centers = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["center"] #gets just the center-column
+    times = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["time"] #gets just the time-column
     beta = 2.5
 
     for i in range(len(centers)-1):
@@ -279,7 +278,7 @@ def camera_sync(tow:int, sensor_type:str, overwrite=False):
 
     ###########################################################################################################
 
-    for i in range(200,300):
+    for i in range(100,250):
         delta_center = abs(centers[i+1] - centers[i])
         delta_center_list.append(delta_center)
     
