@@ -38,7 +38,7 @@ def error_vs_distance_plot(df_lls_a, df_lls_b, df_lt, df_cam, title: str):
         df_lls_a['error_LLS_A'], 
         df_lls_b['error_LLS_B'], 
         df_lt['error_LT'], 
-        df_cam['error_CAM']
+        df_cam['center']
     ]
     distances = [
         df_lls_a['distance'], 
@@ -147,7 +147,7 @@ def all_errors_vs_distance_plot(data: pd.DataFrame, title:str):
         error_CAM = camera '''
 
     ax.plot(data['distance'], data['error_LLS_A'])
-    ax.plot(data['distance'], data['error_LLS_b'])
+    ax.plot(data['distance'], data['error_LLS_B'])
     ax.plot(data['distance'], data['error_LT'])
     ax.plot(data['distance'], data['error_CAM'])
 
@@ -177,7 +177,7 @@ def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
     ax.plot(data['time'], data['error_LLS_A'])
     ax.plot(data['time'], data['error_LLS_B'])
     ax.plot(data['time'], data['error_LT'])
-    ax.plot(data['time'], data['error_CAM'])
+    ax.plot(data['time'], data['center'])
 
     # Identify every line in the plot
     ax.legend()

@@ -231,7 +231,7 @@ def scan_for_min(t_len:float, times:list, values:list, start_time:float, end_tim
             j = i
 
             if times[i] + t_len > end_time:
-                break # makes sure to not enclude the endstop
+                break # makes sure to not include the endstop
             
             while times[j] <= times[i] + t_len:
                 sum_x += values[j]**2
@@ -390,7 +390,7 @@ def get_synced_data(tow:int, *args:str)->pd.DataFrame:
 def main():
     for k in range(1,32):
         print(k)
-        camera_sync(k, "CAM")
+        camera_sync(k, "LLS_A")
 
 if __name__ == "__main__":
     main()
