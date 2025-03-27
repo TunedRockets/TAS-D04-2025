@@ -203,8 +203,13 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
     if sensor_type == "LLS_B":
         t = 40*t
     if sensor_type == "LLS_A":
+<<<<<<< Updated upstream
         t = 20*t
     index_stop, time_stop = scan_for_min(t, times, width_velocities, 3.5, 5.5)    
+=======
+        t = 25*t
+    index_stop, time_stop = scan_for_min(t, times, width_velocities, 5.5)    
+>>>>>>> Stashed changes
     
 
     print(time_stop)
@@ -370,9 +375,9 @@ def get_synced_data(tow:int, *args)->pd.DataFrame:
 
 def main():
 
-    for k in range(1, 32):
-        print(k)
-        LLS_sync(k, "LLS_A")
+    #for k in range(1, 32):
+        #print(k)
+        LLS_sync(18, "LLS_A")
 
 if __name__ == "__main__":
     main()
