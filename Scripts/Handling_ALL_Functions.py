@@ -100,7 +100,7 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
 
 def _handle_camera(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
     rows = len(time)
-    columns = 3
+    columns = 4
     shape = (rows, columns)
     pandas_table = np.empty(shape)
     zero_time = time_to_float(time[0])
