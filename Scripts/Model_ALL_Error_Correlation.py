@@ -348,8 +348,7 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.legend()
     plt.show()
 
-    for k in range(1, 32):
-        LLS_sync(k, "LLS_B")
+
 
 def main():
 
