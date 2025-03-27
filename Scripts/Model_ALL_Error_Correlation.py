@@ -265,7 +265,7 @@ def camera_sync(tow:int, sensor_type:str, overwrite=False):
     center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
 
     xi, t = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
-    index_stop, time_stop = scan_for_min(t, times, center_velocities, 4.5, 6)    
+    index_stop, time_stop = scan_for_min(t, times, center_velocities, 3, 6)    
     
 
     print(time_stop)
