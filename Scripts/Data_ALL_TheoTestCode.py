@@ -47,7 +47,7 @@ def load_and_prepare_data(sensor, error="0", train_ratio=0.5, random_state=42): 
     # Loop through tow numbers from 1 to 31
     for tow_number in range(1, 32):
         # Get processed data for the current tow and sensor type
-        tow_data = get_processed_data(tow_number, sensor)
+        tow_data = get_processed_data(tow_number, sensor, True)
 
         # Ensure that the returned object is a dataframe
         if not tow_data.empty and tow_data.shape[1] > 1:  # Ensure there are at least two columns
@@ -187,7 +187,7 @@ def plot_deviation_histograms(x_sorted, bin_edges, deviations_per_bin):
 # -------------------
 # Example usage:
 # -------------------
-x_train, x_test, y_train, y_test = load_and_prepare_data("CAM", "center", 0.5)
+x_train, x_test, y_train, y_test = load_and_prepare_data("LT", "y", 0.5)
 x_sorted, y_sorted, bin_edges, x_binned, y_binned = bin_data(x_train, y_train, num_bins=40)
 slope, intercept, *_ = linregress(x_binned, y_binned)
 deviations_per_bin = compute_deviations(x_sorted, y_sorted, bin_edges, slope, intercept)

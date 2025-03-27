@@ -61,7 +61,7 @@ def _error_LT(y: list, z: list, tow_number)->list:
     if tow_number == 1:
         y_ref = 125
     else:
-        y_ref = 125 + 12.5 * (tow_number)
+        y_ref = 125 + 12.5 * (tow_number-2)
 
     for i in range(len(y)):
         error_y.append(y[i] - y_ref)
