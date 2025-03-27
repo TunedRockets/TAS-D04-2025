@@ -182,7 +182,7 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
         width_velocities.append(widths[i+1] - widths[i])
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
 
-    xi, t = find_x930(Handling_ALL_Functions.get_processed_data(1, "LT")["x"], Handling_ALL_Functions.get_processed_data(1, "LT")["time"])
+    xi, t = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
     if sensor_type == "LLS_B":
         t = 40*t
     if sensor_type == "LLS_A":
@@ -259,8 +259,8 @@ def camera_sync(tow:int, sensor_type:str, overwrite=False):
         center_velocities.append(centers[i+1] - centers[i])
     center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
 
-    xi, t = find_x930(Handling_ALL_Functions.get_processed_data(1, "LT")["x"], Handling_ALL_Functions.get_processed_data(1, "LT")["time"])
-    index_stop, time_stop = scan_for_min(t, times, center_velocities, 3.5, 5.5)    
+    xi, t = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
+    index_stop, time_stop = scan_for_min(t, times, center_velocities, 4.5, 6)    
     
 
     print(time_stop)
