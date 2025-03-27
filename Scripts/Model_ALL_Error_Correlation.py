@@ -373,12 +373,16 @@ def get_synced_data(tow:int, *args:str)->pd.DataFrame:
     if tow not in range(1,32):
         raise IndexError(f"Tow ID {tow} is out of range")
 
-    # get the sist...
-
-
+    # get the list of dataframes:
+    frame_list = []
+    for arg in args:
+        frame = Handling_ALL_Functions.get_processed_data(tow,arg)
+        frame_list.append(arg, frame) # adding both the key (arg) and the frame so we know which frame is which
+    
+    #TODO: put all the syncing functions here to get the data synced...
 
     raise NotImplementedError
-    return pd.DataFrame([1])
+    return ...
 
 def main():
 
