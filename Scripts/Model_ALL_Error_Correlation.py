@@ -255,7 +255,7 @@ def scan_for_min(t_len:float, times:list, values:list, start_time:float, end_tim
     minimum = min(sums)
     min_index = sums.index(minimum)
 
-    return min_index, times[min_index]
+    return min_index, times[min_index+ti]
 
 def camera_sync(cam_data: list, cam_time: list):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
