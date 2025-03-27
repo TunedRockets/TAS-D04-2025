@@ -200,6 +200,10 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
     delta_width_min = second_min
     
     xi, t = find_x930(Handling_ALL_Functions.get_processed_data(1, "LT")["x"], Handling_ALL_Functions.get_processed_data(1, "LT")["time"])
+    if sensor_type == "LLS_B":
+        t = 40*t
+    if sensor_type == "LLS_A":
+        t = 20*t
     index_stop, time_stop = scan_for_min(t, times, width_velocities)    
     
 
@@ -361,7 +365,8 @@ def get_synced_data(tow:int, *args)->pd.DataFrame:
 def main():
 
     for k in range(1, 32):
-        LLS_sync(k, "LLS_B")
+        print(k)
+        LLS_sync(k, "LLS_A")
 
 if __name__ == "__main__":
     main()
