@@ -182,29 +182,12 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
         width_velocities.append(widths[i+1] - widths[i])
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
 
-    ###########################################################################################################
-
-    for i in range(200,300):
-        delta_width = abs(widths[i+1] - widths[i])
-        delta_width_list.append(delta_width)
-    
-        sorted_values = sorted(set(delta_width_list))  # Remove duplicates and sort
-
-        if len(sorted_values) > 1:
-            second_min = sorted_values[1]  # Second smallest value
-        else:
-            second_min = None  # No second minimum available
-
-    print("Second Minimum:", second_min)
-
-    delta_width_min = second_min
-    
     xi, t = find_x930(Handling_ALL_Functions.get_processed_data(1, "LT")["x"], Handling_ALL_Functions.get_processed_data(1, "LT")["time"])
     if sensor_type == "LLS_B":
         t = 40*t
     if sensor_type == "LLS_A":
         t = 25*t
-    index_stop, time_stop = scan_for_min(t, times, width_velocities, 4.5, 7)    
+    index_stop, time_stop = scan_for_min(t, times, width_velocities, 3.5, 5.5)    
     
 
     print(time_stop)
@@ -257,7 +240,7 @@ def scan_for_min(t_len:float, times:list, values:list, start_time:float, end_tim
 
     return min_index, times[min_index+ti]
 
-def camera_sync(tow:int, sensor_type:str, overwrite=False):
+def camera_sync(tow:int, sensor_type:str, overwrite=True):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
@@ -268,32 +251,14 @@ def camera_sync(tow:int, sensor_type:str, overwrite=False):
 
     center_velocities = [] # Set up list of velocities
     delta_center_list = []
-    data = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite) # get data, first argument 1-31, second has to stay "LLS_B"
-    centers = data.iloc[:,1].values #gets just the width-column
-    times = data.iloc[:,0].values #gets just the time-column
+    centers = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["center"] #gets just the center-column
+    times = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["time"] #gets just the time-column
     beta = 2.5
 
     for i in range(len(centers)-1):
         center_velocities.append(centers[i+1] - centers[i])
     center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
 
-    ###########################################################################################################
-
-    for i in range(200,300):
-        delta_center = abs(centers[i+1] - centers[i])
-        delta_center_list.append(delta_center)
-    
-        sorted_values = sorted(set(delta_center_list))  # Remove duplicates and sort
-
-        if len(sorted_values) > 1:
-            second_min = sorted_values[1]  # Second smallest value
-        else:
-            second_min = None  # No second minimum available
-
-    print("Second Minimum:", second_min)
-
-    delta_center_min = second_min
-    
     xi, t = find_x930(Handling_ALL_Functions.get_processed_data(1, "LT")["x"], Handling_ALL_Functions.get_processed_data(1, "LT")["time"])
     index_stop, time_stop = scan_for_min(t, times, center_velocities, 3.5, 5.5)    
     
