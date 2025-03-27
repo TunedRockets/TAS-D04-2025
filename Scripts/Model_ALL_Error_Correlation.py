@@ -362,8 +362,21 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.legend()
     plt.show()
 
-def get_synced_data(tow:int, *args)->pd.DataFrame:
-    """gets the """
+def get_synced_data(tow:int, *args:pd.DataFrame)->pd.DataFrame:
+    '''gets the synced data of the given tow, input is a variable number of datatype keys\n
+    valid keys are "LT","LLS_A","LLS_B","CAM"'''
+    
+    # checks that inputs are valid:
+    for sensor_type in args:
+        if sensor_type not in ["LT","LLS_A","LLS_B","CAM"]:
+            raise KeyError(f"the Key {sensor_type} was invalid: No such data exists")
+    if tow not in range(1,32):
+        raise IndexError(f"Tow ID {tow} is out of range")
+
+    # if all this works it should be trivial to link them
+
+    output = args.p
+
 
     raise NotImplementedError
     return pd.DataFrame([1])
