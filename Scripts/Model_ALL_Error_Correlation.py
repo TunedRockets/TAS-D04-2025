@@ -99,7 +99,6 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, shift)-> pd.DataFrame:
 
     return joined
 
-<<<<<<< Updated upstream
 def _test_join_function():
     '''just a function to test that joining works correctly'''
      # testing the shifting thing
@@ -129,12 +128,7 @@ def _test_join_function():
     plt.plot(combined["time"],combined["shifted"])
     plt.show()
 
-
-
-def find_x930(LT_x: list, LT_time):
-=======
 def find_x930(LT_x: list, LT_time: list):
->>>>>>> Stashed changes
     """This function grabs a sample of the LT data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
@@ -337,8 +331,6 @@ def plot_errors(error1, error2, error3, error4, error5, error6):
     plt.tight_layout()
     plt.show()
 
-
-
 def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:str, column2:str):
     """plots two columns against time compared to each other, Normalized"""
 
@@ -359,14 +351,10 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     for k in range(1, 32):
         LLS_sync(k, "LLS_B")
 
-
-
-
 def main():
-    pass
-   
 
-
+    for k in range(1, 32):
+        LLS_sync(k, "LLS_B")
 
 if __name__ == "__main__":
     main()
