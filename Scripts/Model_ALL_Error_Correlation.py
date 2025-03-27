@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 
-def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, shift)-> pd.DataFrame:
+def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, shift:float)-> pd.DataFrame:
     '''
     joins the two dataframe columnwise from a given desync time\n
     I.e. shifts frame two BACKWARDS by the desync.\n
@@ -362,7 +362,7 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.legend()
     plt.show()
 
-def get_synced_data(tow:int, *args:pd.DataFrame)->pd.DataFrame:
+def get_synced_data(tow:int, *args:str)->pd.DataFrame:
     '''gets the synced data of the given tow, input is a variable number of datatype keys\n
     valid keys are "LT","LLS_A","LLS_B","CAM"'''
     
@@ -373,9 +373,8 @@ def get_synced_data(tow:int, *args:pd.DataFrame)->pd.DataFrame:
     if tow not in range(1,32):
         raise IndexError(f"Tow ID {tow} is out of range")
 
-    # if all this works it should be trivial to link them
+    # get the sist...
 
-    output = args.p
 
 
     raise NotImplementedError
