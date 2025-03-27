@@ -204,7 +204,7 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
         t = 40*t
     if sensor_type == "LLS_A":
         t = 20*t
-    index_stop, time_stop = scan_for_min(t, times, width_velocities)    
+    index_stop, time_stop = scan_for_min(t, times, width_velocities, 5.5)    
     
 
     print(time_stop)
