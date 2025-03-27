@@ -99,6 +99,7 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, shift)-> pd.DataFrame:
 
     return joined
 
+<<<<<<< Updated upstream
 def _test_join_function():
     '''just a function to test that joining works correctly'''
      # testing the shifting thing
@@ -131,6 +132,9 @@ def _test_join_function():
 
 
 def find_x930(LT_x: list, LT_time):
+=======
+def find_x930(LT_x: list, LT_time: list):
+>>>>>>> Stashed changes
     """This function grabs a sample of the LT data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
@@ -139,18 +143,26 @@ def find_x930(LT_x: list, LT_time):
         Then the coressponding time at xi is ti and this time can be used to sync the LT data with
         other data sets"""
 
-    beta = 2
+    beta = 1/5000
     delta_x_values = []
 
     for i in range(600,1300):
         delta_x = abs(LT_x[i+1] - LT_x[i])
         delta_x_values.append(delta_x)
+
+        sorted_values = sorted(set(delta_x_values))  # Remove duplicates and sort
+        if sorted_values[0] != 0:
+            delta_x_min = sorted_values[0]  # Second smallest value
+        elif sorted_values[0] == 0:
+            delta_x_min = sorted_values[1]  # Second smallest value
+        else:
+            delta_x_min = None  # No second minimum available
     
-    delta_x_min = min(delta_x_values)
+    print(delta_x_min)
     xi_list = []
     ti_list = []
 
-    for j in range(1300,len(LT_x)):
+    for j in range(1300,len(LT_x)-2):
         if abs(LT_x[j+1] - LT_x[j]) < (delta_x_min/beta):
             xi_list.append(LT_x[j])
             ti_list.append(LT_time[j])
@@ -163,6 +175,79 @@ def find_x930(LT_x: list, LT_time):
                 break
         
     return xi, t
+
+def LLS_sync(tow:int, sensor_type:str, overwrite=False):
+    width_velocities = [] # Set up list of velocities
+    delta_width_list = []
+    data = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite) # get data, first argument 1-31, second has to stay "LLS_B"
+    widths = data.iloc[:,1].values #gets just the width-column
+    times = data.iloc[:,0].values #gets just the time-column
+    beta = 2.5
+
+    for i in range(len(widths)-1):
+        width_velocities.append(widths[i+1] - widths[i])
+    width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
+
+    ###########################################################################################################
+
+    for i in range(200,300):
+        delta_width = abs(widths[i+1] - widths[i])
+        delta_width_list.append(delta_width)
+    
+        sorted_values = sorted(set(delta_width_list))  # Remove duplicates and sort
+
+        if len(sorted_values) > 1:
+            second_min = sorted_values[1]  # Second smallest value
+        else:
+            second_min = None  # No second minimum available
+
+    print("Second Minimum:", second_min)
+
+    delta_width_min = second_min
+    
+    xi, t = find_x930(Handling_ALL_Functions.get_processed_data(1, "LT")["x"], Handling_ALL_Functions.get_processed_data(1, "LT")["time"])
+    index_stop, time_stop = scan_for_min(t, times, width_velocities)    
+    
+
+    print(time_stop)
+    ##########################################################################################################
+
+
+
+    # #Loop over all the data points and store results
+    # for i in range(len(widths)-1): 
+    #     width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
+    #     width_velocities.append(width_velocity)
+
+    plt.plot(times, width_velocities, label="width_velocities", color="red")
+    plt.title("Width velocity")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Rate of change of tow width [m/s]")
+    plt.plot(time_stop,0, "-o")
+    plt.grid()
+    plt.show() 
+
+def scan_for_min(t_len:float, times:list, values:list)->tuple:
+    '''finds the minimum range for the given length and returns the index and time where the minimum starts\n
+    also makes the diffference absolute to cope with negative values'''
+
+    sums = []
+    try:
+        for i in range(len(values)):
+            sum_x = 0
+            j = i
+            
+            while times[j] <= times[i] + t_len:
+                sum_x += values[j]**2
+                j+=1
+            sums.append(sum_x)
+    except IndexError:
+        pass # now we're at the end so no point going further
+
+    minimum = min(sums)
+    min_index = sums.index(minimum)
+
+    return min_index, times[min_index]
 
 def camera_sync(cam_data: list, cam_time: list):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
@@ -271,6 +356,8 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.legend()
     plt.show()
 
+    for k in range(1, 32):
+        LLS_sync(k, "LLS_B")
 
 
 
