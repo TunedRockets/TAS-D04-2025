@@ -254,12 +254,22 @@ def plot_errors(error1, error2, error3, error4, error5, error6):
 
 
 
+def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:str, column2:str):
+    """plots two columns against time compared to each other, Normalized"""
 
 
 
+    data1= dataframe1[column1]
+    data2 = dataframe2[column2]
+    data1 = (data1-data1.mean())/data1.std()
+    data2 = (data2-data2.mean())/data2.std()
 
-
-
+    plt.plot(dataframe1["time"], data1, label = column1)
+    plt.plot(dataframe2["time"], data2, label = column2)
+    plt.xlabel("Time")
+    plt.ylabel("Data (Normalized)")
+    plt.legend()
+    plt.show()
 
 
 
