@@ -204,7 +204,7 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
         t = 40*t
     if sensor_type == "LLS_A":
         t = 20*t
-    index_stop, time_stop = scan_for_min(t, times, width_velocities, 5.5)    
+    index_stop, time_stop = scan_for_min(t, times, width_velocities, 3.5, 5.5)    
     
 
     print(time_stop)
@@ -225,18 +225,24 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
     plt.grid()
     plt.show() 
 
-def scan_for_min(t_len:float, times:list, values:list, endstop:float)->tuple:
+def scan_for_min(t_len:float, times:list, values:list, start_time:float, end_time:float)->tuple:
     '''finds the minimum range for the given length and returns the index and time where the minimum starts\n
     also makes the diffference absolute to cope with negative values\n
-    makes shure that the entire window is BEFORE the endstop (in time)'''
+    only looks between the start and end times'''
 
     sums = []
+    # run up the data to the start
+    ti=0
+    while times[ti] < start_time:
+        ti+= 1
+    
+
     try:
-        for i in range(len(values)):
+        for i in range(ti, len(values)):
             sum_x = 0
             j = i
 
-            if times[i] + t_len > endstop:
+            if times[i] + t_len > end_time:
                 break # makes sure to not enclude the endstop
             
             while times[j] <= times[i] + t_len:
@@ -357,10 +363,10 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.show()
 
 def get_synced_data(tow:int, *args)->pd.DataFrame:
+    """gets the """
 
-
-
-   pass 
+    raise NotImplementedError
+    return pd.DataFrame([1])
 
 def main():
 
