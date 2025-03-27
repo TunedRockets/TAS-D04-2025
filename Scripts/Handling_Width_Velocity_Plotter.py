@@ -81,6 +81,7 @@ def main():
 
     for k in range(1, 32):
         LLS_sync(k, "LLS_B")
+        print(k)
 
 if __name__ == "__main__":
     main()
