@@ -51,14 +51,7 @@ def get_all_sensor_data():
     for k in range(1, 32):
         processed_data_LT = get_processed_data(tow=k, sensor_type="LT", overwrite=False)
 
-
-        if processed_data_LT.shape[1] > 4:
-            processed_data_LT = processed_data_LT.iloc[:, :4]
-        # If only 3 columns, insert a placeholder at index 1 (assuming 'width' is missing)
-        elif processed_data_LT.shape[1] == 3:
-            processed_data_LT.insert(1, "temp", np.nan)
-
-        processed_data_LT.columns = ["time", "width", "center", "error_LT"]
+        processed_data_LT = processed_data_LT[["time", "error_LT"]]
         results_LT.append(processed_data_LT)
 
     # ---------------------------
@@ -67,14 +60,7 @@ def get_all_sensor_data():
     for w in range(1, 32):
         processed_data_CAM = get_processed_data(tow=w, sensor_type="CAM", overwrite=False)
 
-
-        if processed_data_CAM.shape[1] > 4:
-            processed_data_CAM = processed_data_CAM.iloc[:, :4]
-        # If only 3 columns, insert a placeholder at index 2 (assuming 'center' is missing)
-        elif processed_data_CAM.shape[1] == 3:
-            processed_data_CAM.insert(2, "temp", np.nan)
-
-        processed_data_CAM.columns = ["time", "width", "center", "error_CAM"]
+        processed_data_CAM = processed_data_CAM[["time", "error_CAM"]]
         results_CAM.append(processed_data_CAM)
 
     # Combine into one DataFrame per sensor type
@@ -147,8 +133,6 @@ def main():
     # Compute stats
     mean, median, std, minimum, maximum = statistical_values(df_error)
 
-
-    #TODO: Make the output more neat and readable
 
     labels = ["LLS A", "LLS B", "LT", "CAM"]
 
