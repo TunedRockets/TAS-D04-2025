@@ -139,6 +139,8 @@ def find_x930(LT_x: list, LT_time: list):
 
     beta = 1/5000
     delta_x_values = []
+    xi = None
+    ti = None
 
     for i in range(600,1300):
         delta_x = abs(LT_x[i+1] - LT_x[i])
@@ -152,7 +154,6 @@ def find_x930(LT_x: list, LT_time: list):
         else:
             delta_x_min = None  # No second minimum available
     
-    print(delta_x_min)
     xi_list = []
     ti_list = []
 
@@ -167,6 +168,9 @@ def find_x930(LT_x: list, LT_time: list):
                 tn = LT_time[j+1]
                 t = tn - ti
                 break
+
+    if xi is None or t is None:
+        raise ValueError("No valid tape cut event found.")
         
     return xi, t
 
