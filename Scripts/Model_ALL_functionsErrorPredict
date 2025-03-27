@@ -18,8 +18,8 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import linregress
 from Data_CAM_importer import CAM_exceltolist
 
-def load_and_prepare_data(file_path, column_index=4):
-    all_sheets_data = CAM_exceltolist(file_path)
+def load_and_prepare_data(file_path, column_index=4): #CHANGE USED COLUMN
+    all_sheets_data = CAM_exceltolist(file_path)  #USE different data loader
     column_arrays = [
         sheet_df.iloc[:, column_index].dropna().to_numpy() for sheet_df in all_sheets_data
     ]
@@ -152,7 +152,7 @@ bin_stats_df = summarize_bins(x_sorted, y_binned, bin_edges, deviations_per_bin)
 plot_regression_with_bins(x_train, y_train, x_binned, y_binned, slope, intercept)
 plot_deviation_histograms(x_sorted, bin_edges, deviations_per_bin)
 
-x_input = 0.4
+x_input = 0
 prediction_df = predict_next_error(x_input, slope, intercept, x_sorted, bin_edges, deviations_per_bin, 99)
 print("Prediction result:")
 print(prediction_df)
