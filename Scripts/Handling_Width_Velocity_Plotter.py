@@ -32,7 +32,7 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
 
     delta_width_min = second_min
     
-    index_stop, time_stop = scan_for_min(1, times, width_velocities)    
+    index_stop, time_stop = scan_for_min(0.6, times, width_velocities)    
     
 
     print(time_stop)
