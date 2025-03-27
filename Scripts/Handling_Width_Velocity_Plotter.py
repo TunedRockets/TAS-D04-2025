@@ -6,7 +6,7 @@ import pandas as pd
 def LLS_sync(tow:int, sensor_type:str, overwrite=False):
     width_velocities = [] # Set up list of velocities
     delta_width_list = []
-    data = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite) # get data, first argument 1-31, second has to stay "LLS_B"
+    data = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite) # get data
     widths = data.iloc[:,1].values #gets just the width-column
     times = data.iloc[:,0].values #gets just the time-column
     beta = 2.5
@@ -56,7 +56,7 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
 
 def scan_for_min(t_len:float, times:list, values:list)->tuple:
     '''finds the minimum range for the given length and returns the index and time where the minimum starts\n
-    also makes the diffference absolute to cope with negative values'''
+    also makes the difference absolute to cope with negative values'''
 
     sums = []
     try:
@@ -80,7 +80,7 @@ def scan_for_min(t_len:float, times:list, values:list)->tuple:
 def main():
 
     for k in range(1, 32):
-        LLS_sync(k, "LLS_A")
+        LLS_sync(k, "LLS_B")
 
 if __name__ == "__main__":
     main()
