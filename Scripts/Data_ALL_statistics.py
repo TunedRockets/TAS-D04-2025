@@ -134,7 +134,10 @@ def main():
     mean, median, std, minimum, maximum = statistical_values(df_error)
 
 
-    labels = ["LLS A", "LLS B", "LT", "CAM"]
+    labels = ["Tape Width Before Compression", 
+              "Tape Width After Compression", 
+              "Robot Position", 
+              "Tape Lateral Movement"]
 
     for i, label in enumerate(labels):
         print(f"{label}:")
