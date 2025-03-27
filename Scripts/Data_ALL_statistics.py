@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from Handling_ALL_Functions import get_processed_data
 
+""" Written by Manuel and Diogo, this python imports the processed data from handling all functions and makes the different error plots for the sensors"""
+
 def get_all_sensor_data():
     results_LLSA = []
     results_LLSB = []
@@ -101,8 +103,8 @@ def get_all_sensor_data():
         "LLS_A": df_LLSA,
         "LLS_B": df_LLSB,
         "LT": df_LT,
-        "CAM": df_CAM
-    }
+        "CAM": df_CAM}
+
 
 def statistical_values(data: pd.DataFrame):
     errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
@@ -127,10 +129,10 @@ def plot_histograms(data: pd.DataFrame, title: str):
 
     errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
     errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
-    titles = ['Error LLS A vs. time',
-              'Error LLS B vs. time',
-              'Error Laser Tracker vs. time',
-              'Error Camera vs. time']
+    titles = ['Error Tape width',
+              'Error Tape width after compaction',
+              'Error robot position',
+              'Error tape lateral movement']
 
     for i, error in enumerate(errors):
         row = i // 2
