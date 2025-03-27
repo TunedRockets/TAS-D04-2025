@@ -72,7 +72,7 @@ def _error_LT(y: list, z: list, tow_number)->list:
 ################################################################################################################
 """Functions for Laser Line Scanner"""
 
-def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
+def _handle_LLS(time: list, left_edge: list, right_edge: list, width:list) -> pd.DataFrame:
     """"This function takes the processed data and
         creates new data points for each time stamp
         where each point in time has a corresponding
@@ -88,7 +88,7 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
 
     for i in range(len(time)):
         pandas_table[i][0] = time_to_float(time[i]) - zero_time
-        pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
+        pandas_table[i][1] = width[i] # width
         pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
         pandas_table[i][3] = (pandas_table[i][1]-6.35) # error (6.35 is the right width)
     
@@ -250,12 +250,12 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
         case "LLS_A":
             # Laser Line Sensor 1
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-2]).T
-            processesed_data = _handle_LLS(*data[:3])
+            processesed_data = _handle_LLS(*data[:4])
 
         case "LLS_B":
             # Laser Line Sensor 2
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
-            processesed_data = _handle_LLS(*data[:3])
+            processesed_data = _handle_LLS(*data[:4])
     _save_table(processesed_data, name) # save the data
     return processesed_data
 
@@ -263,7 +263,8 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 
 def main():
     # add testing code here
-    print(get_processed_data(1,"CAM", True))
+    for k in range(1,32):
+        print(get_processed_data(k,"LLS_A", True))
     pass
 
 
