@@ -1,4 +1,4 @@
-#We input our current error, which we will call x
+#Way the model works: We input our current error, which we will call x
 # we calculate the mean of the next error, which we call y from the regression model
 #the value of x, the previous error, corresponds to a certain bin which contains a normal curve the randomness in the deviation of y 
 #we extract a random point from the normal curve 
@@ -43,7 +43,7 @@ x_train, x_test, y_train, y_test = train_test_split(
 )
 
 # Binning and Averaging on Training Data
-num_bins = 20
+num_bins = 40
 
 # Sort training x-values and reorder y-values accordingly
 sorted_indices = np.argsort(x_train)
@@ -92,7 +92,7 @@ for i in range(num_bins):
 # Plot Histograms of Deviations per Bin
 
 
-rows, cols = 4, 5
+rows, cols = 5, 8
 fig, axes = plt.subplots(rows, cols, figsize=(20, 10))
 fig.suptitle("Histograms of Deviations per Bin (Training Data)", fontsize=16)
 axes = axes.flatten()
@@ -140,19 +140,27 @@ plt.show()
 bin_stats = []
 
 for i in range(num_bins):
+    bin_start = bin_edges[i]
+    bin_end = bin_edges[i + 1]
     bin_devs = deviations_per_bin[i]
-    x_mean = x_binned[i]
+    bin_x_values = x_sorted[bin_start:bin_end]
     y_mean = y_binned[i]
     mu, std = stats.norm.fit(bin_devs)
     variance = std**2
+    count = bin_end - bin_start  # Number of points in this bin
+
+    # Get min and max x for this bin
+    x_min = np.min(bin_x_values)
+    x_max = np.max(bin_x_values)
+    x_range_str = f"[{x_min:.2f}, {x_max:.2f}]"
 
     bin_stats.append({
-        "x_mean": x_mean,
+        "x_range": x_range_str,
         "y_mean": y_mean,
         "deviation_mean": mu,
-        "deviation_variance": variance
-})
-
+        "deviation_variance": variance,
+        "point_count": count
+    })
 # Convert to DataFrame for easy viewing
 bin_stats_df = pd.DataFrame(bin_stats)
 
@@ -160,3 +168,61 @@ bin_stats_df = pd.DataFrame(bin_stats)
 print(bin_stats_df)
 
 
+#------------------
+#prediction model
+#------------------
+def predict_next_error(x_value, slope, intercept, x_binned, bin_edges, x_sorted, deviations_per_bin, confidence=95):
+    # Step 1: Predict mean using regression
+    y_pred = slope * x_value + intercept
+
+    # Step 2: Find the bin where x_value belongs
+    bin_index = None
+    for i in range(len(bin_edges-1)):
+        start_idx = bin_edges[i]
+        end_idx = bin_edges[i + 1]
+        bin_x_min = x_sorted[start_idx]
+        bin_x_max = x_sorted[end_idx-1]
+
+        if bin_x_min <= x_value <= bin_x_max:
+            bin_index = i
+            break
+
+    # If x_value is outside the binned data, use nearest bin
+    if bin_index is None:
+        if x_value < x_sorted[0]:
+            bin_index = 0
+        else:
+            bin_index = len(bin_edges) - 2
+
+    # Step 3: Get deviation statistics from selected bin
+    deviations = deviations_per_bin[bin_index]
+    deviation_mu, deviation_sigma = stats.norm.fit(deviations)
+
+    # Step 4: Adjust prediction by bias (deviation mean)
+    adjusted_prediction = y_pred + deviation_mu
+
+    # Step 5: Compute confidence interval from normal distribution
+    z_score = stats.norm.ppf(1 - (1 - confidence / 100) / 2)
+    lower_bound = adjusted_prediction - z_score * deviation_sigma
+    upper_bound = adjusted_prediction + z_score * deviation_sigma
+
+    return {
+        "x_value": x_value,
+        "predicted_mean": adjusted_prediction,
+        "lower_bound": lower_bound,
+        "upper_bound": upper_bound,
+        "confidence": confidence,
+    }
+
+
+result = predict_next_error(
+    x_value=0.2,
+    slope=slope,
+    intercept=intercept,
+    x_binned=x_binned,
+    bin_edges=bin_edges,
+    x_sorted=x_sorted,
+    deviations_per_bin=deviations_per_bin,
+    confidence=99
+)
+print(result)
