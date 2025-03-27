@@ -162,11 +162,16 @@ def main():
 
     # Compute stats
     mean, median, std, minimum, maximum = statistical_values(df_error)
-    print("Mean:", mean)
-    print("Median:", median)
-    print("Standard Deviation:", std)
-    print("Min:", minimum)
-    print("Max:", maximum)
+
+
+    #TODO: Make the output more neat and readable
+
+    print("Mean:", [float(val) for val in mean])
+    print("Median:", [float(val) for val in median])
+    print("Standard Deviation:", [float(val) for val in std])
+    print("Min:", [float(val) for val in minimum])
+    print("Max:", [float(val) for val in maximum])
+
 
     # Plot histograms
     plot_histograms(df_error, "Sensor Error Histograms")
