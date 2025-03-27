@@ -213,6 +213,11 @@ def scan_for_min(t_len:float, times:list, values:list, start_time:float, end_tim
     also makes the diffference absolute to cope with negative values\n
     only looks between the start and end times'''
 
+    # Check for the simple error:
+    if end_time - start_time < t_len:
+        raise ValueError(f"Start and end times too close, {end_time - start_time:.2f} for the given t_len, {t_len:.2f}")
+
+
     sums = []
     # run up the data to the start
     ti=0
