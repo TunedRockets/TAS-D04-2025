@@ -141,7 +141,7 @@ def find_x930(LT_x: list, LT_time: list):
     delta_x_values = []
     x_values = []
 
-    for i in range(2000,2800):
+    for i in range(int(len(LT_x)*0.45), int(len(LT_x)*0.48)):
         delta_x = (LT_x[i+1] - LT_x[i])/0.010 # Divided by the rate at which the LT scans
         x = LT_x[i]
         delta_x_values.append(delta_x)
@@ -153,33 +153,30 @@ def find_x930(LT_x: list, LT_time: list):
     ti_list = []
     delta_xi_list = []
 
-    for j in range(2800,3500):
+    for j in range(int(len(LT_x)*0.50), int(len(LT_x)*0.75)):
         if (LT_x[j+1] - LT_x[j])/0.010 < (delta_x_min/beta):
             xi_list.append(LT_x[j])
             ti_list.append(LT_time[j])
-            delta_xi_list.append((LT_x[j+1] - LT_x[j])/0.010)
+            delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)
             if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta):
-                k = len(ti_list) - 1
                 break
-    
-    index_delta_xi_min = delta_xi_list.index(min(delta_xi_list))
+
+    k = len(ti_list) - 1
+    index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
     xi = xi_list[index_delta_xi_min]
     ti = ti_list[index_delta_xi_min]
-    t_width = ti_list[k] - ti_list[0]
+    t_width = (ti_list[k] - ti_list[0])/3 # The time seems to be off by a factor of 3 in the data?
     print(t_width)
-
-    if xi is None or ti is None:
-        raise ValueError("No valid tape cut event found.")
 
     # Plot the data
     plt.figure(figsize=(8, 5))
-    plt.plot(xi_list, delta_xi_list, label="X Width vs X", color="blue")
+    plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
     # Mark the detected tape cut point
-    plt.scatter(xi, ti, color="red")
+    plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
     # Labels and legend
-    plt.xlabel("X Position [mm]")
-    plt.ylabel("X Width [mm]")
-    plt.title("X Width vs X with Tape Cut Detection")
+    plt.xlabel("Time [s]")
+    plt.ylabel("X Position [mm]")
+    plt.title("X vs Time with Tape Cut Detection")
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -196,13 +193,13 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
         width_velocities.append(widths[i+1] - widths[i])
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
 
+    print(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"])
     xi, t = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
     if sensor_type == "LLS_B":
-        t = 4*t
+        t = 1*t
     if sensor_type == "LLS_A":
-        t = 2*t
+        t = 1*t
     index_stop, time_stop = scan_for_min(t, times, width_velocities, 0, 6)    
-    
     print(time_stop)
 
     ##########################################################################################################
@@ -400,7 +397,7 @@ def get_synced_data(tow:int, *args:str)->pd.DataFrame:
     return ...
 
 def main():
-    for k in range(1,32):
+    for k in range(2,32):
         print(k)
         LLS_sync(k, "LLS_B")
 
