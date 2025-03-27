@@ -177,7 +177,7 @@ def all_errors_vs_time_plot(data: pd.DataFrame, title:str):
     ax.plot(data['time'], data['error_LLS_A'])
     ax.plot(data['time'], data['error_LLS_B'])
     ax.plot(data['time'], data['error_LT'])
-    ax.plot(data['time'], data['error_CAM'])
+    ax.plot(data['time'], data['center'])
 
     # Identify every line in the plot
     ax.legend()
