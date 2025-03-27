@@ -103,8 +103,8 @@ def get_all_sensor_data():
         "LLS_A": df_LLSA,
         "LLS_B": df_LLSB,
         "LT": df_LT,
-        "CAM": df_CAM
-    }
+        "CAM": df_CAM}
+
 
 def statistical_values(data: pd.DataFrame):
     errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
