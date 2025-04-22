@@ -37,11 +37,11 @@ def get_all_sensor_data():
         processed_data_LLSB = get_processed_data(tow=j, sensor_type="LLS_B", overwrite=False)
 
 
-        if processed_data_LLSB.shape[1] > 4:
+        '''if processed_data_LLSB.shape[1] > 4:
             processed_data_LLSB = processed_data_LLSB.iloc[:, :4]
         # If only 3 columns, insert a placeholder at index 1 (assuming 'width' is missing)
         elif processed_data_LLSB.shape[1] == 3:
-            processed_data_LLSB.insert(1, "temp", np.nan)
+            processed_data_LLSB.insert(1, "temp", np.nan)'''
 
         processed_data_LLSB.columns = ["time", "width", "center", "error_LLS_B"]
         results_LLSB.append(processed_data_LLSB)
@@ -94,29 +94,56 @@ def statistical_values(data: pd.DataFrame):
 
     return mean, median, std, minimum, maximum
 
-def plot_histograms(data: pd.DataFrame, title: str):
+def plot_histograms(data: pd.DataFrame,
+                    title: str,
+                    bin_widths: list[float] = None):
     fig, ax = plt.subplots(2, 2, figsize=(10, 8))
     fig.suptitle(title)
 
-    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
+    errors      = [data['error_LLS_A'], data['error_LLS_B'],
+                   data['error_LT'],      data['error_CAM'] ]
     errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
-    titles = ['Error Tape width',
-              'Error Tape width after compaction',
-              'Error robot position',
-              'Error tape lateral movement']
+    titles      = ['Error Tape width',
+                   'Error Tape width after compaction',
+                   'Error robot position',
+                   'Error tape lateral movement']
+
+    if bin_widths is None:
+        bin_widths = [None]*4
 
     for i, error in enumerate(errors):
-        row = i // 2
-        col = i % 2
-        ax[row, col].hist(error, bins=40, color='skyblue', edgecolor='black')
+        row, col = divmod(i, 2)
+        clean = error.dropna().to_numpy()
+        mn, mx = clean.min(), clean.max()
+
+        bw = bin_widths[i]
+        if bw is None:
+            bins = 40
+        else:
+            bins = np.arange(mn, mx + bw, bw)
+
+        ax[row, col].hist(clean, bins=bins,
+                          color='skyblue', edgecolor='black')
+
+        # ** ZOOM IN on i==1 (top right) and i==2 (bottom left) **
+        if i == 1:   # top‑right plot (error_LLS_B)
+            ax[row, col].set_xlim(-0.5, 0.5)   # example limits
+        elif i == 2: # bottom‑left plot (error_LT)
+            ax[row, col].set_xlim(-1.5, 0.)   # example limits
+        elif i== 3: # bottom-left plot 
+             ax[row, col].set_xlim(-13.0, -12.0)
+
         ax[row, col].set_title(titles[i])
         ax[row, col].set_xlabel(errors_names[i])
         ax[row, col].set_ylabel('Frequency')
 
-        # Calculate the mean of the error data
-        mean_val = error.mean()
-        ax[row, col].axvline(mean_val, color='red', linestyle='-', label='Mean')
+        mean_val = clean.mean()
+        ax[row, col].axvline(mean_val, color='red', linestyle='-',
+                             label=f'Mean = {mean_val:.2f}')
         ax[row, col].legend()
+
+    plt.tight_layout(rect=[0,0,1,0.96])
+    plt.show()
 
 def main():
     # Gather data
@@ -152,8 +179,15 @@ def main():
 
 
     # Plot histograms
-    plot_histograms(df_error, "Sensor Error Histograms")
-    plt.show()
+    my_bin_widths = [0.01, 0.01, 0.05, 0.02]
+
+    # TODO: Bottom row plots are incorrect, check data 
+    # TODO: ('Error robot position', 'Error tape lateral movement')
+
+    plot_histograms(
+        df_error,
+        title="Sensor Error Histograms",
+        bin_widths=my_bin_widths)
 
 if __name__ == '__main__':
     main()

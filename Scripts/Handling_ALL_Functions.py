@@ -19,6 +19,7 @@ from constants import z_ref
 import Data_LLS_AB_importer
 import Data_LT_importer
 import Data_CAM_importer
+import Model_ALL_Syncing
 
 ################################################################################################################
 """Functions for Laser Tracker"""
@@ -259,12 +260,28 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     _save_table(processesed_data, name) # save the data
     return processesed_data
 
+
+def get_synced_data(tow:int, overwrite:bool=False)->pd.DataFrame:
+    '''Returns a massive DataFrame that is synced and cleaned\n
+    uses the syncing.py file functions, but use this function to keep everything organized'''
+
+    synced = Model_ALL_Syncing._get_synced_data(tow, "LT","LLS_A","LLS_B","CAM", overwrite=overwrite)
+
+
+    raise NotImplementedError
+    return synced
+
+
+
+
+
+
 ################################################################################################################
 
 def main():
     # add testing code here
     for k in range(1,32):
-        print(get_processed_data(1,"LLS_A"))
+        print(get_processed_data(1,"CAM"))
     pass
 
 

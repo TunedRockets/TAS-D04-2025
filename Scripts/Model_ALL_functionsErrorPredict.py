@@ -1,28 +1,36 @@
-#Way the model works: We input our current error, which we will call x
-# we calculate the mean of the next error, which we call y from the regression model
-#the value of x, the previous error, corresponds to a certain bin which contains a normal curve the randomness in the deviation of y 
-#we extract a random point from the normal curve 
-#we add this value to the before calculated mean
 
-#Note: we cant create a value of the mean or the histogram/normal curve of the devation for a certain data point of x(previous error), 
-#       because we don’t have enough data points at that precise point. This is why bins have been created: 
-#       this works, but will obtain a slight bias, because the deviation normal curve does not 
-#       correspond to the exact value of x, but only to the values around it
-
-
+'''
+    Way the model works: We input our current error, which we will call x
+    A regression model is made by binning the data, calculate the mean of each bin and find a regression line
+    we calculate the mean of the next error from the regression model which we call y
+    the value of x, the previous error, corresponds to a certain bin which contains a normal curve the randomness in the deviation of y 
+    we extract a random point from the normal curve, and we add this value to the before calculated mean
+    
+    Note: we cant create a value of the mean or the histogram/normal curve of the devation for a certain data point of x(previous error),
+    because we don’t have enough data points at that precise point. This is why bins have been created: 
+    this works, but will obtain a slight bias, because the deviation normal curve does not 
+    correspond to the exact value of x, but only to the values around it
+'''
+    
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 from sklearn.model_selection import train_test_split
 from scipy.stats import linregress
-from Data_CAM_importer import CAM_exceltolist
+def CAM_exceltolist(file_path):
+    excel_data = pd.read_excel(file_path, sheet_name=None)
+    CAM_sheets_data = []
+    for sheet_name, sheet_df in excel_data.items():
+        if sheet_name.startswith("Sheet"):
+            CAM_sheet_df = sheet_df.iloc[:, 0:]
+            CAM_sheets_data.append(CAM_sheet_df)
+    return CAM_sheets_data
+
 
 def load_and_prepare_data(file_path, column_index=4): #CHANGE USED COLUMN
     all_sheets_data = CAM_exceltolist(file_path)  #USE different data loader
-    column_arrays = [
-        sheet_df.iloc[:, column_index].dropna().to_numpy() for sheet_df in all_sheets_data
-    ]
+    column_arrays = [sheet_df.iloc[:, column_index].dropna().to_numpy() for sheet_df in all_sheets_data]
     combined_array = np.concatenate(column_arrays, axis=0)
     x_values = combined_array[:-1]
     y_values = combined_array[1:]
