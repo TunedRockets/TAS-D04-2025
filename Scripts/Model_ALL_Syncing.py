@@ -134,8 +134,10 @@ def blue_dot_LT(tow:int, overwrite:bool=False):
     LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
     LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT")["time"]
     xi, _ = find_x930(LT_x, LT_time)
-    index = LT_x.index(xi)
-    return LT_time(index)
+    index = 0
+    while LT_x[index] < xi:
+        index += 1
+    return LT_time[index]
 
 
 
@@ -397,22 +399,18 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.legend()
     plt.show()
 
-def _get_synced_data(tow:int, *args:str, overwrite:bool = False)->pd.DataFrame:
-    '''gets the synced data of the given tow, input is a variable number of datatype keys\n
-    valid keys are "LT","LLS_A","LLS_B","CAM"'''
+def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
+    '''gets the synced data of the given tow'''
     
     # checks that inputs are valid:
-    for sensor_type in args:
-        if sensor_type not in ["LT","LLS_A","LLS_B","CAM"]:
-            raise KeyError(f"the Key {sensor_type} was invalid: No such data exists")
     if tow not in range(1,32):
         raise IndexError(f"Tow ID {tow} is out of range")
 
     # get the list of dataframes:
     frame_list = []
-    for arg in args:
+    for arg in ["LT","CAM","LLS_A","LLS_B"]:
         frame = Handling_ALL_Functions.get_processed_data(tow,arg,overwrite)
-        frame_list.append(arg, frame) # adding both the key (arg) and the frame so we know which frame is which
+        frame_list.append([arg, frame]) # adding both the key (arg) and the frame so we know which frame is which
     
     #TODO: put all the syncing functions here to get the data synced...
 
@@ -434,7 +432,7 @@ def _get_synced_data(tow:int, *args:str, overwrite:bool = False)->pd.DataFrame:
 
 def main():
     for k in range(1,32):
-        _get_synced_data(k, "LT","LLS_A","LLS_B","CAM")
+        _get_synced_data(k)
 
 if __name__ == "__main__":
     main()
