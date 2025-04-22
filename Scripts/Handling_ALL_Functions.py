@@ -24,32 +24,42 @@ import Model_ALL_Syncing
 ################################################################################################################
 """Functions for Laser Tracker"""
 
-def _handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
-    """"This function takes the processed data and
-        creates new data points for each time stamp
-        where each point in time has a corresponding
-        position, and its errors in position"""
-    
+def _handle_LT(time: list,
+               x: list,
+               y: list,
+               z: list,
+               tow: int) -> pd.DataFrame:
+    """
+    Build the LT DataFrame and then drop any points
+    where y decreases (i.e. the gantry returning).
+    """
+    import numpy as np
+    import pandas as pd
+
+    # 1) build the raw table exactly as before
     rows = len(time)
-    columns = 6
-    shape = (rows, columns)
-    pandas_table = np.empty(shape)
+    tbl = np.empty((rows, 6))
     error_y, error_z = _error_LT(y, z, tow)
-    zero_time = time_to_float(time[0])
+    t0 = time_to_float(time[0])
 
-    for i in range(len(x)):
-        pandas_table[i][0] = time_to_float(time[i]) - zero_time
-        pandas_table[i][1] = x[i]
-        pandas_table[i][2] = y[i]
-        pandas_table[i][3] = z[i]
-        pandas_table[i][4] = error_y[i] # This is the y-error, it is just a better naming
-        pandas_table[i][5] = error_z[i]
-    # (Optional) Rename the columns to something more readable:
-    pandas_table = pd.DataFrame(pandas_table)
+    for i in range(rows):
+        tbl[i,0] = time_to_float(time[i]) - t0
+        tbl[i,1] = x[i]
+        tbl[i,2] = y[i]
+        tbl[i,3] = z[i]
+        tbl[i,4] = error_y[i]
+        tbl[i,5] = error_z[i]
 
-    pandas_table.columns = ["time", "x", "y", "z", "error_LT", "z error"]
+    df = pd.DataFrame(tbl, columns=[
+        "time","x","y","z","error_LT","z error"
+    ])
 
-    return pandas_table
+    # 2) KEEP ONLY THE OUTBOUND SWEEP: drop rows where y dips
+    #    for the very first row, diff() is NaN → fill with True so we keep it
+    forward_mask = df["y"].diff().fillna(1) > 0
+    df = df[forward_mask].reset_index(drop=True)
+
+    return df
 
 def _error_LT(y: list, z: list, tow_number)->list:
     """"This function takes a given tow path
@@ -305,7 +315,7 @@ def get_synced_data(tow:int, overwrite:bool=False)->pd.DataFrame:
 def main():
     # force-recompute LT data for tows 1–31 and print first rows
     for k in range(1, 32):
-        df_cam = get_processed_data(k, "LT", overwrite=False)
+        df_cam = get_processed_data(k, "LT", overwrite=True)
         print(df_cam.head())
 
 
