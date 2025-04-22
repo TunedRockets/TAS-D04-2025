@@ -61,7 +61,7 @@ def _error_LT(y: list, z: list, tow_number)->list:
     if tow_number == 1:
         y_ref = 125
     else:
-        y_ref = 125 + 12.5 * (tow_number)
+        y_ref = 125 + 12.5 * (tow_number-2)
 
     for i in range(len(y)):
         error_y.append(y[i] - y_ref)
@@ -264,7 +264,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 def main():
     # add testing code here
     for k in range(1,32):
-        print(get_processed_data(k,"LLS_A", True))
+        print(get_processed_data(1,"LLS_A"))
     pass
 
 
