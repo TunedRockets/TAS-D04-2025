@@ -407,13 +407,18 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
     if tow not in range(1,32):
         raise IndexError(f"Tow ID {tow} is out of range")
 
-    # get the list of dataframes:
+    # get the list of dataframes (and rename the columns to avoid duplicate):
 
     frame_LT = Handling_ALL_Functions.get_processed_data(tow,"LT",overwrite)
+
     frame_CAM = Handling_ALL_Functions.get_processed_data(tow,"CAM",overwrite)
+    frame_CAM.columns = ["time", "width_CAM", "center_CAM", "error_CAM"]
+    
     frame_LLS_A = Handling_ALL_Functions.get_processed_data(tow,"LLS_A",overwrite)
+    frame_LLS_A.columns = ["time", "width_LLS_A", "center_LLS_A","width error_LLS_A"]
+
     frame_LLS_B = Handling_ALL_Functions.get_processed_data(tow,"LLS_B",overwrite)
-    #TODO: put all the syncing functions here to get the data synced...
+    frame_LLS_B.columns = ["time", "width_LLS_B", "center_LLS_B","width error_LLS_B"]
 
     # find time discrepancy
     true_time = blue_dot_LT(tow,overwrite)
