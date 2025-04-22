@@ -128,6 +128,18 @@ def _test_join_function():
     plt.plot(combined["time"],combined["shifted"])
     plt.show()
 
+
+def blue_dot_LT(tow:int, overwrite:bool=False):
+    '''gets the time at where the LT is 930'''
+    LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
+    LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT")["time"]
+    xi, _ = find_x930(LT_x, LT_time)
+    index = LT_x.index(xi)
+    return LT_time(index)
+
+
+
+
 def find_x930(LT_x: list, LT_time: list):
     """This function grabs a sample of the LT data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
@@ -210,13 +222,15 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
     #     width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
     #     width_velocities.append(width_velocity)
 
-    plt.plot(times, width_velocities, label="width_velocities", color="red")
-    plt.title("Width velocity")
-    plt.xlabel("Time [s]")
-    plt.ylabel("Rate of change of tow width [m/s]")
-    plt.plot(time_stop,0, "-o")
-    plt.grid()
-    plt.show() 
+    # plt.plot(times, width_velocities, label="width_velocities", color="red")
+    # plt.title("Width velocity")
+    # plt.xlabel("Time [s]")
+    # plt.ylabel("Rate of change of tow width [m/s]")
+    # plt.plot(time_stop,0, "-o")
+    # plt.grid()
+    # plt.show() 
+    return time_stop
+
 
 def scan_for_min(t_len: float, times: list, values: list, start_time: float, end_time: float) -> tuple:
     """Finds the minimum squared sum over a given time window.
@@ -261,7 +275,7 @@ def scan_for_min(t_len: float, times: list, values: list, start_time: float, end
 
     return min_index, times[min_index]
 
-def camera_sync(tow:int, sensor_type:str, overwrite=False):
+def camera_sync(tow:int, overwrite=False):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
@@ -271,8 +285,8 @@ def camera_sync(tow:int, sensor_type:str, overwrite=False):
         other data sets"""
 
     center_velocities = [] # Set up list of velocities
-    centers = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["center"] #gets just the width-column
-    times = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["time"] #gets just the time-column
+    centers = Handling_ALL_Functions.get_processed_data(tow, "CAM", overwrite)["center"] #gets just the width-column
+    times = Handling_ALL_Functions.get_processed_data(tow, "CAM", overwrite)["time"] #gets just the time-column
 
 
     for i in range(len(centers)-1):
@@ -294,13 +308,15 @@ def camera_sync(tow:int, sensor_type:str, overwrite=False):
     #     width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
     #     width_velocities.append(width_velocity)
 
-    plt.plot(times, center_velocities, label="center_velocities", color="red")
-    plt.title("center velocity")
-    plt.xlabel("Time [s]")
-    plt.ylabel("Rate of change of tow center [m/s]")
-    plt.plot(time_stop,0, "-o")
-    plt.grid()
-    plt.show() 
+    # plt.plot(times, center_velocities, label="center_velocities", color="red")
+    # plt.title("center velocity")
+    # plt.xlabel("Time [s]")
+    # plt.ylabel("Rate of change of tow center [m/s]")
+    # plt.plot(time_stop,0, "-o")
+    # plt.grid()
+    # plt.show() 
+
+    return time_stop
 
 def least_squares_regression(x, y):
     """
@@ -401,6 +417,11 @@ def _get_synced_data(tow:int, *args:str, overwrite:bool = False)->pd.DataFrame:
     #TODO: put all the syncing functions here to get the data synced...
 
     # find time discrepancy
+    true_time = blue_dot_LT(tow,overwrite)
+    blue_dot_CAM = camera_sync(tow,overwrite)
+    blue_dot_LLS_A = LLS_sync(tow, "LLS_A", overwrite)
+    blue_dot_LLS_B = LLS_sync(tow, "LLS_B", overwrite)
+
 
     # join data in time
 
@@ -413,8 +434,7 @@ def _get_synced_data(tow:int, *args:str, overwrite:bool = False)->pd.DataFrame:
 
 def main():
     for k in range(1,32):
-        print(k)
-        camera_sync(k, "CAM")
+        _get_synced_data(k, "LT","LLS_A","LLS_B","CAM")
 
 if __name__ == "__main__":
     main()
