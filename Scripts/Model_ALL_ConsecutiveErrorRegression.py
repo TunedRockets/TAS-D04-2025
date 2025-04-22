@@ -1,4 +1,6 @@
-''''''
+'''
+This code makes regression models for mean and variation of the data bins that were extracted in the ConsecutiveErrorRegressions.
+'''
 
 import math
 import pandas as pd
@@ -35,6 +37,7 @@ def fit_cubic(data: pd.DataFrame):   #bin_error: np.array, bin_mean: np.array, b
 
 
 def get_regression_linear(x_cords: np.array, y_cords: np.array):
+    '''This code fits a linear regression and returns the factors of the polynomial.'''
 
     X, Y = [], []
     for i in range(len(x_cords)):
@@ -53,7 +56,7 @@ def get_regression_linear(x_cords: np.array, y_cords: np.array):
     return Beta[0], Beta[1]    # c, b, a
 
 def get_regression_cubic(x_cords: np.array, y_cords: np.array):
-
+    '''This code fits a cubic regression and returns the factors of the polynomial.'''
     X, Y = [], []
     for i in range(len(x_cords)):
         X.append([1, x_cords[i], x_cords[i]**2, x_cords[i]**3])
@@ -71,6 +74,7 @@ def get_regression_cubic(x_cords: np.array, y_cords: np.array):
     return Beta[0], Beta[1], Beta[2], Beta[3]    # d, c, b, a
 
 def plot_function_linear(a: float, b: float, bin_error: list, bin_mean: list, title: str):     # y = a + bx + cx^2
+    '''This code plots the linear regression against the data points.'''
     points = 101
     min, max = np.min(bin_error), np.max(bin_error)
     start = min - 0.05*(max-min)
@@ -91,6 +95,7 @@ def plot_function_linear(a: float, b: float, bin_error: list, bin_mean: list, ti
     plt.show()
 
 def plot_function(a: float, b: float, c: float, d: float, bin_error: list, bin_mean: list, title: str):     # y = a + bx + cx^2
+    '''This code plots the cubic regression against the data points.'''
     points = 101
     min, max = np.min(bin_error), np.max(bin_error)
     start = min - 0.05*(max-min)
@@ -115,6 +120,7 @@ def plot_function(a: float, b: float, c: float, d: float, bin_error: list, bin_m
 
 
 def test():
+    '''Just some test data to check the code'''
     bin_error = np.array([-2.2, -0.9, 0, 1, 2.1])
     bin_mean = np.array([-1, -0.5, 0, 0.7, 1.1])
     bin_variance = np.array([5, 1.2, 0, 2, 3.8])
