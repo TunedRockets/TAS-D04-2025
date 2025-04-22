@@ -12,6 +12,7 @@ def get_all_sensor_data():
     results_LT = []
     results_CAM = []
 
+
     # ---------------------------
     # Process LLS_A sensor data
     # ---------------------------
