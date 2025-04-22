@@ -203,6 +203,8 @@ def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
     # Display the table
     print(bin_stats_df)
 
+    return bin_stats_df
+
 if __name__ == "__main__":
     # Test your function here
     consecutive_error("CAM", "width", 0.2)
