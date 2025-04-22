@@ -12,7 +12,8 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, shift:float)-> pd.DataFr
     I.e. shifts frame two BACKWARDS by the desync.\n
     assumes time is at index 0 in the columns\n
     (also needs both frames to have a column called "time")\n
-    otherwise it breaks
+    otherwise it breaks\n
+    time is kept relative to the first frame
     '''
     # PREPROCCESING:
 
@@ -407,11 +408,11 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
         raise IndexError(f"Tow ID {tow} is out of range")
 
     # get the list of dataframes:
-    frame_list = []
-    for arg in ["LT","CAM","LLS_A","LLS_B"]:
-        frame = Handling_ALL_Functions.get_processed_data(tow,arg,overwrite)
-        frame_list.append([arg, frame]) # adding both the key (arg) and the frame so we know which frame is which
-    
+
+    frame_LT = Handling_ALL_Functions.get_processed_data(tow,"LT",overwrite)
+    frame_CAM = Handling_ALL_Functions.get_processed_data(tow,"CAM",overwrite)
+    frame_LLS_A = Handling_ALL_Functions.get_processed_data(tow,"LLS_A",overwrite)
+    frame_LLS_B = Handling_ALL_Functions.get_processed_data(tow,"LLS_B",overwrite)
     #TODO: put all the syncing functions here to get the data synced...
 
     # find time discrepancy
@@ -422,6 +423,9 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
 
 
     # join data in time
+    data = join_data(frame_LT, frame_CAM, (blue_dot_CAM - true_time))
+    data = join_data(data, frame_LLS_A, (blue_dot_LLS_A - true_time))
+    data = join_data(data, frame_LLS_B, (blue_dot_LLS_B - true_time))
 
     # shift position
 
