@@ -207,4 +207,4 @@ def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
 
 if __name__ == "__main__":
     # Test your function here
-    consecutive_error("CAM", "width", 0.2)
+    consecutive_error("LLS_B", "", 0.2)
