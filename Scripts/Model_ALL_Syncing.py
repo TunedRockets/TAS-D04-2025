@@ -12,7 +12,8 @@ def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, shift:float)-> pd.DataFr
     I.e. shifts frame two BACKWARDS by the desync.\n
     assumes time is at index 0 in the columns\n
     (also needs both frames to have a column called "time")\n
-    otherwise it breaks
+    otherwise it breaks\n
+    time is kept relative to the first frame
     '''
     # PREPROCCESING:
 
@@ -406,13 +407,18 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
     if tow not in range(1,32):
         raise IndexError(f"Tow ID {tow} is out of range")
 
-    # get the list of dataframes:
-    frame_list = []
-    for arg in ["LT","CAM","LLS_A","LLS_B"]:
-        frame = Handling_ALL_Functions.get_processed_data(tow,arg,overwrite)
-        frame_list.append([arg, frame]) # adding both the key (arg) and the frame so we know which frame is which
+    # get the list of dataframes (and rename the columns to avoid duplicate):
+
+    frame_LT = Handling_ALL_Functions.get_processed_data(tow,"LT",overwrite)
+
+    frame_CAM = Handling_ALL_Functions.get_processed_data(tow,"CAM",overwrite)
+    frame_CAM.columns = ["time", "width_CAM", "center_CAM", "error_CAM"]
     
-    #TODO: put all the syncing functions here to get the data synced...
+    frame_LLS_A = Handling_ALL_Functions.get_processed_data(tow,"LLS_A",overwrite)
+    frame_LLS_A.columns = ["time", "width_LLS_A", "center_LLS_A","width error_LLS_A"]
+
+    frame_LLS_B = Handling_ALL_Functions.get_processed_data(tow,"LLS_B",overwrite)
+    frame_LLS_B.columns = ["time", "width_LLS_B", "center_LLS_B","width error_LLS_B"]
 
     # find time discrepancy
     true_time = blue_dot_LT(tow,overwrite)
@@ -422,6 +428,9 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
 
 
     # join data in time
+    data = join_data(frame_LT, frame_LLS_A, (blue_dot_LLS_A - true_time))
+    data = join_data(data, frame_LLS_B, (blue_dot_LLS_B - true_time))
+    data = join_data(data, frame_CAM, (blue_dot_CAM - true_time))
 
     # shift position
 
@@ -431,6 +440,7 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
     return ...
 
 def main():
+    _get_synced_data(5)
     for k in range(1,32):
         _get_synced_data(k)
 
