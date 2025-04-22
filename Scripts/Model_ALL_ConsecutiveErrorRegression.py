@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 
 def fit_linear(data: pd.DataFrame):   #bin_error: np.array, bin_mean: np.array, bin_variance: np.array
+    '''a piece of code to fit and plot a linear regression to the data'''
     bin_error = np.array(data["y_mean"])    # TODO: should be x_mean
     bin_mean = np.array(data["deviation_mean"])
     bin_variance = np.array(data["deviation_variance"])
@@ -20,6 +21,7 @@ def fit_linear(data: pd.DataFrame):   #bin_error: np.array, bin_mean: np.array, 
     plot_function_linear(var_a, var_b, bin_error, bin_variance, 'variance')
 
 def fit_cubic(data: pd.DataFrame):   #bin_error: np.array, bin_mean: np.array, bin_variance: np.array
+    '''a piece of code to fit and plot a cubic regression to the data'''
     bin_error = np.array(data["y_mean"])    # TODO: x_mean
     bin_mean = np.array(data["deviation_mean"])
     bin_variance = np.array(data["deviation_variance"])
