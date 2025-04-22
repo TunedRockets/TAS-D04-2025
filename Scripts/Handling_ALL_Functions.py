@@ -104,21 +104,45 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list, width:list) -> pd
 """Functions for Camera"""
 
 def _handle_camera(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
-    rows = len(time)
-    columns = 4
-    shape = (rows, columns)
-    pandas_table = np.empty(shape)
-    zero_time = time_to_float(time[0])
+    """
+    time       : list of timestamp strings
+    left_edge  : list of left‐edge positions (floats)
+    right_edge : list of right‐edge positions (floats)
 
-    for i in range(len(time)):
-        pandas_table[i][0] = time_to_float(time[i]) - zero_time
-        pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
-        pandas_table[i][2] = 0.5 * (right_edge[i] + left_edge[i])
-        pandas_table[i][3] = (right_edge[i] - left_edge[i]) - 6.35  # assume width error
-    pandas_table = pd.DataFrame(pandas_table)
-    pandas_table.columns = ["time", "width", "center", "error_CAM"]
+    Returns a DataFrame with columns:
+      - time       : seconds since start
+      - width      : absolute measured width (mm)
+      - center     : midpoint of the two edges
+      - error_CAM  : measured width minus 6.35 mm nominal
+    """
+    # 1) compute time floats
+    t_secs = np.array([time_to_float(t) for t in time], dtype=float)
+    t0     = t_secs[0]
+    rel_time = t_secs - t0
 
-    return pandas_table
+    # 2) make arrays of edges
+    le = np.asarray(left_edge, dtype=float)
+    re = np.asarray(right_edge, dtype=float)
+
+    # 3) compute width and centers
+    widths  = np.abs(re - le)
+    centers = 0.5 * (re + le)
+    errors  = widths - 6.35
+
+    # 4) debug print first few to verify
+    for i in range(min(5, len(widths))):
+        print(f"[CAM] i={i:>2} | left={le[i]:.2f} mm | right={re[i]:.2f} mm"
+              f" | width={widths[i]:.2f} mm | error={errors[i]:.2f} mm")
+
+    # 5) build the DataFrame
+    df = pd.DataFrame({
+        "time":      rel_time,
+        "width":     widths,
+        "center":    centers,
+        "error_CAM": errors
+    })
+
+    return df
 
 ################################################################################################################
 
@@ -279,10 +303,10 @@ def get_synced_data(tow:int, overwrite:bool=False)->pd.DataFrame:
 ################################################################################################################
 
 def main():
-    # add testing code here
-    for k in range(1,32):
-        print(get_processed_data(1,"CAM"))
-    pass
+    # force-recompute LT data for tows 1–31 and print first rows
+    for k in range(1, 32):
+        df_cam = get_processed_data(k, "LT", overwrite=False)
+        print(df_cam.head())
 
 
 if __name__ == "__main__":
