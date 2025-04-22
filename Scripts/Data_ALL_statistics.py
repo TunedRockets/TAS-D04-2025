@@ -37,11 +37,11 @@ def get_all_sensor_data():
         processed_data_LLSB = get_processed_data(tow=j, sensor_type="LLS_B", overwrite=False)
 
 
-        if processed_data_LLSB.shape[1] > 4:
+        '''if processed_data_LLSB.shape[1] > 4:
             processed_data_LLSB = processed_data_LLSB.iloc[:, :4]
         # If only 3 columns, insert a placeholder at index 1 (assuming 'width' is missing)
         elif processed_data_LLSB.shape[1] == 3:
-            processed_data_LLSB.insert(1, "temp", np.nan)
+            processed_data_LLSB.insert(1, "temp", np.nan)'''
 
         processed_data_LLSB.columns = ["time", "width", "center", "error_LLS_B"]
         results_LLSB.append(processed_data_LLSB)
@@ -129,8 +129,9 @@ def plot_histograms(data: pd.DataFrame,
         if i == 1:   # top‑right plot (error_LLS_B)
             ax[row, col].set_xlim(-0.5, 0.5)   # example limits
         elif i == 2: # bottom‑left plot (error_LT)
-            ax[row, col].set_xlim(-3.0, 3.0)   # example limits
-        elif 
+            ax[row, col].set_xlim(-1.5, 1.0)   # example limits
+        elif i== 3: # bottom-left plot 
+             ax[row, col].set_xlim(-13.0, -12.0)
 
         ax[row, col].set_title(titles[i])
         ax[row, col].set_xlabel(errors_names[i])
@@ -178,7 +179,10 @@ def main():
 
 
     # Plot histograms
-    my_bin_widths = [0.01, 0.01, 0.1, 0.05]
+    my_bin_widths = [0.005, 0.01, 0.05, 0.02]
+
+    # TODO: Bottom row plots are incorrect, check data 
+    # TODO: ('Error robot position', 'Error tape lateral movement')
 
     plot_histograms(
         df_error,
