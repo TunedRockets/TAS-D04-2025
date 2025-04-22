@@ -281,7 +281,7 @@ def get_synced_data(tow:int, overwrite:bool=False)->pd.DataFrame:
 def main():
     # add testing code here
     for k in range(1,32):
-        print(get_processed_data(1,"LLS_A"))
+        print(get_processed_data(1,"CAM"))
     pass
 
 

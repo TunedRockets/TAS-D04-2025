@@ -129,7 +129,7 @@ def plot_histograms(data: pd.DataFrame,
         if i == 1:   # top‑right plot (error_LLS_B)
             ax[row, col].set_xlim(-0.5, 0.5)   # example limits
         elif i == 2: # bottom‑left plot (error_LT)
-            ax[row, col].set_xlim(-1.5, 1.0)   # example limits
+            ax[row, col].set_xlim(-1.5, 0.)   # example limits
         elif i== 3: # bottom-left plot 
              ax[row, col].set_xlim(-13.0, -12.0)
 
@@ -179,7 +179,7 @@ def main():
 
 
     # Plot histograms
-    my_bin_widths = [0.005, 0.01, 0.05, 0.02]
+    my_bin_widths = [0.01, 0.01, 0.05, 0.02]
 
     # TODO: Bottom row plots are incorrect, check data 
     # TODO: ('Error robot position', 'Error tape lateral movement')
