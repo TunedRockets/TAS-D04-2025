@@ -126,9 +126,9 @@ def test():
     bin_variance = np.array([5, 1.2, 0, 2, 3.8])
 
 
-import Model_ALL_functionsErrorPredict
+import Model_ALL_ConsecutiveErrorTheo
 
+stats = Model_ALL_ConsecutiveErrorTheo.consecutive_error('LLS_A', '', 0.2)
 
-
-x = fit_linear(Model_ALL_functionsErrorPredict.bin_stats_df)
+x = fit_linear(stats)    # Model_ALL_functionsErrorPredict.bin_stats_df
 # x = test()
