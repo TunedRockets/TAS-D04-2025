@@ -381,7 +381,7 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.legend()
     plt.show()
 
-def get_synced_data(tow:int, *args:str)->pd.DataFrame:
+def _get_synced_data(tow:int, *args:str, overwrite:bool = False)->pd.DataFrame:
     '''gets the synced data of the given tow, input is a variable number of datatype keys\n
     valid keys are "LT","LLS_A","LLS_B","CAM"'''
     
@@ -395,7 +395,7 @@ def get_synced_data(tow:int, *args:str)->pd.DataFrame:
     # get the list of dataframes:
     frame_list = []
     for arg in args:
-        frame = Handling_ALL_Functions.get_processed_data(tow,arg)
+        frame = Handling_ALL_Functions.get_processed_data(tow,arg,overwrite)
         frame_list.append(arg, frame) # adding both the key (arg) and the frame so we know which frame is which
     
     #TODO: put all the syncing functions here to get the data synced...
