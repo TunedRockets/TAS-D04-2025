@@ -137,80 +137,73 @@ def find_x930(LT_x: list, LT_time: list):
         Then the coressponding time at xi is ti and this time can be used to sync the LT data with
         other data sets"""
 
-    beta = 1/5000
+    beta = 2
     delta_x_values = []
+    x_values = []
 
-    for i in range(600,1300):
-        delta_x = abs(LT_x[i+1] - LT_x[i])
+    for i in range(int(len(LT_x)*0.45), int(len(LT_x)*0.48)):
+        delta_x = (LT_x[i+1] - LT_x[i])/0.010 # Divided by the rate at which the LT scans
+        x = LT_x[i]
         delta_x_values.append(delta_x)
+        x_values.append(x)
 
-        sorted_values = sorted(set(delta_x_values))  # Remove duplicates and sort
-        if sorted_values[0] != 0:
-            delta_x_min = sorted_values[0]  # Second smallest value
-        elif sorted_values[0] == 0:
-            delta_x_min = sorted_values[1]  # Second smallest value
-        else:
-            delta_x_min = None  # No second minimum available
-    
-    print(delta_x_min)
+    sorted_values = sorted(set(delta_x_values))  # Remove duplicates and sort
+    delta_x_min = sorted_values[0]  # Smallest value
     xi_list = []
     ti_list = []
+    delta_xi_list = []
 
-    for j in range(1300,len(LT_x)-2):
-        if abs(LT_x[j+1] - LT_x[j]) < (delta_x_min/beta):
+    for j in range(int(len(LT_x)*0.50), int(len(LT_x)*0.75)):
+        if (LT_x[j+1] - LT_x[j])/0.010 < (delta_x_min/beta):
             xi_list.append(LT_x[j])
             ti_list.append(LT_time[j])
-            if abs(LT_x[j+2] - LT_x[j+1]) >= (delta_x_min/beta):
-                xi = xi_list[0]
-                ti = ti_list[0]
-                xn = LT_x[j+1]
-                tn = LT_time[j+1]
-                t = tn - ti
+            delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)
+            if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta):
                 break
-        
-    return xi, t
+
+    k = len(ti_list) - 1
+    index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
+    xi = xi_list[index_delta_xi_min]
+    ti = ti_list[index_delta_xi_min]
+    t_width = (ti_list[k] - ti_list[0])/3 # The time seems to be off by a factor of 3 in the data?
+
+    # Plot the data
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
+    # Mark the detected tape cut point
+    # plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
+    # Labels and legend
+    # plt.xlabel("Time [s]")
+    # plt.ylabel("X Position [mm]")
+    # plt.title("X vs Time with Tape Cut Detection")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
+
+    return xi, t_width
 
 def LLS_sync(tow:int, sensor_type:str, overwrite=False):
     width_velocities = [] # Set up list of velocities
-    delta_width_list = []
-    data = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite) # get data, first argument 1-31, second has to stay "LLS_B"
-    widths = data.iloc[:,1].values #gets just the width-column
-    times = data.iloc[:,0].values #gets just the time-column
-    beta = 2.5
+    widths = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["width"] #gets just the width-column
+    times = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["time"] #gets just the time-column
+
 
     for i in range(len(widths)-1):
         width_velocities.append(widths[i+1] - widths[i])
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
 
-    ###########################################################################################################
-
-    for i in range(200,300):
-        delta_width = abs(widths[i+1] - widths[i])
-        delta_width_list.append(delta_width)
-    
-        sorted_values = sorted(set(delta_width_list))  # Remove duplicates and sort
-
-        if len(sorted_values) > 1:
-            second_min = sorted_values[1]  # Second smallest value
-        else:
-            second_min = None  # No second minimum available
-
-    print("Second Minimum:", second_min)
-
-    delta_width_min = second_min
-    
-    xi, t = find_x930(Handling_ALL_Functions.get_processed_data(1, "LT")["x"], Handling_ALL_Functions.get_processed_data(1, "LT")["time"])
+    xi, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
     if sensor_type == "LLS_B":
-        t = 40*t
+        t_width = 2*t_width
+        start_time = 4
+        end_time = 5.5
     if sensor_type == "LLS_A":
-        t = 25*t
-    index_stop, time_stop = scan_for_min(t, times, width_velocities, 3.5, 5.5)    
-    
+        t_width = 1.5*t_width
+        start_time = 4
+        end_time = 5.5
+    index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time)    
 
-    print(time_stop)
     ##########################################################################################################
-
-
 
     # #Loop over all the data points and store results
     # for i in range(len(widths)-1): 
@@ -225,39 +218,50 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
     plt.grid()
     plt.show() 
 
-def scan_for_min(t_len:float, times:list, values:list, start_time:float, end_time:float)->tuple:
-    '''finds the minimum range for the given length and returns the index and time where the minimum starts\n
-    also makes the diffference absolute to cope with negative values\n
-    only looks between the start and end times'''
+def scan_for_min(t_len: float, times: list, values: list, start_time: float, end_time: float) -> tuple:
+    """Finds the minimum squared sum over a given time window.
+    
+    Returns the index and time where the minimum starts.
+    Handles negative values by taking absolute differences.
+    Only considers values between start_time and end_time.
+    """
+    
+    # Check if the given time range is valid
+    if end_time - start_time < t_len:
+        raise ValueError(f"Start and end times too close: {end_time - start_time:.2f}, required: {t_len:.2f}")
+    
+    # Find the index where the start_time begins
+    ti = 0
+    while ti < len(times) and times[ti] < start_time:
+        ti += 1
 
     sums = []
-    # run up the data to the start
-    ti=0
-    while times[ti] < start_time:
-        ti+= 1
-    
+    min_sum = float('inf')
+    min_index = -1
 
-    try:
-        for i in range(ti, len(values)):
-            sum_x = 0
-            j = i
+    for i in range(ti, len(values)):
+        if times[i] + t_len > end_time:
+            break  # Ensure we stay within the time range
 
-            if times[i] + t_len > end_time:
-                break # makes sure to not enclude the endstop
-            
-            while times[j] <= times[i] + t_len:
-                sum_x += values[j]**2
-                j+=1
-            sums.append(sum_x)
-    except IndexError:
-        pass # now we're at the end so no point going further
+        sum_x = 0
+        j = i
+        while j < len(values) and times[j] <= times[i] + t_len:
+            sum_x += values[j] ** 2
+            j += 1
 
-    minimum = min(sums)
-    min_index = sums.index(minimum)
+        sums.append(sum_x)
 
-    return min_index, times[min_index+ti]
+        # Keep track of the minimum sum
+        if sum_x < min_sum:
+            min_sum = sum_x
+            min_index = i  # Store the absolute index in `times`
 
-def camera_sync(cam_data: list, cam_time: list):
+    if min_index == -1:
+        raise ValueError("No valid range found within the specified time window.")
+
+    return min_index, times[min_index]
+
+def camera_sync(tow:int, sensor_type:str, overwrite=False):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
@@ -266,22 +270,37 @@ def camera_sync(cam_data: list, cam_time: list):
         Then the coressponding time at xi is ti and this time can be used to sync the CAM data with
         other data sets"""
 
-    beta = 2
-    delta_center_values = []
+    center_velocities = [] # Set up list of velocities
+    centers = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["center"] #gets just the width-column
+    times = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["time"] #gets just the time-column
 
-    for i in range(100,200):
-        delta_center = abs(cam_data[i+1] - cam_data[i])
-        delta_center_values.append(delta_center)
-    
-    delta_center_min = min(delta_center_values)
 
-    for j in range(200,len(cam_data)):
-        if abs(cam_data[j+1] - cam_data[j]) < (delta_center_min/beta):
-            ci = cam_data[j]
-            ti = cam_time[j]
-            break
-        
-    return ci, ti
+    for i in range(len(centers)-1):
+        center_velocities.append(centers[i+1] - centers[i])
+    center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
+
+    xi, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
+    t_width = 1.5*t_width
+    start_time = 4.5
+    end_time = 5.75
+    index_stop, time_stop = scan_for_min(t_width, times, center_velocities, start_time, end_time)    
+
+    ##########################################################################################################
+
+
+
+    # #Loop over all the data points and store results
+    # for i in range(len(widths)-1): 
+    #     width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
+    #     width_velocities.append(width_velocity)
+
+    plt.plot(times, center_velocities, label="center_velocities", color="red")
+    plt.title("center velocity")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Rate of change of tow center [m/s]")
+    plt.plot(time_stop,0, "-o")
+    plt.grid()
+    plt.show() 
 
 def least_squares_regression(x, y):
     """
@@ -385,10 +404,9 @@ def get_synced_data(tow:int, *args:str)->pd.DataFrame:
     return ...
 
 def main():
-
-    #for k in range(1, 32):
-        #print(k)
-        LLS_sync(1, "LLS_A")
+    for k in range(1,32):
+        print(k)
+        camera_sync(k, "CAM")
 
 if __name__ == "__main__":
     main()

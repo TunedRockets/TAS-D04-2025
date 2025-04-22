@@ -12,7 +12,8 @@ Everything is wrapped up in get_processed_data(), just use that and everything w
 
 import numpy as np
 import pandas as pd
-
+import glob
+import os
 
 from constants import z_ref
 import Data_LLS_AB_importer
@@ -57,7 +58,10 @@ def _error_LT(y: list, z: list, tow_number)->list:
     error_y = []
     error_z = []
 
-    y_ref = 125 + 12.5*(tow_number-1)
+    if tow_number == 1:
+        y_ref = 125
+    else:
+        y_ref = 125 + 12.5 * (tow_number-2)
 
     for i in range(len(y)):
         error_y.append(y[i] - y_ref)
@@ -68,7 +72,7 @@ def _error_LT(y: list, z: list, tow_number)->list:
 ################################################################################################################
 """Functions for Laser Line Scanner"""
 
-def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
+def _handle_LLS(time: list, left_edge: list, right_edge: list, width:list) -> pd.DataFrame:
     """"This function takes the processed data and
         creates new data points for each time stamp
         where each point in time has a corresponding
@@ -84,7 +88,7 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
 
     for i in range(len(time)):
         pandas_table[i][0] = time_to_float(time[i]) - zero_time
-        pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
+        pandas_table[i][1] = width[i] # width
         pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
         pandas_table[i][3] = (pandas_table[i][1]-6.35) # error (6.35 is the right width)
     
@@ -106,7 +110,8 @@ def _handle_camera(time: list, left_edge: list, right_edge: list) -> pd.DataFram
     zero_time = time_to_float(time[0])
 
     for i in range(len(time)):
-        ...
+        pandas_table[i][0] = time_to_float(time[i]) - zero_time
+        pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
         pandas_table[i][2] = 0.5 * (right_edge[i] + left_edge[i])
         pandas_table[i][3] = (right_edge[i] - left_edge[i]) - 6.35  # assume width error
     pandas_table = pd.DataFrame(pandas_table)
@@ -174,6 +179,32 @@ def export_to_csv(data_table:pd.DataFrame, name:str)-> None:
     data_table.to_csv(_save_path + name)
     return None
 
+def purge_cache(confirmation:bool = False)->None:
+    '''gets rid of all the files in the cache.\n
+    Warning! don't do this unless you're sure you want to\n
+    you will have to generate all the data again'''
+
+    print("purging cache...")
+    if confirmation != True:
+        raise PermissionError("You did not give confirmation for purging the cache. are you sure you want to do this?")
+
+    files = glob.glob(_save_path + "*")
+    for file in files:
+        if os.path.isfile(file):
+            os.remove(file)
+    print("cache purged")
+
+def create_cache()->None:
+    """runs through all the datatypes and generates the cache, will take some time"""
+    print("Let there be cache...")
+    codes = ["LT","LLS_A","LLS_B","CAM"]
+    tows = range(1,32)
+
+    for code in codes:
+        for tow in tows:
+            get_processed_data(tow,code, True)
+    print("Cache created!")
+
 def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     '''
     This function handles ALL the grabbing and processing of the raw data\n
@@ -219,12 +250,12 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
         case "LLS_A":
             # Laser Line Sensor 1
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-2]).T
-            processesed_data = _handle_LLS(*data[:3])
+            processesed_data = _handle_LLS(*data[:4])
 
         case "LLS_B":
             # Laser Line Sensor 2
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
-            processesed_data = _handle_LLS(*data[:3])
+            processesed_data = _handle_LLS(*data[:4])
     _save_table(processesed_data, name) # save the data
     return processesed_data
 
@@ -232,7 +263,9 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 
 def main():
     # add testing code here
-    print(get_processed_data(1,"LT"))
+    for k in range(1,32):
+        print(get_processed_data(1,"LLS_A"))
+    pass
 
 
 if __name__ == "__main__":
