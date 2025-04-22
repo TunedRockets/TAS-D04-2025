@@ -1,3 +1,6 @@
+'''
+This code uses the synchronization point found during the syncing to cut all the non-layup data out of the processed data
+'''
 import math
 import os
 
@@ -6,11 +9,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
 
-from Model_ALL_Error_Correlation import find_x930
+from Model_ALL_Syncing import find_x930
 import Handling_ALL_Functions
 
 
 def LT_time_sync(tow: int, data: pd.DataFrame):
+    '''This function uses xi (the cutting point) in combination with
+     layup values, such as length to fins the start and end times'''
     xi, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"],
                             Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
     x_0 = xi - 930
@@ -33,6 +38,7 @@ def LT_time_sync(tow: int, data: pd.DataFrame):
     return t_0, t_end
 
 def LT_cutter(data: pd.DataFrame, t_0: float, t_end: float):
+    '''This function cuts the laser tracker data and saves it to a new dataframe, which it returns.'''
     t_list = data['time']
 
     for i in range(len(t_list)):
@@ -66,6 +72,7 @@ def LT_cutter(data: pd.DataFrame, t_0: float, t_end: float):
     return pandas_table
 
 def LLS_cutter(data: pd.DataFrame, t_0: float, t_end: float):
+    '''This function cuts the laser line scanner data and saves it to a new dataframe, which it returns.'''
     t_list = data['time']
 
     for i in range(len(t_list)):
@@ -98,6 +105,7 @@ def LLS_cutter(data: pd.DataFrame, t_0: float, t_end: float):
 
 
 def CAM_cutter(data: pd.DataFrame, t_0: float, t_end: float):
+    '''This function cuts the camera data and saves it to a new dataframe, which it returns.'''
     t_list = data['time']
 
     for i in range(len(t_list)):
@@ -130,6 +138,7 @@ def CAM_cutter(data: pd.DataFrame, t_0: float, t_end: float):
 
 
 def import_data(tow: int):
+    '''This function imports the data for all the sensors'''
     LT_data = Handling_ALL_Functions.get_processed_data(tow, "LT")
     LLSA_data = Handling_ALL_Functions.get_processed_data(tow, "LLS1")
     LLSB_data = Handling_ALL_Functions.get_processed_data(tow, "LLS2")
@@ -150,6 +159,10 @@ def export_data(data_table: pd.DataFrame, short_name):
 
 
 def main():
+    '''
+    this is the main function, it calls all the other functions to complete the cutting of the data.
+    it iterates over the tows, for each of which it modifies and saves all the sensor's data.
+    '''
     x_i, t_width = find_x930()
 
     for n in range(31):
