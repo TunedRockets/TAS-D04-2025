@@ -264,7 +264,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
 def main():
     # add testing code here
     for k in range(1,32):
-        print(get_processed_data(k,"LLS_A", True))
+        print(get_processed_data(1,"LLS_A"))
     pass
 
 
