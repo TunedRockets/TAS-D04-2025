@@ -428,9 +428,9 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
 
 
     # join data in time
-    data = join_data(frame_LT, frame_CAM, (blue_dot_CAM - true_time))
-    data = join_data(data, frame_LLS_A, (blue_dot_LLS_A - true_time))
+    data = join_data(frame_LT, frame_LLS_A, (blue_dot_LLS_A - true_time))
     data = join_data(data, frame_LLS_B, (blue_dot_LLS_B - true_time))
+    data = join_data(data, frame_CAM, (blue_dot_CAM - true_time))
 
     # shift position
 
@@ -440,6 +440,7 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
     return ...
 
 def main():
+    _get_synced_data(5)
     for k in range(1,32):
         _get_synced_data(k)
 
