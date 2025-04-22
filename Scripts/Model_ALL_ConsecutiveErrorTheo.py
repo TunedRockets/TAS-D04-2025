@@ -43,11 +43,11 @@ def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
     # Takes care of error type (for LT and CAM)
     if error == "width" or error == "y":
         column = -2
-    else:
+    else:  # So for LLS_A, LLS_B, CAM center and LT z
         column = -1
 
     if sensor == "LLS_A" or sensor == "LLS_B":
-        column = -1
+        error = ''  # Fixes labeling issues
 
 
     # Prepare an empty list to store (x_n, x_{n+1}) pairs for each tow
