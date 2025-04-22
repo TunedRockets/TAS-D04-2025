@@ -400,6 +400,14 @@ def _get_synced_data(tow:int, *args:str, overwrite:bool = False)->pd.DataFrame:
     
     #TODO: put all the syncing functions here to get the data synced...
 
+    # find time discrepancy
+
+    # join data in time
+
+    # shift position
+
+    # export
+
     raise NotImplementedError
     return ...
 
