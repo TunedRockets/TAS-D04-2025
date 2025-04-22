@@ -127,11 +127,11 @@ def plot_histograms(data: pd.DataFrame,
 
         # ** ZOOM IN on i==1 (top right) and i==2 (bottom left) **
         if i == 1:   # top‑right plot (error_LLS_B)
-            ax[row, col].set_xlim(-0.5, 0.5)   # example limits
+            ax[row, col].set_xlim(-0.4, 0.2)   
         elif i == 2: # bottom‑left plot (error_LT)
-            ax[row, col].set_xlim(-1.5, 0.)   # example limits
-        elif i== 3: # bottom-left plot 
-             ax[row, col].set_xlim(-0.4, 0.8)
+            ax[row, col].set_xlim(-1.2, 1.)   
+        elif i== 3: # bottom-right plot 
+             ax[row, col].set_xlim(-0.5, 0.25)
 
         ax[row, col].set_title(titles[i])
         ax[row, col].set_xlabel(errors_names[i])
@@ -177,12 +177,11 @@ def main():
         print()
 
 
-
     # Plot histograms
-    my_bin_widths = [0.01, 0.01, 0.03, 0.02]
+    my_bin_widths = [0.01, 0.01, 0.02, 0.015]
 
-    # TODO: Bottom row plots are incorrect, check data 
-    # TODO: ('Error robot position', 'Error tape lateral movement')
+    # TODO: Fix camera error. Look at the data, because there is center error and other error.
+    # TODO: Speak with theo.
 
     plot_histograms(
         df_error,
