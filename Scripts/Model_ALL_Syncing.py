@@ -433,6 +433,7 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
     data = join_data(data, frame_CAM, (blue_dot_CAM - true_time))
 
     # shift position
+    #NOTE: how does this deal with non constant dx?
 
     # export
 
