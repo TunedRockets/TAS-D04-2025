@@ -256,14 +256,33 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     return processesed_data
 
 
-def get_synced_data(tow:int, overwrite:bool=False)->pd.DataFrame:
+def get_synced_data(tow:int,spacesynced:bool = False, overwrite:bool=False)->pd.DataFrame:
     '''Returns a massive DataFrame that is synced and cleaned\n
-    uses the syncing.py file functions, but use this function to keep everything organized'''
+    uses the syncing.py file functions, but use this function to keep everything organized\n
+    if spacesynced is true it will sync the points in space, otherwise it will be synced in time'''
 
-    synced = Model_ALL_Syncing._get_synced_data(tow, "LT","LLS_A","LLS_B","CAM", overwrite=overwrite)
+    synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, "LT","LLS_A","LLS_B","CAM", overwrite=overwrite)
 
+    # cut data:
 
-    raise NotImplementedError
+    x_list = synced["x"]
+    # get index of point 0:
+    index_0 = 0
+    while x_list[index_0]< 0:
+        index_0 += 1
+    # now index is the first positive x
+
+    # get index of point 1000
+    index_1000 = index_0
+    while x_list[index_1000] < 1000:
+        index_1000 +=1
+
+    synced = synced.truncate(index_0,index_1000)
+
+    if spacesynced:
+        raise NotImplementedError
+
+    # TODO: the cache saving...
     return synced
 
 

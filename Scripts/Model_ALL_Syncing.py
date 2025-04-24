@@ -432,15 +432,10 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
     data = join_data(data, frame_LLS_B, (blue_dot_LLS_B - true_time))
     data = join_data(data, frame_CAM, (blue_dot_CAM - true_time))
 
-    # shift position
-    #NOTE: how does this deal with non constant dx?
+    return data
 
-    # export
-
-    # TODO: add dt to data
-
+def _sync_time_data():
     raise NotImplementedError
-    return ...
 
 def main():
     _get_synced_data(5)
