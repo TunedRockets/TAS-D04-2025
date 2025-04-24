@@ -121,8 +121,8 @@ def plot_histograms(data: pd.DataFrame,
         pdf = None
         if i == 0:
             # Fit skew-normal for top-left (captures asymmetry)
-            a, loc, scale = skewnorm.fit(clean)
-            pdf = skewnorm.pdf(x, a, loc, scale)
+            mu, sigma = norm.fit(clean)
+            pdf = norm.pdf(x, mu, sigma)
         elif i == 1:
             # Fit normal for top-right
             mu, sigma = norm.fit(clean)
