@@ -6,25 +6,32 @@
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from Handling_ALL_Functions import get_processed_data
+from Model_ALL_Syncing import _get_synced_data
 
-def tow_plotter(data: pd.DataFrame, name: str):
+def tow_plotter(tow: pd.DataFrame, name: str):
     
     #Gets the important data, might need to be changed depending on what names are in the final synchronized dataframe
-    centerline = data["centerline"]
-    width = data["width"]
-    x = data["x"]
+    centerline = tow["center"]
+    width = tow["width"]
+    x = tow["x"]
     
     # make the plot
     fig, ax = plt.subplots()
-    ax.plot(x, centerline)
-    ax.plot(x, centerline + 0.5 * width)
-    ax.plot(x, centerline - 0.5 * width)
+    ax.plot(x, centerline, label="centerline", )
+    ax.plot(x, centerline + 0.5 * width, label="top edge")
+    ax.plot(x, centerline - 0.5 * width, label="bottom edge")
+    ax.vline()
     plt.xlabel("x-position [mm]")
-    plt.ylabel()
+    plt.ylabel("tow outline")
+    plt.title(name)
+    plt.legend()
     plt.show(fig)
 
 
+tow = _get_synced_data(1)
+print(tow)
+tow_plotter(tow, "some name")
+""" 
 def main():
     # force-recompute LT data for tows 1–31 and print first rows
     for k in range(1, 32):
@@ -34,3 +41,5 @@ def main():
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
+
+""" 
