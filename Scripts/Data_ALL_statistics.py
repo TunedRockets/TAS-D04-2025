@@ -7,6 +7,9 @@ from scipy.stats import norm, gamma, skewnorm
 """ Written by Manuel and Diogo, this python imports the processed data from 
     Handling_ALL_Functions and makes the different error plots for the sensors"""
 
+# TODO: Change the code, now the data is synced, the synced_data is a big dataframe.
+# TODO: We can probably just call the column with the error directly and plot it.
+
 def get_all_sensor_data():
     results_LLSA = []
     results_LLSB = []
