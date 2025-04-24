@@ -61,6 +61,9 @@ def get_all_sensor_data():
     for w in range(1, 32):
         processed_data_CAM = get_processed_data(tow=w, sensor_type="CAM", overwrite=False)
 
+        # rename camera's "width error" column to "error_CAM"
+        processed_data_CAM = processed_data_CAM.rename(columns={"width error": "error_CAM"})
+        # now select only time and our newly‐named error column
         processed_data_CAM = processed_data_CAM[["time", "error_CAM"]]
         results_CAM.append(processed_data_CAM)
 
@@ -131,7 +134,7 @@ def plot_histograms(data: pd.DataFrame,
         elif i == 2: # bottom‑left plot (error_LT)
             ax[row, col].set_xlim(-1.2, 1.)   
         elif i== 3: # bottom-right plot 
-             ax[row, col].set_xlim(-0.5, 0.25)
+             ax[row, col].set_xlim(0, 1)
 
         ax[row, col].set_title(titles[i])
         ax[row, col].set_xlabel(errors_names[i])
@@ -142,7 +145,7 @@ def plot_histograms(data: pd.DataFrame,
                              label=f'Mean = {mean_val:.2f}')
         ax[row, col].legend()
 
-    plt.tight_layout(rect=[0,0,1,0.96])
+    plt.tight_layout(rect=[0,0,1,1])
     plt.show()
 
 def main():
