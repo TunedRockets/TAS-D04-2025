@@ -420,9 +420,9 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
 
     # find time discrepancy
     time_930, x_930, index_930, t_width = blue_dot_LT(frame_LT["x"], frame_LT["time"])
-    blue_dot_CAM = camera_sync(frame_CAM["center"], frame_CAM["time"], t_width)
-    blue_dot_LLS_A = LLS_sync(frame_LLS_A["width"], frame_LLS_A["time"], "LLS_A", t_width)
-    blue_dot_LLS_B = LLS_sync(frame_LLS_B["width"], frame_LLS_B["time"], "LLS_B", t_width)
+    blue_dot_CAM = camera_sync(frame_CAM["center_CAM"], frame_CAM["time"], t_width)
+    blue_dot_LLS_A = LLS_sync(frame_LLS_A["width_LLS_A"], frame_LLS_A["time"], "LLS_A", t_width)
+    blue_dot_LLS_B = LLS_sync(frame_LLS_B["width_LLS_B"], frame_LLS_B["time"], "LLS_B", t_width)
 
     # fix the spacing
     delta_x = x_930 - 930
