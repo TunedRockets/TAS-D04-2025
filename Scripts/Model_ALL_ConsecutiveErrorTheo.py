@@ -5,8 +5,9 @@ import scipy.stats as stats
 from sklearn.model_selection import train_test_split
 from scipy.stats import linregress
 from Handling_ALL_Functions import get_processed_data
+import math
 
-def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
+def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bins_show = False):
     """
         Analyze consecutive error pairs and their distributions from processed sensor data.
 
@@ -15,13 +16,6 @@ def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
         sensor : str
             The type of sensor data to process. This determines which column of data
             is used for analysis.
-        error: str
-            [ONLY for LT and CAM] Type of error to be analyzed.
-            This determines which column of data is used for analysis.
-            Possible values are:
-            LT: "y" or "z"
-            CAM: "width" or "center" ("width" refers to tow width error, "center" refers to tow center error)
-            LLS_A or LLS_B: does not matter, input anything.
         test_ratio : float
             Proportion of data to use for testing, ranging from 0.0 to 1.0 (e.g., 0.2 uses
             20% of the data for testing and 80% for training).
@@ -34,20 +28,11 @@ def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
     if not sensor == "LT" and not sensor == "CAM" and not sensor == "LLS_A" and not sensor == "LLS_B":
         raise ValueError("Invalid sensor type. Possible values are 'LT', 'CAM', 'LLS_A', and 'LLS_B'.")
 
-    # Wrong error type of LT or CAM
-    if sensor == "LT" and not error == "y" and not error == "z":
-        raise ValueError("Invalid error type for LT sensor. Possible values are 'y' and 'z'.")
-    if sensor == "CAM" and not error == "width" and not error == "center":
-        raise ValueError("Invalid error type for CAM sensor. Possible values are 'width' and 'center'.")
-
-    # Takes care of error type (for LT and CAM)
-    if error == "width" or error == "y":
+    # Takes care of which column to use
+    if sensor == "CAM" or sensor == "LT":
         column = -2
-    else:  # So for LLS_A, LLS_B, CAM center and LT z
+    else:
         column = -1
-
-    if sensor == "LLS_A" or sensor == "LLS_B":
-        error = ''  # Fixes labeling issues
 
 
     # Prepare an empty list to store (x_n, x_{n+1}) pairs for each tow
@@ -60,7 +45,7 @@ def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
 
         # Ensure that the returned object is a dataframe
         if not tow_data.empty and tow_data.shape[1] > 1:  # Ensure there are at least two columns
-            # Extract the last or second-to-last column (based on error type)
+            # Extract the last or second-to-last column (based on sensor type)
             second_to_last_column = tow_data.iloc[:, column].values  # Convert to numpy array
 
             # Create (x_n, x_{n+1}) pairs for the current tow
@@ -84,9 +69,6 @@ def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
     # NOTE: random_state ensures reproducible splits of the data;
     # change it to another integer for a different split, or set it to None for random behavior.
 
-    # Binning and Averaging on Training Data
-    num_bins = 20
-
     # Sort training x-values and reorder y-values accordingly
     sorted_indices = np.argsort(x_train)
     x_sorted = x_train[sorted_indices]
@@ -103,17 +85,18 @@ def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
     slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
     print(r_value)
 
+    # Define error label
+    error_labels = {"LT": "y error", "CAM": "position error", "LLS_A": "width error", "LLS_B": "width error"}
+    error_label = error_labels[sensor]
 
-
+    # Plot scatter + binned fit
     plt.figure(figsize=(8, 6))
     plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
     plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
     plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
-    params = {'mathtext.default': 'regular'}
-    plt.rcParams.update(params)
     plt.xlabel("$ε_{i}$ [mm]")
     plt.ylabel("$ε_{i+1}$ [mm]")
-    plt.title("{} {} : Consecutive Error Correlation (Training set)".format(sensor, error))
+    plt.title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -135,47 +118,54 @@ def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
         # Compute deviation (residuals) at each point
         deviations = bin_y_values - predicted_y_values
         deviations_per_bin.append(deviations)
-    # Plot Histograms of Deviations per Bin
 
+    # Paginate histogram grids
     rows, cols = 4, 5
-    fig, axes = plt.subplots(rows, cols, figsize=(20, 10))
-    fig.suptitle("{} {} : Histograms of Deviations per Bin (Training set)".format(sensor, error))
-    axes = axes.flatten()
+    plots_per_page = rows * cols
+    total_bins = num_bins
+    total_pages = math.ceil(total_bins / plots_per_page)
 
-    for i in range(num_bins):
-        ax = axes[i]
-        bin_devs = deviations_per_bin[i]
-        bin_x_values = x_sorted[bin_edges[i]:bin_edges[i + 1]]
 
-        # Histogram of deviations
-        counts, bins, patches = ax.hist(bin_devs, bins=30, edgecolor='black', color='blue', density=True)
+    if bins_show:
+        for page in range(total_pages):
+            start = page * plots_per_page
+            end = min(start + plots_per_page, total_bins)
 
-        # Fit normal distribution to the deviations
-        mu, std = stats.norm.fit(bin_devs)
+            fig, axes = plt.subplots(rows, cols, figsize=(20, 10))
+            fig.suptitle(f"{sensor} {error_label} : Histograms of Deviations per Bin (Page {page + 1}/{total_pages})",
+                         fontsize=16)
+            axes_flat = axes.flatten()
 
-        # Generate and plot normal PDF
-        x_fit = np.linspace(min(bin_devs), max(bin_devs), 100)
-        p_fit = stats.norm.pdf(x_fit, mu, std)
-        ax.plot(x_fit, p_fit, 'r', linewidth=2)
+            for idx_plot in range(start, end):
+                bin_idx = idx_plot
+                ax = axes_flat[idx_plot - start]
+                devs = deviations_per_bin[bin_idx]
+                xs = x_sorted[bin_edges[bin_idx]:bin_edges[bin_idx + 1]]
 
-        # Compute bin x-range
-        x_min = np.min(bin_x_values)
-        x_max = np.max(bin_x_values)
+                # Histogram and normal fit
+                counts, bins_hist, _ = ax.hist(devs, bins=30, edgecolor='black', density=True)
+                mu, std = stats.norm.fit(devs)
+                x_fit = np.linspace(devs.min(), devs.max(), 100)
+                p_fit = stats.norm.pdf(x_fit, mu, std)
+                ax.plot(x_fit, p_fit, 'r', linewidth=2)
 
-        # Annotate with x bounds, μ and σ
-        annotation = f"x ∈ [{x_min:.2f}, {x_max:.2f}]\nμ = {mu:.4f}\nσ = {std:.4f}"
-        ax.text(0.95, 0.95, annotation, transform=ax.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                fontsize=10, bbox=dict(facecolor='white'))
+                # Annotation
+                annotation = f"x ∈ [{xs.min():.2f}, {xs.max():.2f}]\nμ = {mu:.4f}\nσ = {std:.4f}"
+                ax.text(0.95, 0.95, annotation, transform=ax.transAxes,
+                        verticalalignment='top', horizontalalignment='right', fontsize=10,
+                        bbox=dict(facecolor='white', alpha=0.8))
 
-        ax.set_title(f"Bin {i}")
-        ax.set_xlabel("Deviation [mm]")
-        ax.set_ylabel("Density")
-        ax.grid(True)
+                ax.set_title(f"Bin {bin_idx}")
+                ax.set_xlabel("Deviation [mm]")
+                ax.set_ylabel("Density")
+                ax.grid(True)
 
-    # Final layout adjustments
-    plt.tight_layout(rect=[0, 0, 1, 1])
-    plt.show()
+            # Turn off unused subplots on last page
+            for unused in range(end - start, plots_per_page):
+                axes_flat[unused].axis('off')
+
+            plt.tight_layout(rect=[0, 0, 1, 0.96])
+            plt.show()
 
     # -------------------------
     # summarize all data
@@ -207,4 +197,8 @@ def consecutive_error(sensor, error='', test_ratio=0.8, random_state=42):
 
 if __name__ == "__main__":
     # Test your function here
-    consecutive_error("LLS_B", "", 0.2)
+    consecutive_error("CAM", 0.2, num_bins=100, bins_show=True)
+    # consecutive_error("LT", 0.2)
+    # consecutive_error("LLS_A", 0.2)
+    # consecutive_error("LLS_B", 0.2)
+    # print(get_processed_data(2, "CAM"))
