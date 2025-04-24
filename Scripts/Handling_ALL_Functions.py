@@ -107,8 +107,8 @@ def _handle_camera(time: list, left_edge: list, right_edge: list, width:list) ->
     for i in range(len(time)):
         pandas_table[i][0] = time_to_float(time[i]) - zero_time
         pandas_table[i][1] = width[i] # width
-        pandas_table[i][2] = -0.5*(right_edge[i] + left_edge[i]) # center
-        pandas_table[i][3] = (pandas_table[i][1]-(-6.35)) # error (6.35 is the right width)
+        pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
+        pandas_table[i][3] = abs(pandas_table[i][1] - (-6.35))
     
     pandas_table = pd.DataFrame(pandas_table)
     pandas_table.columns = ["time", "width", "center","width error"]
