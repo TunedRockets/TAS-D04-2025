@@ -52,7 +52,7 @@ def get_all_sensor_data():
         processed_data_CAM = get_processed_data(tow=w, sensor_type="CAM", overwrite=False)
 
         # rename camera's "width error" column to "error_CAM"
-        processed_data_CAM["error_CAM"] = processed_data_CAM["center"].abs()
+        processed_data_CAM["error_CAM"] = -processed_data_CAM["center"] # Added minus sign because camera was inverted
         processed_data_CAM = processed_data_CAM[["time", "error_CAM"]]
         results_CAM.append(processed_data_CAM)
 
@@ -127,7 +127,7 @@ def plot_histograms(data: pd.DataFrame,
         elif i == 2: # bottom-left plot (error_LT)
             ax[row, col].set_xlim(-1.2, 1.)   
         elif i== 3: # bottom-right plot 
-             ax[row, col].set_xlim(-0.5, 1.2)
+             ax[row, col].set_xlim(-0.75, 1)
 
         ax[row, col].set_title(titles[i])
         ax[row, col].set_xlabel(errors_names[i])
@@ -176,7 +176,7 @@ def main():
         print()
 
     # Plot histograms
-    my_bin_widths = [0.01, 0.01, 0.02, 0.015]
+    my_bin_widths = [0.01, 0.01, 0.02, 0.03]
 
     plot_histograms(
         df_error,
