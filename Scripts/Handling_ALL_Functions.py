@@ -24,42 +24,24 @@ import Model_ALL_Syncing
 ################################################################################################################
 """Functions for Laser Tracker"""
 
-def _handle_LT(time: list,
-               x: list,
-               y: list,
-               z: list,
-               tow: int) -> pd.DataFrame:
-    """
-    Build the LT DataFrame and then drop any points
-    where y decreases (i.e. the gantry returning).
-    """
-    import numpy as np
-    import pandas as pd
+def _handle_LT(time: list, left_edge: list, right_edge: list, width:list) -> pd.DataFrame:
 
-    # 1) build the raw table exactly as before
     rows = len(time)
-    tbl = np.empty((rows, 6))
-    error_y, error_z = _error_LT(y, z, tow)
-    t0 = time_to_float(time[0])
+    columns = 4
+    shape = (rows, columns)
+    pandas_table = np.empty(shape)
+    zero_time = time_to_float(time[0])
 
-    for i in range(rows):
-        tbl[i,0] = time_to_float(time[i]) - t0
-        tbl[i,1] = x[i]
-        tbl[i,2] = y[i]
-        tbl[i,3] = z[i]
-        tbl[i,4] = error_y[i]
-        tbl[i,5] = error_z[i]
+    for i in range(len(time)):
+        pandas_table[i][0] = time_to_float(time[i]) - zero_time
+        pandas_table[i][1] = width[i] # width
+        pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
+        pandas_table[i][3] = (pandas_table[i][1]-6.35) # error (6.35 is the right width)
+    
+    pandas_table = pd.DataFrame(pandas_table)
+    pandas_table.columns = ["time", "width", "center","width error"]
 
-    df = pd.DataFrame(tbl, columns=[
-        "time","x","y","z","error_LT","z error"
-    ])
-
-    # 2) KEEP ONLY THE OUTBOUND SWEEP: drop rows where y dips
-    #    for the very first row, diff() is NaN → fill with True so we keep it
-    forward_mask = df["y"].diff().fillna(1) > 0
-    df = df[forward_mask].reset_index(drop=True)
-
-    return df
+    return pandas_table
 
 def _error_LT(y: list, z: list, tow_number)->list:
     """"This function takes a given tow path
@@ -113,46 +95,25 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list, width:list) -> pd
 ################################################################################################################
 """Functions for Camera"""
 
-def _handle_camera(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
-    """
-    time       : list of timestamp strings
-    left_edge  : list of left‐edge positions (floats)
-    right_edge : list of right‐edge positions (floats)
+def _handle_camera(time: list, left_edge: list, right_edge: list, width:list) -> pd.DataFrame:
 
-    Returns a DataFrame with columns:
-      - time       : seconds since start
-      - width      : absolute measured width (mm)
-      - center     : midpoint of the two edges
-      - error_CAM  : measured width minus 6.35 mm nominal
-    """
-    # 1) compute time floats
-    t_secs = np.array([time_to_float(t) for t in time], dtype=float)
-    t0     = t_secs[0]
-    rel_time = t_secs - t0
+    rows = len(time)
+    columns = 4
+    shape = (rows, columns)
+    pandas_table = np.empty(shape)
+    zero_time = time_to_float(time[0])
 
-    # 2) make arrays of edges
-    le = np.asarray(left_edge, dtype=float)
-    re = np.asarray(right_edge, dtype=float)
+    # Sign flipped since camera is flipped
+    for i in range(len(time)):
+        pandas_table[i][0] = time_to_float(time[i]) - zero_time
+        pandas_table[i][1] = width[i] # width
+        pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
+        pandas_table[i][3] = abs(pandas_table[i][1] - (-6.35))
+    
+    pandas_table = pd.DataFrame(pandas_table)
+    pandas_table.columns = ["time", "width", "center","width error"]
 
-    # 3) compute width and centers
-    widths  = np.abs(re - le)
-    centers = 0.5 * (re + le)
-    errors  = widths - 6.35
-
-    # 4) debug print first few to verify
-    for i in range(min(5, len(widths))):
-        print(f"[CAM] i={i:>2} | left={le[i]:.2f} mm | right={re[i]:.2f} mm"
-              f" | width={widths[i]:.2f} mm | error={errors[i]:.2f} mm")
-
-    # 5) build the DataFrame
-    df = pd.DataFrame({
-        "time":      rel_time,
-        "width":     widths,
-        "center":    centers,
-        "error_CAM": errors
-    })
-
-    return df
+    return pandas_table
 
 ################################################################################################################
 
@@ -295,14 +256,33 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     return processesed_data
 
 
-def get_synced_data(tow:int, overwrite:bool=False)->pd.DataFrame:
+def get_synced_data(tow:int,spacesynced:bool = False, overwrite:bool=False)->pd.DataFrame:
     '''Returns a massive DataFrame that is synced and cleaned\n
-    uses the syncing.py file functions, but use this function to keep everything organized'''
+    uses the syncing.py file functions, but use this function to keep everything organized\n
+    if spacesynced is true it will sync the points in space, otherwise it will be synced in time'''
 
-    synced = Model_ALL_Syncing._get_synced_data(tow, "LT","LLS_A","LLS_B","CAM", overwrite=overwrite)
+    synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, "LT","LLS_A","LLS_B","CAM", overwrite=overwrite)
 
+    # cut data:
 
-    raise NotImplementedError
+    x_list = synced["x"]
+    # get index of point 0:
+    index_0 = 0
+    while x_list[index_0]< 0:
+        index_0 += 1
+    # now index is the first positive x
+
+    # get index of point 1000
+    index_1000 = index_0
+    while x_list[index_1000] < 1000:
+        index_1000 +=1
+
+    synced = synced.truncate(index_0,index_1000)
+
+    if spacesynced:
+        raise NotImplementedError
+
+    # TODO: the cache saving...
     return synced
 
 
@@ -313,7 +293,7 @@ def get_synced_data(tow:int, overwrite:bool=False)->pd.DataFrame:
 def main():
     # force-recompute LT data for tows 1–31 and print first rows
     for k in range(1, 32):
-        df_cam = get_processed_data(k, "LT", overwrite=True)
+        df_cam = get_processed_data(k, "LT", overwrite=False)
         print(df_cam.head())
 
 
