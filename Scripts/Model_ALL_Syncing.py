@@ -131,14 +131,17 @@ def _test_join_function():
 
 
 def blue_dot_LT(tow:int, overwrite:bool=False):
-    '''gets the time at where the LT is 930'''
-    LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
-    LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT")["time"]
-    xi, _ = find_x930(LT_x, LT_time)
+    '''gets the time at where the LT is 930, also returns the x value of 930'''
+    LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT", overwrite)["x"]
+    LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT", overwrite)["time"]
+    xi,ti, _ = find_x930(LT_x, LT_time)
     index = 0
     while LT_x[index] < xi:
-        index += 1
-    return LT_time[index]
+        index +=1
+    assert_x = LT_x[index]
+    assert assert_x == xi
+
+    return ti, xi, index
 
 
 
@@ -150,7 +153,9 @@ def find_x930(LT_x: list, LT_time: list):
         the sample, if the distance between them is smaller than some factor beta times the minimum
         distance found in the sample, then we know that the tape has been cut and xi = 930mm.
         Then the coressponding time at xi is ti and this time can be used to sync the LT data with
-        other data sets"""
+        other data sets\n
+        
+        returns value xi, time ti, and the width of the stop"""
 
     beta = 2
     delta_x_values = []
@@ -195,7 +200,7 @@ def find_x930(LT_x: list, LT_time: list):
     # plt.grid(True)
     # plt.show()
 
-    return xi, t_width
+    return xi, ti, t_width
 
 def LLS_sync(tow:int, sensor_type:str, overwrite=False):
     width_velocities = [] # Set up list of velocities
@@ -207,7 +212,7 @@ def LLS_sync(tow:int, sensor_type:str, overwrite=False):
         width_velocities.append(widths[i+1] - widths[i])
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
 
-    xi, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
+    xi, _, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
     if sensor_type == "LLS_B":
         t_width = 2*t_width
         start_time = 4
@@ -296,7 +301,7 @@ def camera_sync(tow:int, overwrite=False):
         center_velocities.append(centers[i+1] - centers[i])
     center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
 
-    xi, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
+    xi, _, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
     t_width = 1.5*t_width
     start_time = 4.5
     end_time = 5.75
@@ -401,7 +406,8 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.show()
 
 def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
-    '''gets the synced data of the given tow'''
+    '''gets the synced data of the given tow\n
+    DONT USE THIS ONE! USE THE ONE IN THE HANDLING FILE'''
     
     # checks that inputs are valid:
     if tow not in range(1,32):
@@ -421,16 +427,23 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
     frame_LLS_B.columns = ["time", "width_LLS_B", "center_LLS_B","width error_LLS_B"]
 
     # find time discrepancy
-    true_time = blue_dot_LT(tow,overwrite)
+    time_930, x_930, index_930 = blue_dot_LT(tow,overwrite)
     blue_dot_CAM = camera_sync(tow,overwrite)
     blue_dot_LLS_A = LLS_sync(tow, "LLS_A", overwrite)
     blue_dot_LLS_B = LLS_sync(tow, "LLS_B", overwrite)
 
+    # fix the spacing
+    delta_x = x_930 - 930
+    frame_LT["x"] -= delta_x
+
+    x_guess_930 = frame_LT["x"][index_930]
+    assert abs(x_guess_930 - 930) < 1
+
 
     # join data in time
-    data = join_data(frame_LT, frame_LLS_A, (blue_dot_LLS_A - true_time))
-    data = join_data(data, frame_LLS_B, (blue_dot_LLS_B - true_time))
-    data = join_data(data, frame_CAM, (blue_dot_CAM - true_time))
+    data = join_data(frame_LT, frame_LLS_A, (blue_dot_LLS_A - time_930))
+    data = join_data(data, frame_LLS_B, (blue_dot_LLS_B - time_930))
+    data = join_data(data, frame_CAM, (blue_dot_CAM - time_930))
 
     return data
 

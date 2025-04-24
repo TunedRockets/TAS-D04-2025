@@ -256,12 +256,12 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     return processesed_data
 
 
-def get_synced_data(tow:int,spacesynced:bool = False, overwrite:bool=False)->pd.DataFrame:
+def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd.DataFrame:
     '''Returns a massive DataFrame that is synced and cleaned\n
     uses the syncing.py file functions, but use this function to keep everything organized\n
     if spacesynced is true it will sync the points in space, otherwise it will be synced in time'''
 
-    synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, "LT","LLS_A","LLS_B","CAM", overwrite=overwrite)
+    synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, overwrite=overwrite)
 
     # cut data:
 
@@ -273,16 +273,16 @@ def get_synced_data(tow:int,spacesynced:bool = False, overwrite:bool=False)->pd.
     # now index is the first positive x
 
     # get index of point 1000
-    index_1000 = index_0
-    while x_list[index_1000] < 1000:
-        index_1000 +=1
+    index_1000 = len(x_list) - 1
+    while x_list[index_1000] >= 1000:
+        index_1000 -=1
 
     synced = synced.truncate(index_0,index_1000)
 
     if spacesynced:
         raise NotImplementedError
 
-    # TODO: the cache saving...
+    # TODO: the cache saving and overwriting...
     return synced
 
 
@@ -293,8 +293,8 @@ def get_synced_data(tow:int,spacesynced:bool = False, overwrite:bool=False)->pd.
 def main():
     # force-recompute LT data for tows 1–31 and print first rows
     for k in range(1, 32):
-        df_cam = get_processed_data(k, "LT", overwrite=False)
-        print(df_cam.head())
+        df = get_synced_data(k, overwrite=False)
+        print(df.head())
 
 
 if __name__ == "__main__":
