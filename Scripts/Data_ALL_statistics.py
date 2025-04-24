@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from Handling_ALL_Functions import get_processed_data
+from scipy.stats import norm, gamma, skewnorm
 
 """ Written by Manuel and Diogo, this python imports the processed data from 
     Handling_ALL_Functions and makes the different error plots for the sensors"""
@@ -96,48 +97,61 @@ def plot_histograms(data: pd.DataFrame,
     fig, ax = plt.subplots(2, 2, figsize=(10, 8))
     fig.suptitle(title)
 
-    errors      = [data['error_LLS_A'], data['error_LLS_B'],
-                   data['error_LT'],      data['error_CAM'] ]
-    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
-    titles      = ['Error Tape width before compaction',
-                   'Error Tape width after compaction',
-                   'Error robot position',
-                   'Error tape lateral movement']
-
+    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
+    names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
+    titles = ['Error Tape width before compaction',
+              'Error Tape width after compaction',
+              'Error robot position',
+              'Error tape lateral movement']
     if bin_widths is None:
         bin_widths = [None]*4
 
-    for i, error in enumerate(errors):
+    for i, vals in enumerate(errors):
         row, col = divmod(i, 2)
-        clean = error.dropna().to_numpy()
+        clean = vals.dropna().to_numpy()
         mn, mx = clean.min(), clean.max()
-
         bw = bin_widths[i]
-        if bw is None:
-            bins = 40
-        else:
-            bins = np.arange(mn, mx + bw, bw)
+        bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
 
-        ax[row, col].hist(clean, bins=bins,
-                          color='skyblue', edgecolor='black')
+        counts, bin_edges, _ = ax[row, col].hist(clean, bins=bins,
+                                                edgecolor='black', alpha=0.6, density=True)
+        bin_width = bin_edges[1] - bin_edges[0]
 
-        # ** ZOOM IN on i==1 (top right) and i==2 (bottom left) **
-        if i == 1:   # top-right plot (error_LLS_B)
-            ax[row, col].set_xlim(-0.4, 0.2)   
-        elif i == 2: # bottom-left plot (error_LT)
-            ax[row, col].set_xlim(-1.2, 1.)   
-        elif i== 3: # bottom-right plot 
-             ax[row, col].set_xlim(-0.75, 1)
+        x = np.linspace(mn, mx, 200)
+        pdf = None
+        if i == 0:
+            # Fit skew-normal for top-left (captures asymmetry)
+            a, loc, scale = skewnorm.fit(clean)
+            pdf = skewnorm.pdf(x, a, loc, scale)
+        elif i == 1:
+            # Fit normal for top-right
+            mu, sigma = norm.fit(clean)
+            pdf = norm.pdf(x, mu, sigma)
+        elif i == 3:
+            # Fit gamma for bottom-right
+            a, loc, scale = gamma.fit(clean)
+            pdf = gamma.pdf(x, a, loc, scale)
+
+        if pdf is not None:
+            # plot PDF directly since hist is density-scaled
+            ax[row, col].plot(x, pdf, 'r-', lw=2, label='Fit')
+
+        # Zoom settings
+        if i == 1:
+            ax[row, col].set_xlim(-0.4, 0.2)
+        elif i == 2:
+            ax[row, col].set_xlim(-1.2, 1.0)
+        elif i == 3:
+            ax[row, col].set_xlim(-0.75, 1)
 
         ax[row, col].set_title(titles[i])
-        ax[row, col].set_ylabel('Frequency')
-
+        ax[row, col].set_xlabel(names[i])
+        ax[row, col].set_ylabel('Density')
         mean_val = clean.mean()
-        ax[row, col].axvline(mean_val, linestyle='-',
-                             label=f'Mean = {mean_val:.2f}')
+        ax[row, col].axvline(mean_val, linestyle='-', label=f'Mean = {mean_val:.2f}')
         ax[row, col].legend()
 
-    plt.tight_layout(rect=[0,0,1,1])
+    plt.tight_layout(rect=[0, 0, 1, 1])
     plt.show()
 
 
