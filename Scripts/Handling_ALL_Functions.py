@@ -225,7 +225,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)-
         raise IndexError(f"Tow ID {tow} is out of range")
     # set the name
     name = sensor_type + "_" + str(tow)
-    if not helper:
+    if not helper: # ignore all the data
         # check if file exists:
         data = _load_table(name)
 
@@ -265,7 +265,7 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
     if spacesynced is true it will sync the points in space, otherwise it will be synced in time'''
 
     name = "proccessed_" + str(tow)
-    name += ("space" if spacesynced else "time")
+    name += ("_space" if spacesynced else "_time")
     # first check the cache
     data = _load_table(name)
     if data is not None and not overwrite:
@@ -307,6 +307,7 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
 
 def main():
     # force-recompute LT data for tows 1–31 and print first rows
+    get_processed_data(4,"LT",True)
     for k in range(1, 32):
         df = get_synced_data(k, overwrite=False)
         print(df.head())
