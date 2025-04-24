@@ -99,7 +99,7 @@ def plot_histograms(data: pd.DataFrame,
     errors      = [data['error_LLS_A'], data['error_LLS_B'],
                    data['error_LT'],      data['error_CAM'] ]
     errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
-    titles      = ['Error Tape width',
+    titles      = ['Error Tape width before compaction',
                    'Error Tape width after compaction',
                    'Error robot position',
                    'Error tape lateral movement']
@@ -130,7 +130,6 @@ def plot_histograms(data: pd.DataFrame,
              ax[row, col].set_xlim(-0.75, 1)
 
         ax[row, col].set_title(titles[i])
-        ax[row, col].set_xlabel(errors_names[i])
         ax[row, col].set_ylabel('Frequency')
 
         mean_val = clean.mean()
