@@ -130,18 +130,15 @@ def _test_join_function():
     plt.show()
 
 
-def blue_dot_LT(tow:int, overwrite:bool=False):
-    '''gets the time at where the LT is 930, also returns the x value of 930'''
-    LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT", overwrite)["x"]
-    LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT", overwrite)["time"]
-    xi,ti, _ = find_x930(LT_x, LT_time)
+def blue_dot_LT(LT_x,LT_time):
+    '''gets the time at where the LT is 930, also returns the x value of 930\n
+    basically wraps find_x930'''
+    xi,ti, t_width = find_x930(LT_x, LT_time)
     index = 0
     while LT_x[index] < xi:
         index +=1
-    assert_x = LT_x[index]
-    assert assert_x == xi
 
-    return ti, xi, index
+    return ti, xi, index, t_width
 
 
 
@@ -202,17 +199,15 @@ def find_x930(LT_x: list, LT_time: list):
 
     return xi, ti, t_width
 
-def LLS_sync(tow:int, sensor_type:str, overwrite=False):
+def LLS_sync(widths, times, sensor_type, t_width):
     width_velocities = [] # Set up list of velocities
-    widths = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["width"] #gets just the width-column
-    times = Handling_ALL_Functions.get_processed_data(tow, sensor_type, overwrite)["time"] #gets just the time-column
 
 
     for i in range(len(widths)-1):
         width_velocities.append(widths[i+1] - widths[i])
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
 
-    xi, _, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
+
     if sensor_type == "LLS_B":
         t_width = 2*t_width
         start_time = 4
@@ -283,7 +278,7 @@ def scan_for_min(t_len: float, times: list, values: list, start_time: float, end
 
     return min_index, times[min_index]
 
-def camera_sync(tow:int, overwrite=False):
+def camera_sync(centers, times, t_width):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
@@ -293,15 +288,12 @@ def camera_sync(tow:int, overwrite=False):
         other data sets"""
 
     center_velocities = [] # Set up list of velocities
-    centers = Handling_ALL_Functions.get_processed_data(tow, "CAM", overwrite)["center"] #gets just the width-column
-    times = Handling_ALL_Functions.get_processed_data(tow, "CAM", overwrite)["time"] #gets just the time-column
 
 
     for i in range(len(centers)-1):
         center_velocities.append(centers[i+1] - centers[i])
     center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
 
-    xi, _, t_width = find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"])
     t_width = 1.5*t_width
     start_time = 4.5
     end_time = 5.75
@@ -415,22 +407,22 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
 
     # get the list of dataframes (and rename the columns to avoid duplicate):
 
-    frame_LT = Handling_ALL_Functions.get_processed_data(tow,"LT",overwrite)
+    frame_LT = Handling_ALL_Functions.get_processed_data(tow,"LT",overwrite, helper=True)
 
-    frame_CAM = Handling_ALL_Functions.get_processed_data(tow,"CAM",overwrite)
+    frame_CAM = Handling_ALL_Functions.get_processed_data(tow,"CAM",overwrite, helper=True)
     frame_CAM.columns = ["time", "width_CAM", "center_CAM", "error_CAM"]
     
-    frame_LLS_A = Handling_ALL_Functions.get_processed_data(tow,"LLS_A",overwrite)
+    frame_LLS_A = Handling_ALL_Functions.get_processed_data(tow,"LLS_A",overwrite, helper=True)
     frame_LLS_A.columns = ["time", "width_LLS_A", "center_LLS_A","width error_LLS_A"]
 
-    frame_LLS_B = Handling_ALL_Functions.get_processed_data(tow,"LLS_B",overwrite)
+    frame_LLS_B = Handling_ALL_Functions.get_processed_data(tow,"LLS_B",overwrite, helper=True)
     frame_LLS_B.columns = ["time", "width_LLS_B", "center_LLS_B","width error_LLS_B"]
 
     # find time discrepancy
-    time_930, x_930, index_930 = blue_dot_LT(tow,overwrite)
-    blue_dot_CAM = camera_sync(tow,overwrite)
-    blue_dot_LLS_A = LLS_sync(tow, "LLS_A", overwrite)
-    blue_dot_LLS_B = LLS_sync(tow, "LLS_B", overwrite)
+    time_930, x_930, index_930, t_width = blue_dot_LT(frame_LT["x"], frame_LT["time"])
+    blue_dot_CAM = camera_sync(frame_CAM["center"], frame_CAM["time"], t_width)
+    blue_dot_LLS_A = LLS_sync(frame_LLS_A["width"], frame_LLS_A["time"], "LLS_A", t_width)
+    blue_dot_LLS_B = LLS_sync(frame_LLS_B["width"], frame_LLS_B["time"], "LLS_B", t_width)
 
     # fix the spacing
     delta_x = x_930 - 930

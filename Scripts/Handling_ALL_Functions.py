@@ -201,7 +201,7 @@ def create_cache()->None:
             get_processed_data(tow,code, True)
     print("Cache created!")
 
-def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
+def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)->pd.DataFrame:
     '''
     This function handles ALL the grabbing and processing of the raw data\n
     call this and it will do all the stuff for you, no other functions needed\n
@@ -211,7 +211,9 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     sensor_type:str, the type of data to get. valid keys are: "LT","LLS_A","LLS_B","CAM"\n
     overwrite:bool (optional), If this is true, the function will ignore the cache\n
     and reprocess the raw data. False by default. only do this if something in the processing\n
-    has changed, or if the raw data has changed.
+    has changed, or if the raw data has changed.\n
+    helper is a variable that should always be false when using (it's just to make it work with get synced data)\n
+    (it circumvents the messages and the saving process since sync will save instead)
     '''
 
     # generate consistent name:
@@ -223,15 +225,15 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
         raise IndexError(f"Tow ID {tow} is out of range")
     # set the name
     name = sensor_type + "_" + str(tow)
+    if not helper:
+        # check if file exists:
+        data = _load_table(name)
 
-    # check if file exists:
-    data = _load_table(name)
-
-    if data is not None and not overwrite:
-        #if true the data already exists, return it:
-        return data
-    # else the data doesn't exist, grab it
-    print(f"No file with code {name} cached. Generating new data...")
+        if data is not None and not overwrite:
+            #if true the data already exists, return it:
+            return data
+        # else the data doesn't exist, grab it
+        print(f"No file with code {name} cached. Generating new data...")
     match sensor_type:
         case "LT":
             # Laser Tracker
@@ -252,7 +254,8 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
             # Laser Line Sensor 2
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
             processesed_data = _handle_LLS(*data[:4])
-    _save_table(processesed_data, name) # save the data
+    if not helper:
+        _save_table(processesed_data, name) # save the data
     return processesed_data
 
 
@@ -261,10 +264,21 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
     uses the syncing.py file functions, but use this function to keep everything organized\n
     if spacesynced is true it will sync the points in space, otherwise it will be synced in time'''
 
+    name = "proccessed_" + str(tow)
+    name += ("space" if spacesynced else "time")
+    # first check the cache
+    data = _load_table(name)
+    if data is not None and not overwrite:
+        #if true the data already exists, return it:
+        return data
+    # else the data doesn't exist, grab it
+    print(f"No file with code {name} cached. Generating new data...")
+
+
+
+
     synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, overwrite=overwrite)
-
     # cut data:
-
     x_list = synced["x"]
     # get index of point 0:
     index_0 = 0
@@ -282,7 +296,8 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
     if spacesynced:
         raise NotImplementedError
 
-    # TODO: the cache saving and overwriting...
+    _save_table(synced, name) # save the data
+
     return synced
 
 
