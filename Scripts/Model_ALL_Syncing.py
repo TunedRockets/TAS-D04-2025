@@ -471,7 +471,7 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
         # do this by shifting the data in time, which makes it line up in space.
         timeshift_CAM = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_CAM)
         timeshift_LLS_A = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_LLS_A)
-        timeshift_LLS_B = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_LLS_B)
+        timeshift_LLS_B = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_LLS_B) # changed by Martijn 29-04 at around 19:55 from ".TCP_CAM" to ".TCP_LLS_B"
 
         # fix the CAM:
         #find closest point index in time:
