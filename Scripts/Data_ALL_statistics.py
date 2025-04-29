@@ -94,11 +94,6 @@ def statistical_values(data: pd.DataFrame):
     return mean, median, std, minimum, maximum
 
 
-
-pd.set_option('display.max_columns', None)  # show all columns
-
-
-
 def plot_histograms(data: pd.DataFrame,
                     title: str,
                     bin_widths: list[float] = None):
@@ -172,7 +167,7 @@ def main():
 
     # 4) (OPTIONAL) And to see the full head:
     print(df.head())
-    
+
     all_tows = range(1, 32)
     sensors  = ["LLS_A", "LLS_B", "LT", "CAM"]
 
