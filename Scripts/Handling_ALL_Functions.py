@@ -324,6 +324,8 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
 
 ################################################################################################################
 
+print(df.columns.tolist())
+
 def main():
     # force-recompute LT data for tows 1–31 and print first rows
 
