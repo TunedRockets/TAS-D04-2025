@@ -221,6 +221,15 @@ def create_cache()->None:
             get_processed_data(tow,code, True)
     print("Cache created!")
 
+def create_processed_cache()->None:
+    '''generates the cache for the time and space synced tows'''
+    print("Let there be cache...")
+    tows = range(1,32)
+    for tow in tows:
+        get_synced_data(tow, spacesynced=False, overwrite=True)
+        get_synced_data(tow, spacesynced=True, overwrite=True)
+    print("Cache created!")
+
 def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)->pd.DataFrame:
     '''
     This function handles ALL the grabbing and processing of the raw data\n
