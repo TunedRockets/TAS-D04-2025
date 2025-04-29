@@ -32,6 +32,9 @@ def tow_plotter(tow: pd.DataFrame, name: str):
     plt.plot([0,0], [tow_width_specified * 0.5, -tow_width_specified * 0.5])
     plt.plot([1000,1000], [tow_width_specified * 0.5, -tow_width_specified * 0.5])
 
+    # Axis scaling for a:b mm proportions (x:y = 1:2)
+    plt.gca().set_aspect(100)
+
     #plot info
     plt.xlabel("x-position [mm]")
     plt.ylabel("tow outline [mm]")
