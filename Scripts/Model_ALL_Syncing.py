@@ -10,6 +10,7 @@ authors: Johannes, ...
 import Handling_ALL_Functions
 import pandas as pd
 import numpy as np
+import inspect
 import matplotlib.pyplot as plt
 import itertools
 import constants
@@ -429,6 +430,9 @@ def closest_idx(lst, K): # stolen from geeksforgeeks.com
 def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
     '''gets the synced data of the given tow\n
     DONT USE THIS ONE! USE THE ONE IN THE HANDLING FILE'''
+
+    if inspect.stack()[1][3] != 'get_synced_data':
+        raise UserWarning("I Told you to not call this function >:(. use the one in Handling_ALL_Functions.py instead")
 
     # checks that inputs are valid:
     if tow not in range(1,32):
