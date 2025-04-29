@@ -1,4 +1,11 @@
+'''
+Syncs the data:
 
+I.e. it takes in the unsynced data, and returns synced data.
+do not actuallly import this file, just use the functions in Handling_ALL_Functions
+authors: Johannes, ...
+
+'''
 
 import Handling_ALL_Functions
 import pandas as pd
@@ -464,7 +471,7 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
 
         # fix the CAM:
         #find closest point index in time:
-        
+
 
     
 

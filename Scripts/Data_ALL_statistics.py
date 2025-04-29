@@ -177,6 +177,71 @@ def plot_histograms(data: pd.DataFrame,
     plt.tight_layout(rect=[0, 0, 1, 1])
     plt.show()
 
+def plot_histograms_separated(data: pd.DataFrame,
+                    title: str,
+                    bin_widths: list[float] = None):
+    errors = [
+        data['width error_LLS_A'],
+        data['width error_LLS_B'],
+        data['error_LT'],
+        data['center_CAM']
+    ]
+    names = [
+        'width error_LLS_A',
+        'width error_LLS_B',
+        'error_LT',
+        'error_CAM'
+    ]
+    titles = [
+        'Error Tape Width Before Compaction',
+        'Error Tape Width After Compaction',
+        'Error Robot Position',
+        'Error Tape Lateral Movement'
+    ]
+
+    
+    if bin_widths is None:
+        bin_widths = [None] * 4
+
+    figs = []
+
+    for i, vals in enumerate(errors):
+        clean = vals.dropna().to_numpy()
+        mn, mx = clean.min(), clean.max()
+        bw = bin_widths[i]
+        bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
+
+        fig, ax = plt.subplots(figsize=(6, 4))
+        fig.suptitle(f"{title} — {titles[i]}")
+
+        # histogram
+        ax.hist(clean, bins=bins, edgecolor='black', alpha=0.6, density=True)
+
+        # mean line
+        mean_val = clean.mean()
+        ax.axvline(mean_val, linestyle='-', color='red',
+                   label=f'Mean = {mean_val:.2f}')
+
+        # optional custom x-limits
+        if i == 0:
+            ax.set_xlim(-1.2, 1.)
+        if i == 1:
+            ax.set_xlim(-1.2, 1.)
+        elif i == 2:
+            ax.set_xlim(-1.2, 1.0)
+        elif i == 3:
+            ax.set_xlim(-1.2, 1.)
+
+        ax.set_title(titles[i])
+        ax.set_xlabel(names[i])
+        ax.set_ylabel('Density')
+        ax.legend()
+
+        fig.tight_layout(rect=[0, 0, 1, 0.95])
+        figs.append(fig)
+    
+    plt.show()
+
 
 def main():
     df = pd.concat((get_synced_data(t) for t in range(1, 8)),
@@ -187,6 +252,10 @@ def main():
         title="Sensor Error Histograms (ONLY 9 TOES)",
         bin_widths=[0.01, 0.01, 0.005, 0.03]
     )
+
+    plot_histograms_separated(df,
+                title="Sensor Error Histograms (All Tows)",
+                bin_widths=[0.01, 0.01, 0.02, 0.03])
 
 
 if __name__ == "__main__":
