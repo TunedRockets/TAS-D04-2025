@@ -96,11 +96,14 @@ data = run_model()
 
 def tow_visualizer(tow: pd.DataFrame, name: str):
     """
-    This function takes a dataframe that contains features of a tow. The data it takes from that dataframe are
+    This function takes a dataframe that contains features of a tow and plots the corresponding tow, as well as the intended tow. 
+    The data it takes from that dataframe are
     the centerline, width and x-position. It is important that the columns in the dataframe are properly named.
     For this, check that the centerline column is named "center_CAM", the width after compaction column is named
     "width_LLS_B" and the x-position columns is called "x".
-    Arguments are the datafram of the tow and the name of the tow.
+    Arguments are:
+    tow: pd.DataFrame, the dataframe of the tow 
+    name: str, the name of the tow, will be the title of the graph.
     
     Author: Martijn
     """
