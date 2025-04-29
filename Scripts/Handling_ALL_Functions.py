@@ -285,6 +285,7 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
     this one takes care of the saving and loading\n
     if spacesynced is true it will sync the points in space, otherwise it will be synced in time'''
 
+    
     name = "proccessed_" + str(tow)
     name += ("_space" if spacesynced else "_time")
     # first check the cache
@@ -298,7 +299,7 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
 
 
 
-    synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, overwrite=overwrite)
+    synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, spacesynced=spacesynced, overwrite=overwrite)
     # cut data:
     x_list = synced["x"]
     # get index of point 0:
@@ -314,8 +315,7 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
 
     synced = synced.truncate(index_0,index_1000)
 
-    if spacesynced:
-        raise NotImplementedError
+   
 
     _save_table(synced, name) # save the data
 
