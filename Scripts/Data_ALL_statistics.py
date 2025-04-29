@@ -131,14 +131,13 @@ def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = No
             mean_val,
             color='red',
             linestyle='-',
-            label=f'Mean = {mean_val:.2f}'
-        )
+            label=f'Mean = {mean_val:.2f}')
+        
         ax[row, col].axvline(
             mean_val + std_val,
             color='orange',
             linestyle='--',
-            label=f'+1 Std = {std_val:.2f}'
-        )
+            label=fr'$\sigma$ = {std_val:.2f}')
 
         ax[row, col].set_title(titles[i])
         ax[row, col].set_xlabel(names[i])
@@ -188,14 +187,18 @@ def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[f
             mean_val,
             linestyle='-',
             color='red',
-            label=f'Mean = {mean_val:.2f}'
-        )
+            label=f'Mean = {mean_val:.2f}')
+        
         ax.axvline(
             mean_val + std_val,
             linestyle='--',
             color='orange',
-            label=f'+1 Std = {std_val:.2f}'
-        )
+            label=fr'$\sigma$ = {std_val:.2f}')
+
+        ax.axvline(
+            0.0,
+            color = 'black',
+            linestyle='dashed')
 
         if i in (0, 1, 2, 3):
             ax.set_xlim(-1.2, 1.0)
