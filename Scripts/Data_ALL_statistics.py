@@ -103,7 +103,7 @@ def plot_histograms(data: pd.DataFrame,
     errors = [data['width error_LLS_A'], 
               data['width error_LLS_B'], 
               data['error_LT'], 
-              data['error_CAM']]
+              data['center_CAM']]
     
     names = ['error_LLS_A', 
              'error_LLS_B', 
@@ -150,11 +150,12 @@ def plot_histograms(data: pd.DataFrame,
 
 def main():
     
-    df = get_synced_data(1)
+    df = pd.concat((get_synced_data(t) for t in range(1, 8)),
+                   ignore_index=True)
 
     plot_histograms(
         df,
-        title="Sensor Error Histograms (Tow 1)",
+        title="Sensor Error Histograms (All 31 Tows)",
         bin_widths=[0.01, 0.01, 0.02, 0.03]
     )
 
