@@ -421,6 +421,11 @@ def _space_time_shift(xx,tt,dx)->np.ndarray:
             dt.append(np.nan)
     return dt
 
+def closest_idx(lst, K): # stolen from geeksforgeeks.com
+    '''return index of the closest value to K'''
+    return min(range(len(lst)), key = lambda i: abs(lst[i]-K))
+
+
 def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
     '''gets the synced data of the given tow\n
     DONT USE THIS ONE! USE THE ONE IN THE HANDLING FILE'''
@@ -456,23 +461,41 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
     assert abs(x_guess_930 - 930) < 1
 
     # fix spacing if asked:
-    
-    constants.TCP_CAM
-    constants.TCP_LLS_B
-    constants.TCP_LLS_A
+
 
     if spacesynced:
         # fix the distance so the data all refers to one physical point
-        # do this by shifting
-        pass
+        # do this by shifting the data in time, which makes it line up in space.
         timeshift_CAM = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_CAM)
         timeshift_LLS_A = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_LLS_A)
         timeshift_LLS_B = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_CAM)
 
         # fix the CAM:
         #find closest point index in time:
+        # move by that delta
+        for i in range(len(frame_CAM)):
 
+            index = closest_idx(frame_LT["time"], frame_CAM["time"][i])
+            dt = timeshift_CAM[index]
 
+            frame_CAM["time"][i] += dt # or -dt?
+        frame_CAM.dropna() # get rid of datapoints we can't move
+        # another cut :( 
+        # -Future Johannes
+        for i in range(len(frame_LLS_A)):
+
+            index = closest_idx(frame_LT["time"], frame_LLS_A["time"][i])
+            dt = timeshift_LLS_A[index]
+
+            frame_LLS_A["time"][i] += dt
+        frame_LLS_A.dropna()
+        for i in range(len(frame_LLS_B)):
+
+            index = closest_idx(frame_LT["time"], frame_LLS_B["time"][i])
+            dt = timeshift_LLS_B[index]
+
+            frame_LLS_B["time"][i] += dt
+        frame_LLS_B.dropna()
     
 
 
