@@ -101,6 +101,8 @@ def tow_visualizer(tow: pd.DataFrame, name: str):
     For this, check that the centerline column is named "center_CAM", the width after compaction column is named
     "width_LLS_B" and the x-position columns is called "x".
     Arguments are the datafram of the tow and the name of the tow.
+    
+    Author: Martijn
     """
     #Gets the important data, names called in the dataframe might need to be changed depending on what names are 
     #in the final synchronized dataframe
