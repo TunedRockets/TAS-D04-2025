@@ -1,3 +1,5 @@
+'''This is meant to run a large number of simulations at a time.'''
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
