@@ -1,3 +1,11 @@
+'''
+Some constants that are useful throughout the project, 
+
+authors: Martijn, Johannes
+
+'''
+
+
 #Dimensions of the set-up
 roller_width = 31 #mm
 roller_diameter = 40 #mm
