@@ -7,7 +7,6 @@ from scipy.stats import linregress
 from Handling_ALL_Functions import get_processed_data
 from Handling_ALL_Functions import get_synced_data
 import math
-from scipy.stats import truncnorm
 
 def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bins_show = False):
     """
@@ -206,7 +205,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
 
     return bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin
 
-def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0,use_truncnorm=False):
+def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0):
     np.random.seed(random_seed)
     error_path = [start_error]
     x_current = start_error
@@ -232,14 +231,8 @@ def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_ed
         # Get deviation stats and sample a deviation
         deviations = deviations_per_bin[bin_index]
         mu, sigma = stats.norm.fit(deviations)
-        if use_truncnorm:
-            # Use truncated normal within ±2σ
-            from scipy.stats import truncnorm
-            a, b = -2, 2
-            sampled_deviation = truncnorm(a, b, loc=mu, scale=sigma).rvs()
-        else:
-            # Use regular normal distribution
-            sampled_deviation = np.random.normal(mu, sigma)
+        sampled_deviation = np.random.normal(mu, sigma)
+
         # Next error
         next_error = y_pred + sampled_deviation
         error_path.append(next_error)
@@ -254,12 +247,12 @@ if __name__ == "__main__":
 
 
 
-    synced_data_tow_1 = get_synced_data(tow=1).to_numpy()
-    synced_data_cam_tow_1 = synced_data_tow_1[:,13]
+    synced_data_tow_1 = get_synced_data(tow=1).to_numpy
+    synced_data_cam_tow_1 = synced_data_tow_1[:,14]
     start_error = synced_data_cam_tow_1[0]
     n_steps = len(synced_data_cam_tow_1) - 1
     simulated_tow_path = generate_error_path(
-    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=42
+    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0
     )
 
     plt.figure(figsize=(12, 5))
@@ -271,5 +264,4 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.legend()
     plt.show()
-    MSE=np.sum((synced_data_cam_tow_1- simulated_tow_path) ** 2)
-    print("mean squared error is:", MSE)
+
