@@ -8,6 +8,10 @@ Everything is wrapped up in get_processed_data(), just use that and everything w
 ║  NO NEED TO DO ANITHING ELSE, IT FIXES EVERYTHING!    ║
 ║                                                       ║
 ╚═══════════════════════════════════════════════════════╝
+
+Now the get_synced_data() also exists, use that to get one (1) dataframe with all the data
+
+authors: Johannes, ...
 """
 
 import numpy as np
