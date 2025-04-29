@@ -427,7 +427,7 @@ def closest_idx(lst, K): # stolen from geeksforgeeks.com
     '''return index of the closest value to K'''
     return min(range(len(lst)), key = lambda i: abs(lst[i]-K))
 
-def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
+# def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
     '''gets the synced data of the given tow\n
     DONT USE THIS ONE! USE THE ONE IN THE HANDLING FILE'''
 
@@ -515,13 +515,14 @@ def _sync_time_data():
 
 def main():
     # for k in range(1,32):
-        k = 9
-        print(k)
+        k = 8
+        # print(k)
+        print(Handling_ALL_Functions.get_synced_data(10)["time"])
         width_LLS_A = Handling_ALL_Functions.get_synced_data(k)["width_LLS_A"]
         time = Handling_ALL_Functions.get_synced_data(k)["time"]
         LT_x = Handling_ALL_Functions.get_synced_data(k)["x"]
-        print(time)
-        LLS_sync(width_LLS_A, time, "LLS_A", find_x930(LT_x, time))
+        # print(time)
+        # LLS_sync(width_LLS_A, time, "LLS_A", find_x930(LT_x, time))
 
 if __name__ == "__main__":
     main()
