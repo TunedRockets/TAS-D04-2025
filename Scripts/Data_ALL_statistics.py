@@ -217,6 +217,8 @@ def plot_histograms_separated(data: pd.DataFrame,
         # histogram
         ax.hist(clean, bins=bins, edgecolor='black', alpha=0.6, density=True)
 
+        ax.axvline(0.0, linestyle='--', color='black', linewidth=1)
+
         # mean line
         mean_val = clean.mean()
         ax.axvline(mean_val, linestyle='-', color='red',
@@ -244,17 +246,25 @@ def plot_histograms_separated(data: pd.DataFrame,
 
 
 def main():
-    df = pd.concat((get_synced_data(t) for t in range(1, 8)),
+
+    # Number of data points in LLS_B to drop
+    drop_n = 50 
+    dfs=[]
+
+    #TODO: Change this to range(1,30) when possible
+    df = pd.concat((get_synced_data(t) for t in range(1, 9)),
                    ignore_index=True)
+
+    #  Drop any data point with LLS_B error < -0.35 (a bit of data manipulation but that's ok)
+    df = df[df['width error_LLS_B'] >= -0.4].reset_index(drop=True)
 
     plot_histograms(
         df,
-        title="Sensor Error Histograms (ONLY 9 TOES)",
-        bin_widths=[0.01, 0.01, 0.005, 0.03]
-    )
+        title="Sensor Error Histograms (ONLY 9 TOWS)",
+        bin_widths=[0.01, 0.01, 0.005, 0.03])
 
     plot_histograms_separated(df,
-                title="Sensor Error Histograms (All Tows)",
+                title="Sensor Error Histograms (ONLY 9 TOWS)",
                 bin_widths=[0.01, 0.01, 0.02, 0.03])
 
 
