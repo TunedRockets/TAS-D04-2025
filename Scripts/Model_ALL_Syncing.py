@@ -163,7 +163,7 @@ def find_x930(LT_x: list, LT_time: list):
     delta_x_values = []
     x_values = []
 
-    for i in range(int(len(LT_x)*0.45), int(len(LT_x)*0.48)):
+    for i in range(int(len(LT_x)*0.2), int(len(LT_x)*0.6)):
         delta_x = (LT_x[i+1] - LT_x[i])/0.010 # Divided by the rate at which the LT scans
         x = LT_x[i]
         delta_x_values.append(delta_x)
@@ -175,7 +175,7 @@ def find_x930(LT_x: list, LT_time: list):
     ti_list = []
     delta_xi_list = []
 
-    for j in range(int(len(LT_x)*0.50), int(len(LT_x)*0.75)):
+    for j in range(int(len(LT_x)*0.6), int(len(LT_x))):
         if (LT_x[j+1] - LT_x[j])/0.010 < (delta_x_min/beta):
             xi_list.append(LT_x[j])
             ti_list.append(LT_time[j])
@@ -187,7 +187,7 @@ def find_x930(LT_x: list, LT_time: list):
     index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
     xi = xi_list[index_delta_xi_min]
     ti = ti_list[index_delta_xi_min]
-    t_width = (ti_list[k] - ti_list[0])/3 # The time seems to be off by a factor of 3 in the data?
+    t_width = (ti_list[k] - ti_list[0])*2
 
     # Plot the data
     # plt.figure(figsize=(8, 5))
@@ -204,9 +204,9 @@ def find_x930(LT_x: list, LT_time: list):
 
     return xi, ti, t_width
 
-def LLS_sync(widths, times, sensor_type, t_width):
+def LLS_sync(widths, times, sensor_type, x930):
     width_velocities = [] # Set up list of velocities
-
+    NONE, NONE2, t_width = x930
 
     for i in range(len(widths)-1):
         width_velocities.append(widths[i+1] - widths[i])
@@ -218,25 +218,25 @@ def LLS_sync(widths, times, sensor_type, t_width):
         start_time = 4
         end_time = 5.5
     if sensor_type == "LLS_A":
-        t_width = 1.5*t_width
-        start_time = 4
-        end_time = 5.5
+        t_width = 1*t_width
+        start_time = 9
+        end_time = 11
     index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time)    
 
     ##########################################################################################################
 
-    # #Loop over all the data points and store results
-    # for i in range(len(widths)-1): 
-    #     width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
-    #     width_velocities.append(width_velocity)
+    #Loop over all the data points and store results
+    for i in range(len(widths)-1): 
+        width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
+        width_velocities.append(width_velocity)
 
-    # plt.plot(times, width_velocities, label="width_velocities", color="red")
-    # plt.title("Width velocity")
-    # plt.xlabel("Time [s]")
-    # plt.ylabel("Rate of change of tow width [m/s]")
-    # plt.plot(time_stop,0, "-o")
-    # plt.grid()
-    # plt.show() 
+    plt.plot(times, width_velocities)
+    plt.title("Width velocity")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Rate of change of tow width [m/s]")
+    plt.plot(time_stop,0, "-o")
+    plt.grid()
+    plt.show() 
     return time_stop
 
 def scan_for_min(t_len: float, times: list, values: list, start_time: float, end_time: float) -> tuple:
@@ -426,7 +426,6 @@ def closest_idx(lst, K): # stolen from geeksforgeeks.com
     '''return index of the closest value to K'''
     return min(range(len(lst)), key = lambda i: abs(lst[i]-K))
 
-
 def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
     '''gets the synced data of the given tow\n
     DONT USE THIS ONE! USE THE ONE IN THE HANDLING FILE'''
@@ -514,9 +513,14 @@ def _sync_time_data():
     raise NotImplementedError
 
 def main():
-    _get_synced_data(5)
-    for k in range(1,32):
-        _get_synced_data(k)
+    # for k in range(1,32):
+        k = 9
+        print(k)
+        width_LLS_A = Handling_ALL_Functions.get_synced_data(k)["width_LLS_A"]
+        time = Handling_ALL_Functions.get_synced_data(k)["time"]
+        LT_x = Handling_ALL_Functions.get_synced_data(k)["x"]
+        print(time)
+        LLS_sync(width_LLS_A, time, "LLS_A", find_x930(LT_x, time))
 
 if __name__ == "__main__":
     main()
