@@ -405,7 +405,7 @@ def _space_time_shift(xx,tt,dx)->np.ndarray:
             #now find t closest to x_1
             j = 0
             while xx[i+j] < x_1:
-                j+= 1
+                j+= 1 * np.sign(dx)
             t_1 = tt[i+j] # the nex time
             dt.append(t_1 - tt[i])
         except IndexError:
@@ -452,12 +452,19 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
     
     constants.TCP_CAM
     constants.TCP_LLS_B
-    constants.LLS_A_TCP
+    constants.TCP_LLS_A
 
     if spacesynced:
         # fix the distance so the data all refers to one physical point
         # do this by shifting
         pass
+        timeshift_CAM = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_CAM)
+        timeshift_LLS_A = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_LLS_A)
+        timeshift_LLS_B = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_CAM)
+
+        # fix the CAM:
+        #find closest point index in time:
+        
 
     
 
