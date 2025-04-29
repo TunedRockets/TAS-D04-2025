@@ -412,6 +412,7 @@ def _space_time_shift(xx,tt,dx)->np.ndarray:
             # this datapoint doesn't exist
             # let future Johannes deal with that:
             dt.append(np.nan)
+    return dt
 
 def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
     '''gets the synced data of the given tow\n
