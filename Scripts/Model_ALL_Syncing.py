@@ -1,4 +1,11 @@
+'''
+Syncs the data:
 
+I.e. it takes in the unsynced data, and returns synced data.
+do not actuallly import this file, just use the functions in Handling_ALL_Functions
+authors: Johannes, ...
+
+'''
 
 import Handling_ALL_Functions
 import pandas as pd
@@ -130,7 +137,6 @@ def _test_join_function():
     plt.plot(combined["time"],combined["shifted"])
     plt.show()
 
-
 def blue_dot_LT(LT_x,LT_time):
     '''gets the time at where the LT is 930, also returns the x value of 930\n
     basically wraps find_x930'''
@@ -140,9 +146,6 @@ def blue_dot_LT(LT_x,LT_time):
         index +=1
 
     return ti, xi, index, t_width
-
-
-
 
 def find_x930(LT_x: list, LT_time: list):
     """This function grabs a sample of the LT data where we know the tape is being layed down
@@ -234,7 +237,6 @@ def LLS_sync(widths, times, sensor_type, t_width):
     # plt.grid()
     # plt.show() 
     return time_stop
-
 
 def scan_for_min(t_len: float, times: list, values: list, start_time: float, end_time: float) -> tuple:
     """Finds the minimum squared sum over a given time window.
@@ -398,7 +400,6 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.legend()
     plt.show()
 
-
 def _space_time_shift(xx,tt,dx)->np.ndarray:
     '''returns a list of delta t to shift the offset sensor'''
     dt = []
@@ -411,14 +412,14 @@ def _space_time_shift(xx,tt,dx)->np.ndarray:
             #now find t closest to x_1
             j = 0
             while xx[i+j] < x_1:
-                j+= 1
+                j+= 1 * np.sign(dx)
             t_1 = tt[i+j] # the nex time
             dt.append(t_1 - tt[i])
         except IndexError:
             # this datapoint doesn't exist
             # let future Johannes deal with that:
             dt.append(np.nan)
-
+    return dt
 
 def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
     '''gets the synced data of the given tow\n
@@ -458,12 +459,19 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
     
     constants.TCP_CAM
     constants.TCP_LLS_B
-    constants.LLS_A_TCP
+    constants.TCP_LLS_A
 
     if spacesynced:
         # fix the distance so the data all refers to one physical point
         # do this by shifting
         pass
+        timeshift_CAM = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_CAM)
+        timeshift_LLS_A = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_LLS_A)
+        timeshift_LLS_B = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_CAM)
+
+        # fix the CAM:
+        #find closest point index in time:
+
 
     
 

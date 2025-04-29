@@ -95,7 +95,18 @@ def run_model(dx, save_data: bool=False, use_saved: bool=False):
 data = run_model()
 
 def tow_visualizer(tow: pd.DataFrame, name: str):
+    """
+    This function takes a dataframe that contains features of a tow and plots the corresponding tow, as well as the intended tow. 
+    The data it takes from that dataframe are
+    the centerline, width and x-position. It is important that the columns in the dataframe are properly named.
+    For this, check that the centerline column is named "center_CAM", the width after compaction column is named
+    "width_LLS_B" and the x-position columns is called "x".
+    Arguments are:
+    tow: pd.DataFrame, the dataframe of the tow 
+    name: str, the name of the tow, will be the title of the graph.
     
+    Author: Martijn
+    """
     #Gets the important data, names called in the dataframe might need to be changed depending on what names are 
     #in the final synchronized dataframe
     centerline = tow["center_CAM"]   #take the centerline from CAM
@@ -125,6 +136,7 @@ def tow_visualizer(tow: pd.DataFrame, name: str):
     plt.ylabel("y-position [mm]")
     plt.xlim(-50, 1050)
     plt.ylim(-7, 7)
+    plt.grid()
     plt.title(name)
     plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
     plt.tight_layout()
