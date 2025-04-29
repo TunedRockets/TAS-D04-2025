@@ -136,6 +136,7 @@ def tow_visualizer(tow: pd.DataFrame, name: str):
     plt.ylabel("y-position [mm]")
     plt.xlim(-50, 1050)
     plt.ylim(-7, 7)
+    plt.grid()
     plt.title(name)
     plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
     plt.tight_layout()
