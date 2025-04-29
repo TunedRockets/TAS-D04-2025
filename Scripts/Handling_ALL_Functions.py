@@ -8,6 +8,10 @@ Everything is wrapped up in get_processed_data(), just use that and everything w
 ║  NO NEED TO DO ANITHING ELSE, IT FIXES EVERYTHING!    ║
 ║                                                       ║
 ╚═══════════════════════════════════════════════════════╝
+
+Now the get_synced_data() also exists, use that to get one (1) dataframe with all the data
+
+authors: Johannes, ...
 """
 
 import numpy as np
@@ -323,14 +327,19 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
 
 
 ################################################################################################################
-
+pd.set_option('display.max_columns', None)
 
 def main():
     # force-recompute LT data for tows 1–31 and print first rows
 
-    for k in range(1, 32):
+
+    df = get_synced_data(1)
+    print("All columns in df:", df.columns.tolist())
+    print(df.head())
+
+    '''for k in range(1, 32):
         df = get_synced_data(k, overwrite=False)
-        print(df.head())
+        print(df.head())'''
 
 
 if __name__ == "__main__":
