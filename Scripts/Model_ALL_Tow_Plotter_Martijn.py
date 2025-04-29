@@ -6,7 +6,7 @@
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from Model_ALL_Syncing import _get_synced_data
+from Handling_ALL_Functions import get_synced_data
 
 def tow_plotter(tow: pd.DataFrame, name: str):
     
@@ -28,7 +28,7 @@ def tow_plotter(tow: pd.DataFrame, name: str):
     plt.show(fig)
 
 
-tow = _get_synced_data(1)
+tow = get_synced_data(1)
 print(tow)
 tow_plotter(tow, "some name")
 """ 
