@@ -251,25 +251,39 @@ if __name__ == "__main__":
     # Test your function here
 
     bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin = consecutive_error("CAM", 0.0001, num_bins=20, bins_show=False)
+    bin_stats_df1, slope1, intercept1, r_value1, p_value1, std_err1, x_sorted1, bin_edges1, deviations_per_bin1 = consecutive_error("LT", 0.0001, num_bins=20, bins_show=False)
 
 
 
-    synced_data_tow_1 = get_synced_data(tow=1).to_numpy()
+    synced_data_tow_1 = get_synced_data(tow=2).to_numpy()
     synced_data_cam_tow_1 = synced_data_tow_1[:,13]
     start_error = synced_data_cam_tow_1[0]
     n_steps = len(synced_data_cam_tow_1) - 1
-    simulated_tow_path = generate_error_path(
-    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=42
+    simulated_tow_path_cam = generate_error_path(
+    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=10
     )
 
+    synced_data_LT_tow_1 = synced_data_tow_1[:,4]
+    start_error1 = synced_data_LT_tow_1[0]  
+    simulated_tow_path_LT = generate_error_path(
+    start_error1, n_steps, slope1, intercept1, x_sorted1, bin_edges1, deviations_per_bin1, random_seed=10
+    )
+    simulated_total_offset_centerline = simulated_tow_path_LT+simulated_tow_path_cam
+    total_offset_real = synced_data_cam_tow_1+synced_data_LT_tow_1
+
     plt.figure(figsize=(12, 5))
-    plt.plot(simulated_tow_path, label="Simulated Error Path")
-    plt.plot(synced_data_cam_tow_1,label="real data",linestyle="--")
+    plt.plot(simulated_tow_path_cam, label="Simulated Error Path CAM")
+    plt.plot(synced_data_cam_tow_1,label="real data cam",linestyle="--")
+    plt.plot(simulated_tow_path_LT,label="Simulated path LT",linestyle=":")
+    plt.plot(simulated_total_offset_centerline, label="Total offset")
+    plt.plot(total_offset_real,label="real total offset")
+    plt.plot()
     plt.xlabel("Step")
     plt.ylabel("Error")
     plt.title("Simulated Machine Error Path Over Time")
     plt.grid(True)
     plt.legend()
     plt.show()
-    MSE=np.sum((synced_data_cam_tow_1- simulated_tow_path) ** 2)
+    MSE=np.sum((synced_data_cam_tow_1- simulated_tow_path_cam) ** 2)
     print("mean squared error is:", MSE)
+print(get_synced_data(tow=1))
