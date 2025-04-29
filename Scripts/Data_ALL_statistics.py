@@ -2,13 +2,36 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from Handling_ALL_Functions import get_synced_data
-from scipy.stats import norm, gamma, skewnorm
+from scipy.stats import norm, gamma, skewnorm, logistic, beta, expon, lognorm
+import warnings
+
+
+def best_fit_distribution(data, bins=40, distributions=None):
+    y, bin_edges = np.histogram(data, bins=bins, density=True)
+    x_mid = (bin_edges[:-1] + bin_edges[1:]) / 2.0
+    if distributions is None:
+        distributions = [norm, logistic, gamma, beta, expon, lognorm]
+    best = {'dist': None, 'params': None, 'sse': np.inf}
+    for dist in distributions:
+        # skip distributions that can't handle negative values
+        if data.min() < 0 and dist in (gamma, beta, expon, lognorm):
+            continue
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore')
+            try:
+                params = dist.fit(data)
+                pdf = dist.pdf(x_mid, *params[:-2], loc=params[-2], scale=params[-1])
+                sse = np.sum((y - pdf) ** 2)
+                if sse < best['sse']:
+                    best.update(dist=dist, params=params, sse=sse)
+            except Exception:
+                continue
+    return best
+
 
 """ Written by Manuel and Diogo, this python imports the processed data from 
     Handling_ALL_Functions and makes the different error plots for the sensors"""
 
-# TODO: Change the code, now the data is synced, the synced_data is a big dataframe.
-# TODO: We can probably just call the column with the error directly and plot it.
 
 def get_all_sensor_data():
     results_LLSA = []
@@ -20,7 +43,7 @@ def get_all_sensor_data():
     # Process LLS_A sensor data
     # ---------------------------
     for i in range(1, 32):
-        processed_data_LLSA = get_processed_data(tow=i, sensor_type="LLS_A", overwrite=False)
+        processed_data_LLSA = get_synced_data(tow=i, overwrite=False)
 
         # If there are more than 4 columns, keep only the first 4
         if processed_data_LLSA.shape[1] > 4:
@@ -37,7 +60,7 @@ def get_all_sensor_data():
     # Process LLS_B sensor data
     # ---------------------------
     for j in range(1, 32):
-        processed_data_LLSB = get_processed_data(tow=j, sensor_type="LLS_B", overwrite=False)
+        processed_data_LLSB = get_synced_data(tow=j, overwrite=False)
         processed_data_LLSB.columns = ["time", "width", "center", "error_LLS_B"]
         results_LLSB.append(processed_data_LLSB)
 
@@ -45,7 +68,7 @@ def get_all_sensor_data():
     # Process LT sensor data
     # ---------------------------
     for k in range(1, 32):
-        processed_data_LT = get_processed_data(tow=k, sensor_type="LT", overwrite=False)
+        processed_data_LT = get_synced_data(tow=k, overwrite=False)
         processed_data_LT = processed_data_LT[["time", "error_LT"]]
         results_LT.append(processed_data_LT)
 
@@ -53,24 +76,25 @@ def get_all_sensor_data():
     # Process CAM sensor data
     # ---------------------------
     for w in range(1, 32):
-        processed_data_CAM = get_processed_data(tow=w, sensor_type="CAM", overwrite=False)
+        processed_data_CAM = get_synced_data(tow=w, overwrite=False)
 
         # rename camera's "width error" column to "error_CAM"
-        processed_data_CAM["error_CAM"] = -processed_data_CAM["center"] # Added minus sign because camera was inverted
+        processed_data_CAM["error_CAM"] = -processed_data_CAM["center"]
         processed_data_CAM = processed_data_CAM[["time", "error_CAM"]]
         results_CAM.append(processed_data_CAM)
 
     # Combine into one DataFrame per sensor type
     df_LLSA = pd.concat(results_LLSA, ignore_index=True)
     df_LLSB = pd.concat(results_LLSB, ignore_index=True)
-    df_LT   = pd.concat(results_LT, ignore_index=True)
-    df_CAM  = pd.concat(results_CAM, ignore_index=True)
+    df_LT = pd.concat(results_LT, ignore_index=True)
+    df_CAM = pd.concat(results_CAM, ignore_index=True)
 
     return {
         "LLS_A": df_LLSA,
         "LLS_B": df_LLSB,
         "LT": df_LT,
-        "CAM": df_CAM}
+        "CAM": df_CAM
+    }
 
 
 def statistical_values(data: pd.DataFrame):
@@ -100,22 +124,22 @@ def plot_histograms(data: pd.DataFrame,
     fig, ax = plt.subplots(2, 2, figsize=(10, 8))
     fig.suptitle(title)
 
-    errors = [data['width error_LLS_A'], 
-              data['width error_LLS_B'], 
-              data['error_LT'], 
+    errors = [data['width error_LLS_A'],
+              data['width error_LLS_B'],
+              data['error_LT'],
               data['center_CAM']]
-    
-    names = ['error_LLS_A', 
-             'error_LLS_B', 
-             'error_LT', 
+
+    names = ['error_LLS_A',
+             'error_LLS_B',
+             'error_LT',
              'error_CAM']
-    
+
     titles = ['Error Tape width before compaction',
               'Error Tape width after compaction',
               'Error robot position',
               'Error tape lateral movement']
     if bin_widths is None:
-        bin_widths = [None]*4
+        bin_widths = [None] * 4
 
     for i, vals in enumerate(errors):
         row, col = divmod(i, 2)
@@ -125,9 +149,15 @@ def plot_histograms(data: pd.DataFrame,
         bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
 
         counts, bin_edges, _ = ax[row, col].hist(clean, bins=bins,
-                                                edgecolor='black', alpha=0.6, density=True)
-        bin_width = bin_edges[1] - bin_edges[0]
+                                                 edgecolor='black', alpha=0.6, density=True)
 
+        # fit and plot best distribution
+        best = best_fit_distribution(clean, bins=len(bin_edges) - 1)
+        dist, params = best['dist'], best['params']
+        print(f"{names[i]} best fit: {dist.name}")
+        x = np.linspace(mn, mx, 200)
+        pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
+        ax[row, col].plot(x, pdf, 'r-', lw=2, label=f'{dist.name} fit')
 
         # Zoom settings
         if i == 1:
@@ -135,7 +165,7 @@ def plot_histograms(data: pd.DataFrame,
         elif i == 2:
             ax[row, col].set_xlim(-1.2, -0.75)
         elif i == 3:
-            ax[row, col].set_xlim(0, 1)
+            ax[row, col].set_xlim(-0.5, 1)
 
         ax[row, col].set_title(titles[i])
         ax[row, col].set_xlabel(names[i])
@@ -149,16 +179,15 @@ def plot_histograms(data: pd.DataFrame,
 
 
 def main():
-    # TODO: CHANGE THIS FROM 1->8 to 1->31
     df = pd.concat((get_synced_data(t) for t in range(1, 8)),
                    ignore_index=True)
 
     plot_histograms(
         df,
         title="Sensor Error Histograms (ONLY 9 TOES)",
-        bin_widths=[0.01, 0.01, 0.02, 0.03]
+        bin_widths=[0.01, 0.01, 0.005, 0.03]
     )
+
 
 if __name__ == "__main__":
     main()
-
