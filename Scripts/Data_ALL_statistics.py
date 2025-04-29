@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from Handling_ALL_Functions import get_processed_data
+from Handling_ALL_Functions import get_synced_data
 from scipy.stats import norm, gamma, skewnorm
 
 """ Written by Manuel and Diogo, this python imports the processed data from 
@@ -158,48 +158,69 @@ def plot_histograms(data: pd.DataFrame,
     plt.show()
 
 
+
 def main():
-    # Gather data
-    sensor_data = get_all_sensor_data()
+    df = get_synced_data(1)
 
-    # Create a combined DataFrame of errors
-    df_error = pd.concat([
-        sensor_data["LLS_A"]["error_LLS_A"].reset_index(drop=True),
-        sensor_data["LLS_B"]["error_LLS_B"].reset_index(drop=True),
-        sensor_data["LT"]["error_LT"].reset_index(drop=True),
-        sensor_data["CAM"]["error_CAM"].reset_index(drop=True)
-    ], axis=1)
-    df_error.columns = ["error_LLS_A", "error_LLS_B", "error_LT", "error_CAM"]
+    # 3) Now you *can* print all 15 column names
+    print("All columns in df:", df.columns.tolist())
 
-    # Print columns of the error DataFrame
-    print("Error DataFrame columns:", df_error.columns.tolist())
+    # 4) (OPTIONAL) And to see the full head:
+    print(df.head())
 
-    # Compute stats
-    mean, median, std, minimum, maximum = statistical_values(df_error)
+    all_tows = range(1, 32)
+    sensors  = ["LLS_A", "LLS_B", "LT", "CAM"]
 
-    labels = ["Tape Width Before Compression", 
-              "Tape Width After Compression", 
-              "Robot Position", 
-              "Tape Lateral Movement"]
+    error_dfs = []
+    for tow in all_tows:
+        try:
+            sensor_data = get_synced_data(tow)
+        except Exception as e:
+            print(f"⚠️  Skipping tow {tow} due to error: {e}")
+            continue
 
+        # build a dict of Series for this tow
+        tow_dict = {}
+        for s in sensors:
+            err_col = f"error_{s}"
+            if s in sensor_data and err_col in sensor_data[s].columns:
+                tow_dict[err_col] = sensor_data[s][err_col].reset_index(drop=True)
+            else:
+                print(f"  ⚠️  Warning: missing {s}/{err_col} in tow {tow}")
+                tow_dict[err_col] = pd.Series(dtype=float)
+
+        df_err = pd.DataFrame(tow_dict)
+        df_err["tow"] = tow
+        error_dfs.append(df_err)
+
+    if not error_dfs:
+        print("No valid tow data to process. Exiting.")
+        return
+
+    df_error_all = pd.concat(error_dfs, axis=0, ignore_index=True)
+    print(f"Loaded errors for {len(error_dfs)} valid tows; combined shape = {df_error_all.shape}")
+
+    df_only_errors = df_error_all[[f"error_{s}" for s in sensors]]
+
+    mean, median, std, minimum, maximum = statistical_values(df_only_errors)
+    labels = [
+        "Tape Width Before Compression",
+        "Tape Width After Compression",
+        "Robot Position",
+        "Tape Lateral Movement"
+    ]
     for i, label in enumerate(labels):
-        print(f"{label}:")
-        print(f"  Mean: {mean[i]}")
-        print(f"  Median: {median[i]}")
-        print(f"  Std Dev: {std[i]}")
-        print(f"  Min: {minimum[i]}")
-        print(f"  Max: {maximum[i]}")
-        print()
+        print(f"{label}: mean={mean[i]:.3f}, median={median[i]:.3f}, "
+              f"std={std[i]:.3f}, min={minimum[i]:.3f}, max={maximum[i]:.3f}")
 
-    # Plot histograms
     my_bin_widths = [0.01, 0.01, 0.02, 0.03]
-
     plot_histograms(
-        df_error,
-        title="Sensor Error Histograms",
-        bin_widths=my_bin_widths)
+        df_only_errors,
+        title="Sensor Error Histograms (All Successful Tows)",
+        bin_widths=my_bin_widths
+    )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 
 

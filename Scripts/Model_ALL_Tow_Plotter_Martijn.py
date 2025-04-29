@@ -10,22 +10,27 @@ from Handling_ALL_Functions import get_synced_data
 
 def tow_plotter(tow: pd.DataFrame, name: str):
     
-    #Gets the important data, might need to be changed depending on what names are in the final synchronized dataframe
-    centerline = tow["center"]
-    width = tow["width"]
-    x = tow["x"]
+    #Gets the important data, names called in the dataframe might need to be changed depending on what names are 
+    #in the final synchronized dataframe
+    centerline = tow["CAMcenter"]   #take the centerline from CAM
+    width = tow["LLSBwidth"]        #take the width from LLS B
+    x = tow["LTx"]                  #take the x-position from LT
     
     # make the plot
-    fig, ax = plt.subplots()
-    ax.plot(x, centerline, label="centerline", )
-    ax.plot(x, centerline + 0.5 * width, label="top edge")
-    ax.plot(x, centerline - 0.5 * width, label="bottom edge")
-    ax.vline()
+    
+    plt.plot(x, centerline, label="centerline", linestyle='k--') #plots the centerline
+    plt.plot(x, centerline + 0.5 * width, label="top edge", linestyle='k-') #plots the top edge
+    plt.plot(x, centerline - 0.5 * width, label="bottom edge", linestyle='k-') #plots the bottom edge
+
+    #plots the start end endlines of the tow
+    plt.plot([x[0], x[0]], [centerline[0] - 0.5 * width[0], centerline[0] + 0.5 * width[0]], linestyle='k-', label="starting line")
+    plt.plot([x[-1], x[-1]], [centerline[-1] - 0.5 * width[-1], centerline[-1] + 0.5 * width[-1]], linestyle='k-', label="cut off line")
+
     plt.xlabel("x-position [mm]")
     plt.ylabel("tow outline")
     plt.title(name)
     plt.legend()
-    plt.show(fig)
+    plt.show()
 
 
 tow = get_synced_data(1)
