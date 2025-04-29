@@ -141,7 +141,7 @@ def _test_join_function():
 def blue_dot_LT(LT_x,LT_time):
     '''gets the time at where the LT is 930, also returns the x value of 930\n
     basically wraps find_x930'''
-    xi,ti, t_width = find_x930(LT_x, LT_time)
+    xi,ti, t_width = find_x930(LT_x, LT_time, "p")
     index = 0
     while LT_x[index] < xi:
         index +=1
@@ -163,11 +163,12 @@ def find_x930(LT_x: list, LT_time: list, data_state: str):
 
     if data_state == "p":
 
+
         beta = 2
         delta_x_values = []
         x_values = []
 
-        for i in range(int(len(LT_x)*0.38), int(len(LT_x)*0.4)):
+        for i in range(int(len(LT_x)*0.38), int(len(LT_x)*0.5)):
             delta_x = (LT_x[i+1] - LT_x[i])/0.010 # Divided by the rate at which the LT scans
             x = LT_x[i]
             delta_x_values.append(delta_x)
@@ -179,7 +180,7 @@ def find_x930(LT_x: list, LT_time: list, data_state: str):
         ti_list = []
         delta_xi_list = []
 
-        for j in range(int(len(LT_x)*0.6), int(len(LT_x))):
+        for j in range(int(len(LT_x)*0.5), int(len(LT_x)*0.75)):
             if (LT_x[j+1] - LT_x[j])/0.010 < (delta_x_min/beta):
                 xi_list.append(LT_x[j])
                 ti_list.append(LT_time[j])
@@ -191,31 +192,30 @@ def find_x930(LT_x: list, LT_time: list, data_state: str):
         index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
         xi = xi_list[index_delta_xi_min]
         ti = ti_list[index_delta_xi_min]
-        t_width = (ti_list[k] - ti_list[0])/3
-
+        t_width = (ti_list[k] - ti_list[0])*2
 
     if data_state == "s":
         raise NotImplementedError
 
     # Plot the data
-    plt.figure(figsize=(8, 5))
-    plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
     # Mark the detected tape cut point
-    plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
+    # plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
     # Labels and legend
-    plt.xlabel("Time [s]")
-    plt.ylabel("X Position [mm]")
-    plt.title("X vs Time with Tape Cut Detection")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    # plt.xlabel("X Position [mm]")
+    # plt.ylabel("X Width [mm/s]")
+    # plt.title("X vs X Width with Tape Cut Detection")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
 
     return xi, ti, t_width
 
-def LLS_sync(widths, times, sensor_type, x930):
+def LLS_sync(widths, times, sensor_type, x930p):
     width_velocities = [] # Set up list of velocities
+    t_width = x930p
     print(t_width)
-    NONE, NONE2, t_width = x930
 
     for i in range(len(widths)-1):
         width_velocities.append(widths[i+1] - widths[i])
@@ -228,8 +228,8 @@ def LLS_sync(widths, times, sensor_type, x930):
         end_time = 5.5
     if sensor_type == "LLS_A":
         t_width = 1*t_width
-        start_time = 9
-        end_time = 11
+        start_time = 4.5
+        end_time = 6
     index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time)    
 
     ##########################################################################################################
@@ -450,7 +450,7 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
     # get the list of dataframes (and rename the columns to avoid duplicate):
 
     frame_LT = Handling_ALL_Functions.get_processed_data(tow,"LT",overwrite, helper=True)
-    
+
     frame_CAM = Handling_ALL_Functions.get_processed_data(tow,"CAM",overwrite, helper=True)
     frame_CAM.columns = ["time", "width_CAM", "center_CAM", "error_CAM"]
     
@@ -524,15 +524,16 @@ def _sync_time_data():
 
 def main():
     # for k in range(1,32):
+        # if k == 2: # TODO process tow 2 properly
+            # continue  # Skip number 2 bcs its not processed properly
         k = 8
-        # print(k)
-        print(Handling_ALL_Functions.get_processed_data(k,"LT"))
-        # width_LLS_A = Handling_ALL_Functions.get_synced_data(k)["width_LLS_A"]
-        # time = Handling_ALL_Functions.get_synced_data(k)["time"]
-        # LT_x = Handling_ALL_Functions.get_synced_data(k)["x"]
-        find_x930(Handling_ALL_Functions.get_processed_data(k,"LT")["x"], Handling_ALL_Functions.get_processed_data(k,"LT")["time"], "p")
-        # print(time)
-        # LLS_sync(width_LLS_A, time, "LLS_A", find_x930(LT_x, time))
+        # print(Handling_ALL_Functions.get_processed_data(k, "LLS_A"))
+        width_LLS_A = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["width"]
+        time = Handling_ALL_Functions.get_processed_data(k, "LT")["time"]
+        LT_x = Handling_ALL_Functions.get_processed_data(k, "LT")["x"]
+        find_x930(LT_x, time, "p")
+        # find_x930(LT_x, time, "p") #PROPER 930 FIND USING PROCESSED DATA
+        LLS_sync(width_LLS_A, time, "LLS_A", find_x930(LT_x, time, "p"))
 
 if __name__ == "__main__":
     main()
