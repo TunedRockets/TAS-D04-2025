@@ -438,6 +438,10 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
     constants.TCP_LLS_B
     constants.LLS_A_TCP
 
+    if spacesynced:
+        # fix the distance so the data all refers to one physical point
+        # do this by shifting
+
 
     
 
