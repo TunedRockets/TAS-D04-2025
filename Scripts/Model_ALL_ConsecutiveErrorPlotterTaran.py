@@ -22,6 +22,9 @@ from scipy.optimize import curve_fit
 import scipy.stats as stats
 from sklearn.model_selection import train_test_split
 from scipy.stats import linregress
+from scipy.stats import truncnorm
+from Handling_ALL_Functions import get_synced_data
+
 
 # Load and Prepare Data
 def CAM_exceltolist(file_path):
@@ -72,16 +75,16 @@ y_binned = [np.mean(y_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_
 slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
 print(r_value)
 
-plt.figure(figsize=(8, 6))
-plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Data")
-plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
-plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
-plt.xlabel("X (Train)")
-plt.ylabel("Y (Train)")
-plt.title("Scatter Plot with Equal-Count Binning (Train Data)")
-plt.legend()
-plt.grid(True)
-plt.show()
+#plt.figure(figsize=(8, 6))
+#plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Data")
+#plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
+#plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
+#plt.xlabel("X (Train)")
+#plt.ylabel("Y (Train)")
+#plt.title("Scatter Plot with Equal-Count Binning (Train Data)")
+#plt.legend()
+#plt.grid(True)
+#plt.show()
 
 # Compute Deviations per Bin
 
@@ -141,7 +144,7 @@ for i in range(num_bins):
 
 # Final layout adjustments
 plt.tight_layout(rect=[0, 0, 1, 1])
-plt.show()
+#plt.show()
 
 
 #-------------------------
@@ -176,7 +179,7 @@ for i in range(num_bins):
 bin_stats_df = pd.DataFrame(bin_stats)
 
 # Display the table
-print(bin_stats_df)
+#print(bin_stats_df)
 
 
 #------------------
@@ -261,11 +264,7 @@ def predict_next_error(x_value, slope, intercept, x_binned, bin_edges, x_sorted,
 
 
 
-
-
-
-
-def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0):
+def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=42):
     np.random.seed(random_seed)
     error_path = [start_error]
     x_current = start_error
@@ -291,28 +290,138 @@ def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_ed
         # Get deviation stats and sample a deviation
         deviations = deviations_per_bin[bin_index]
         mu, sigma = stats.norm.fit(deviations)
-        sampled_deviation = np.random.normal(mu, sigma) 
+        #sampled_deviation = np.random.normal(mu, sigma) 
+
+        # Sample deviation from truncated normal (e.g., within ±2σ)
+        a, b = -2, 2  # limits in std dev units
+        truncated_normal = truncnorm(a, b, loc=mu, scale=sigma)
+        sampled_deviation = truncated_normal.rvs()
 
         # Next error
+        next_error = y_pred + sampled_deviation
+        error_path.append(next_error)
+        x_current = next_error
+    return np.array(error_path)
+
+# === USAGE (after your current setup) ===
+# Load specific sheet
+sheet_name = 'Sheet1'  # 
+real_tow_path_df = pd.read_excel(CAM_file_path, sheet_name=sheet_name)
+
+# Pick one column (for example column 5 as before)
+real_tow_path = real_tow_path_df.iloc[:, 4].dropna().to_numpy()
+
+# Now you have real tow path data as an array
+start_error = real_tow_path[0]
+n_steps = len(real_tow_path) - 1
+simulated_tow_path = generate_error_path(
+    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0
+)
+
+
+
+
+
+
+
+
+
+#validation model
+def generate_error_path_no_trunc(start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0):
+    np.random.seed(random_seed)
+    error_path = [start_error]
+    x_current = start_error
+
+    for _ in range(n_steps):
+        y_pred = slope * x_current + intercept
+
+        bin_index = None
+        for i in range(len(bin_edges) - 1):
+            bin_start = bin_edges[i]
+            bin_end = bin_edges[i + 1]
+            bin_x_min = x_sorted[bin_start]
+            bin_x_max = x_sorted[bin_end - 1]
+            if bin_x_min <= x_current <= bin_x_max:
+                bin_index = i
+                break
+        if bin_index is None:
+            bin_index = 0 if x_current < x_sorted[0] else len(bin_edges) - 2
+
+        deviations = deviations_per_bin[bin_index]
+        mu, sigma = stats.norm.fit(deviations)
+        sampled_deviation = np.random.normal(mu, sigma)
+
         next_error = y_pred + sampled_deviation
         error_path.append(next_error)
         x_current = next_error
 
     return np.array(error_path)
 
-# === USAGE (after your current setup) ===
-n_steps = 372
-start_error = 0
+# Helper function: model with truncated normal distribution
+def generate_error_path_trunc(start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0):
+    np.random.seed(random_seed)
+    error_path = [start_error]
+    x_current = start_error
 
-error_path = generate_error_path(
-    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin
+    for _ in range(n_steps):
+        y_pred = slope * x_current + intercept
+
+        bin_index = None
+        for i in range(len(bin_edges) - 1):
+            bin_start = bin_edges[i]
+            bin_end = bin_edges[i + 1]
+            bin_x_min = x_sorted[bin_start]
+            bin_x_max = x_sorted[bin_end - 1]
+            if bin_x_min <= x_current <= bin_x_max:
+                bin_index = i
+                break
+        if bin_index is None:
+            bin_index = 0 if x_current < x_sorted[0] else len(bin_edges) - 2
+
+        deviations = deviations_per_bin[bin_index]
+        mu, sigma = stats.norm.fit(deviations)
+
+        # Sample from truncated normal within ±2σ
+        a, b = -2, 2
+        truncated_normal = truncnorm(a, b, loc=mu, scale=sigma)
+        sampled_deviation = truncated_normal.rvs()
+
+        next_error = y_pred + sampled_deviation
+        error_path.append(next_error)
+        x_current = next_error
+
+    return np.array(error_path)
+
+# =============================================
+# Load the real data (already done earlier)
+# Assume you have: real_tow_path (np.array)
+
+start_error = real_tow_path[0]
+n_steps = len(real_tow_path) - 1
+
+
+simulated_no_trunc = generate_error_path_no_trunc(
+    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=42
 )
 
-plt.figure(figsize=(12, 5))
-plt.plot(error_path, label="Simulated Error Path")
+simulated_trunc = generate_error_path_trunc(
+    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=42
+)
+
+mse_no_trunc = np.mean((real_tow_path - simulated_no_trunc) ** 2)
+mse_trunc = np.mean((real_tow_path - simulated_trunc) ** 2)
+
+print(f"Mean Squared Error without Truncation: {mse_no_trunc:.6f}")
+print(f"Mean Squared Error with Truncation: {mse_trunc:.6f}")
+
+# Combined plot with all three paths
+plt.figure(figsize=(14, 6))
+plt.plot(real_tow_path, label="Actual Tow Path", linewidth=2)
+plt.plot(simulated_no_trunc, label="Simulated Tow Path (No Truncation)", linestyle="--")
+plt.plot(simulated_trunc, label="Simulated Tow Path (Truncated)", linestyle=":")
+plt.title(f"Comparison of Actual and Simulated Tow Paths - {sheet_name}")
 plt.xlabel("Step")
-plt.ylabel("Error")
-plt.title("Simulated Machine Error Path Over Time")
-plt.grid(True)
+plt.ylabel("Tow Path Error")
 plt.legend()
+plt.grid(True)
 plt.show()
