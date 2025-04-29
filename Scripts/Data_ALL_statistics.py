@@ -36,26 +36,22 @@ def get_all_sensor_data():
             df.insert(2, "temp", np.nan)
         df.columns = ["time", "width", "center", "error_LLS_A"]
         results_LLSA.append(df)
-
     for j in range(1, 32):
         df = get_synced_data(tow=j, overwrite=False)
         df.columns = ["time", "width", "center", "error_LLS_B"]
         results_LLSB.append(df)
-
     for k in range(1, 32):
         df = get_synced_data(tow=k, overwrite=False)[["time", "error_LT"]]
         results_LT.append(df)
-
     for w in range(1, 32):
         df = get_synced_data(tow=w, overwrite=False)
         df["error_CAM"] = -df["center"]
         results_CAM.append(df[["time", "error_CAM"]])
-
     return {
         "LLS_A": pd.concat(results_LLSA, ignore_index=True),
         "LLS_B": pd.concat(results_LLSB, ignore_index=True),
-        "LT": pd.concat(results_LT,   ignore_index=True),
-        "CAM": pd.concat(results_CAM, ignore_index=True)
+        "LT":    pd.concat(results_LT,   ignore_index=True),
+        "CAM":   pd.concat(results_CAM,  ignore_index=True)
     }
 
 def statistical_values(data: pd.DataFrame):
@@ -75,6 +71,16 @@ def statistical_values(data: pd.DataFrame):
     return stats
 
 def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = None):
+    distribution_labels = {
+        'norm':     'Normal Distribution',
+        'logistic': 'Logistic Distribution',
+        'gamma':    'Gamma Distribution',
+        'beta':     'Beta Distribution',
+        'expon':    'Exponential Distribution',
+        'lognorm':  'Log-normal Distribution',
+        'skewnorm': 'Skew-Normal Distribution'
+    }
+
     fig, ax = plt.subplots(2, 2, figsize=(10, 8))
     fig.suptitle(title)
 
@@ -104,10 +110,12 @@ def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = No
 
         best = best_fit_distribution(clean, bins=len(bins) - 1)
         dist, params = best['dist'], best['params']
-        print(f"{names[i]} best fit: {dist.name}")
+        friendly = distribution_labels.get(dist.name, dist.name)
+        print(f"{names[i]} best fit: {friendly}")
+
         x = np.linspace(mn, mx, 200)
         pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
-        ax[row, col].plot(x, pdf, 'r-', lw=2, label=f'{dist.name} fit')
+        ax[row, col].plot(x, pdf, '-', lw=2, label=friendly)
 
         if i == 1:
             ax[row, col].set_xlim(-0.4, 0.2)
@@ -121,7 +129,7 @@ def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = No
 
         ax[row, col].axvline(
             mean_val,
-            color='black',
+            color='red',
             linestyle='-',
             label=f'Mean = {mean_val:.2f}'
         )
@@ -130,12 +138,6 @@ def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = No
             color='orange',
             linestyle='--',
             label=f'+1 Std = {std_val:.2f}'
-        )
-        ax[row, col].axvline(
-            mean_val - std_val,
-            color='orange',
-            linestyle='--',
-            label=f'-1 Std = {std_val:.2f}'
         )
 
         ax[row, col].set_title(titles[i])
@@ -194,20 +196,8 @@ def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[f
             color='orange',
             label=f'+1 Std = {std_val:.2f}'
         )
-        ax.axvline(
-            mean_val - std_val,
-            linestyle='--',
-            color='orange',
-            label=f'-1 Std = {std_val:.2f}'
-        )
 
-        if i == 0:
-            ax.set_xlim(-1.2, 1.0)
-        elif i == 1:
-            ax.set_xlim(-1.2, 1.0)
-        elif i == 2:
-            ax.set_xlim(-1.2, 1.0)
-        elif i == 3:
+        if i in (0, 1, 2, 3):
             ax.set_xlim(-1.2, 1.0)
 
         ax.set_title(titles[i])
