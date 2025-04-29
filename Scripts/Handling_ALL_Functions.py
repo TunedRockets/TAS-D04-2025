@@ -280,6 +280,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)-
 def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd.DataFrame:
     '''Returns a massive DataFrame that is synced and cleaned\n
     uses the syncing.py file functions, but use this function to keep everything organized\n
+    this one takes care of the saving and loading\n
     if spacesynced is true it will sync the points in space, otherwise it will be synced in time'''
 
     name = "proccessed_" + str(tow)

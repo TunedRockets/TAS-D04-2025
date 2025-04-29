@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
+import constants
 
 def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, shift:float)-> pd.DataFrame:
     '''
@@ -397,10 +398,10 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.legend()
     plt.show()
 
-def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
+def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
     '''gets the synced data of the given tow\n
     DONT USE THIS ONE! USE THE ONE IN THE HANDLING FILE'''
-    
+
     # checks that inputs are valid:
     if tow not in range(1,32):
         raise IndexError(f"Tow ID {tow} is out of range")
@@ -430,6 +431,15 @@ def _get_synced_data(tow:int, overwrite:bool = False)->pd.DataFrame:
 
     x_guess_930 = frame_LT["x"][index_930]
     assert abs(x_guess_930 - 930) < 1
+
+    # fix spacing if asked:
+    
+    constants.TCP_CAM
+    constants.TCP_LLS_B
+    constants.LLS_A_TCP
+
+
+    
 
 
     # join data in time
