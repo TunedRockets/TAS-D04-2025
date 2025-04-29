@@ -285,7 +285,7 @@ def best_fit_distribution(data, bins=40, distributions=None):
 '''Actually calling the plots'''
 #! TODO: CHANGE range(1, 9) -> range(1, 31)
 def main():
-    df = pd.concat((get_synced_data(t, spacesynced=False) for t in range(1, 30)), ignore_index=True)
+    df = pd.concat((get_synced_data(t, spacesynced=True) for t in range(1, 9)), ignore_index=True)
     '''df = df[df['width error_LLS_B'] >= -0.4].reset_index(drop=True)'''
     plot_histograms(
         df,
