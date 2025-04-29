@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from Handling_ALL_Functions import get_processed_data
+from Handling_ALL_Functions import get_synced_data
 from scipy.stats import norm, gamma, skewnorm
 
 """ Written by Manuel and Diogo, this python imports the processed data from 
@@ -158,48 +158,71 @@ def plot_histograms(data: pd.DataFrame,
     plt.show()
 
 
+'''def plot_histograms(data: pd.DataFrame,
+                    title: str,
+                    bin_widths: list[float] = None):
+    
+    fig, ax = plt.subplots(2, 2, figsize=(10, 8))
+    fig.suptitle(title)
+
+    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
+    names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
+    titles = ['Error Tape width before compaction',
+              'Error Tape width after compaction',
+              'Error robot position',
+              'Error tape lateral movement']'''
+    
+
+
+
 def main():
-    # Gather data
-    sensor_data = get_all_sensor_data()
-
-    # Create a combined DataFrame of errors
-    df_error = pd.concat([
-        sensor_data["LLS_A"]["error_LLS_A"].reset_index(drop=True),
-        sensor_data["LLS_B"]["error_LLS_B"].reset_index(drop=True),
-        sensor_data["LT"]["error_LT"].reset_index(drop=True),
-        sensor_data["CAM"]["error_CAM"].reset_index(drop=True)
-    ], axis=1)
-    df_error.columns = ["error_LLS_A", "error_LLS_B", "error_LT", "error_CAM"]
-
-    # Print columns of the error DataFrame
-    print("Error DataFrame columns:", df_error.columns.tolist())
-
-    # Compute stats
-    mean, median, std, minimum, maximum = statistical_values(df_error)
-
-    labels = ["Tape Width Before Compression", 
-              "Tape Width After Compression", 
-              "Robot Position", 
-              "Tape Lateral Movement"]
-
+    # 1. generate all tow IDs from 1 to 31
+    all_tows = range(1, 32)
+    
+    # 2. collect each tow's error-DataFrame
+    error_dfs = []
+    for tow in all_tows:
+        sensor_data = get_synced_data(tow)
+        
+        df_err = pd.concat([
+            sensor_data["LLS_A"]["error_LLS_A"].reset_index(drop=True),
+            sensor_data["LLS_B"]["error_LLS_B"].reset_index(drop=True),
+            sensor_data["LT"]["error_LT"].reset_index(drop=True),
+            sensor_data["CAM"]["error_CAM"].reset_index(drop=True)
+        ], axis=1)
+        df_err.columns = ["error_LLS_A", "error_LLS_B", "error_LT", "error_CAM"]
+        df_err["tow"] = tow
+        error_dfs.append(df_err)
+    
+    # 3. stack them all into one big DataFrame
+    df_error_all = pd.concat(error_dfs, axis=0, ignore_index=True)
+    print(f"Loaded errors for {len(all_tows)} tows; combined shape = {df_error_all.shape}")
+    
+    # 4. extract only the error columns for stats & plotting
+    df_only_errors = df_error_all[["error_LLS_A", "error_LLS_B", "error_LT", "error_CAM"]]
+    
+    # compute & print your stats
+    mean, median, std, minimum, maximum = statistical_values(df_only_errors)
+    labels = [
+        "Tape Width Before Compression", 
+        "Tape Width After Compression", 
+        "Robot Position", 
+        "Tape Lateral Movement"
+    ]
     for i, label in enumerate(labels):
-        print(f"{label}:")
-        print(f"  Mean: {mean[i]}")
-        print(f"  Median: {median[i]}")
-        print(f"  Std Dev: {std[i]}")
-        print(f"  Min: {minimum[i]}")
-        print(f"  Max: {maximum[i]}")
-        print()
-
-    # Plot histograms
+        print(f"{label}: mean={mean[i]:.3f}, median={median[i]:.3f}, "
+              f"std={std[i]:.3f}, min={minimum[i]:.3f}, max={maximum[i]:.3f}")
+    
+    # plot one pooled histogram across all 31 tows
     my_bin_widths = [0.01, 0.01, 0.02, 0.03]
-
     plot_histograms(
-        df_error,
-        title="Sensor Error Histograms",
-        bin_widths=my_bin_widths)
+        df_only_errors,
+        title="Sensor Error Histograms (All 31 Tows)",
+        bin_widths=my_bin_widths
+    )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+
 
 
