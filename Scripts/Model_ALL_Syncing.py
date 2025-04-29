@@ -1,4 +1,4 @@
-
+7
 
 import Handling_ALL_Functions
 import pandas as pd
@@ -149,7 +149,7 @@ def find_x930(LT_x: list, LT_time: list):
         distance between data points has been found in the sample, then for data points after
         the sample, if the distance between them is smaller than some factor beta times the minimum
         distance found in the sample, then we know that the tape has been cut and xi = 930mm.
-        Then the coressponding time at xi is ti and this time can be used to sync the LT data with
+        Then the corresponding time at xi is ti and this time can be used to sync the LT data with
         other data sets\n
         
         returns value xi, time ti, and the width of the stop"""
@@ -284,7 +284,7 @@ def camera_sync(centers, times, t_width):
         distance between data points has been found in the sample, then for data points after
         the sample, if the distance between them is smaller than some factor beta times the minimum
         distance found in the sample, then we know that the tape has been cut and xi = 930mm.
-        Then the coressponding time at xi is ti and this time can be used to sync the CAM data with
+        Then the corresponding time at xi is ti and this time can be used to sync the CAM data with
         other data sets"""
 
     center_velocities = [] # Set up list of velocities
