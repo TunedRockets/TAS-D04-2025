@@ -133,9 +133,9 @@ def plot_histograms(data: pd.DataFrame,
         if i == 1:
             ax[row, col].set_xlim(-0.4, 0.2)
         elif i == 2:
-            ax[row, col].set_xlim(-1.2, 1.0)
+            ax[row, col].set_xlim(-1.2, -0.75)
         elif i == 3:
-            ax[row, col].set_xlim(-0.75, 1)
+            ax[row, col].set_xlim(0, 1)
 
         ax[row, col].set_title(titles[i])
         ax[row, col].set_xlabel(names[i])
@@ -149,13 +149,13 @@ def plot_histograms(data: pd.DataFrame,
 
 
 def main():
-    
+    # TODO: CHANGE THIS FROM 1->8 to 1->31
     df = pd.concat((get_synced_data(t) for t in range(1, 8)),
                    ignore_index=True)
 
     plot_histograms(
         df,
-        title="Sensor Error Histograms (All 31 Tows)",
+        title="Sensor Error Histograms (ONLY 9 TOES)",
         bin_widths=[0.01, 0.01, 0.02, 0.03]
     )
 
