@@ -20,9 +20,7 @@ import glob
 import os
 
 from constants import z_ref
-import Data_LLS_AB_importer
-import Data_LT_importer
-import Data_CAM_importer
+from Data_ALL_importer import LLS_exceltoarray, CAM_exceltolist, LT_exceltolist
 import Model_ALL_Syncing
 
 ################################################################################################################
@@ -259,22 +257,22 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)-
     match sensor_type:
         case "LT":
             # Laser Tracker
-            data = np.array(Data_LT_importer.LT_exceltolist()[tow-1]).T
+            data = np.array(LT_exceltolist()[tow-1]).T
             processesed_data = _handle_LT(*data[1:], tow)
 
         case "CAM":
             # Camera Data
-            data = np.array(Data_CAM_importer.CAM_exceltolist()[tow-1]).T
+            data = np.array(CAM_exceltolist()[tow-1]).T
             processesed_data = _handle_camera(*data[:4])
 
         case "LLS_A":
             # Laser Line Sensor 1
-            data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-2]).T
+            data = np.array(LLS_exceltoarray()[tow*2-2]).T
             processesed_data = _handle_LLS(*data[:4])
 
         case "LLS_B":
             # Laser Line Sensor 2
-            data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
+            data = np.array(LLS_exceltoarray()[tow*2-1]).T
             processesed_data = _handle_LLS(*data[:4])
     if not helper:
         _save_table(processesed_data, name) # save the data

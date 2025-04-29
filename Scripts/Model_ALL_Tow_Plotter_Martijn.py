@@ -3,6 +3,7 @@
 # It will, amongst other uses, allow us to:
     # Check if the syncing was successful
     # Check if the model produces realistic tows
+#Author: Martijn
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -17,29 +18,32 @@ def tow_plotter(tow: pd.DataFrame, name: str):
     width = tow["width_LLS_B"]        #take the width from LLS B
     x = tow["x"]                  #take the x-position from LT
     
-    # make the plot
-    plt.plot(x, centerline, label="centerline", linestyle='dashed') #plots the centerline
-    plt.plot(x, centerline + 0.5 * width, label="top edge", linestyle='solid') #plots the top edge
-    plt.plot(x, centerline - 0.5 * width, label="bottom edge", linestyle='solid') #plots the bottom edge
+    #set figure size
+    plt.figure(figsize=(15, 2))
+    
+    #make the plot
+    plt.plot(x, centerline, label="centerline", linestyle='dashed', color='grey') #plots the centerline
+    plt.plot(x, centerline + 0.5 * width, label="actual tow edge", linestyle='solid', color='black') #plots the top edge
+    plt.plot(x, centerline - 0.5 * width, linestyle='solid', color='black') #plots the bottom edge
 
     #plots the start end endlines of the tow
-    plt.plot([tow['x'].iloc[0], tow['x'].iloc[0]], [tow['center_CAM'].iloc[0] - 0.5 * tow['width_LLS_B'].iloc[0], tow['center_CAM'].iloc[0] + 0.5 * tow['width_LLS_B'].iloc[0]], linestyle='solid', label="starting line")
-    plt.plot([tow['x'].iloc[-1], tow['x'].iloc[-1]], [tow['center_CAM'].iloc[-1] - 0.5 * tow['width_LLS_B'].iloc[-1], tow['center_CAM'].iloc[-1] + 0.5 * tow['width_LLS_B'].iloc[-1]], linestyle='solid', label="cut off line")
+    plt.plot([tow['x'].iloc[0], tow['x'].iloc[0]], [tow['center_CAM'].iloc[0] - 0.5 * tow['width_LLS_B'].iloc[0], tow['center_CAM'].iloc[0] + 0.5 * tow['width_LLS_B'].iloc[0]], linestyle='solid', color='black')
+    plt.plot([tow['x'].iloc[-1], tow['x'].iloc[-1]], [tow['center_CAM'].iloc[-1] - 0.5 * tow['width_LLS_B'].iloc[-1], tow['center_CAM'].iloc[-1] + 0.5 * tow['width_LLS_B'].iloc[-1]], linestyle='solid', color='black')
 
     #plot the programmed path (just a rectangle)
-    plt.plot([0,1000], [tow_width_specified * 0.5, tow_width_specified * 0.5])
-    plt.plot([0,1000], [-tow_width_specified * 0.5, -tow_width_specified * 0.5])
-    plt.plot([0,0], [tow_width_specified * 0.5, -tow_width_specified * 0.5])
-    plt.plot([1000,1000], [tow_width_specified * 0.5, -tow_width_specified * 0.5])
-
-    # Axis scaling for a:b mm proportions (x:y = 1:2)
-    plt.gca().set_aspect(100)
+    plt.plot([0,1000], [tow_width_specified * 0.5, tow_width_specified * 0.5], 'g', label='programmed tow edge')
+    plt.plot([0,1000], [-tow_width_specified * 0.5, -tow_width_specified * 0.5], 'g')
+    plt.plot([0,0], [tow_width_specified * 0.5, -tow_width_specified * 0.5], 'g')
+    plt.plot([1000,1000], [tow_width_specified * 0.5, -tow_width_specified * 0.5], 'g')
 
     #plot info
     plt.xlabel("x-position [mm]")
-    plt.ylabel("tow outline [mm]")
+    plt.ylabel("y-position [mm]")
+    plt.xlim(-50, 1050)
+    plt.ylim(-7, 7)
     plt.title(name)
-    plt.legend()
+    plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+    plt.tight_layout()
     plt.show()
 
 def main():
