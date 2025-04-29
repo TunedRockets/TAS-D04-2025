@@ -100,8 +100,16 @@ def plot_histograms(data: pd.DataFrame,
     fig, ax = plt.subplots(2, 2, figsize=(10, 8))
     fig.suptitle(title)
 
-    errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
-    names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
+    errors = [data['width error_LLS_A'], 
+              data['width error_LLS_B'], 
+              data['error_LT'], 
+              data['error_CAM']]
+    
+    names = ['error_LLS_A', 
+             'error_LLS_B', 
+             'error_LT', 
+             'error_CAM']
+    
     titles = ['Error Tape width before compaction',
               'Error Tape width after compaction',
               'Error robot position',
@@ -120,24 +128,6 @@ def plot_histograms(data: pd.DataFrame,
                                                 edgecolor='black', alpha=0.6, density=True)
         bin_width = bin_edges[1] - bin_edges[0]
 
-        x = np.linspace(mn, mx, 200)
-        pdf = None
-        if i == 0:
-            # Fit skew-normal for top-left (captures asymmetry)
-            mu, sigma = norm.fit(clean)
-            pdf = norm.pdf(x, mu, sigma)
-        elif i == 1:
-            # Fit normal for top-right
-            mu, sigma = norm.fit(clean)
-            pdf = norm.pdf(x, mu, sigma)
-        elif i == 3:
-            # Fit gamma for bottom-right
-            a, loc, scale = gamma.fit(clean)
-            pdf = gamma.pdf(x, a, loc, scale)
-
-        if pdf is not None:
-            # plot PDF directly since hist is density-scaled
-            ax[row, col].plot(x, pdf, 'r-', lw=2, label='Fit')
 
         # Zoom settings
         if i == 1:
@@ -158,69 +148,16 @@ def plot_histograms(data: pd.DataFrame,
     plt.show()
 
 
-
 def main():
+    
     df = get_synced_data(1)
 
-    # 3) Now you *can* print all 15 column names
-    print("All columns in df:", df.columns.tolist())
-
-    # 4) (OPTIONAL) And to see the full head:
-    print(df.head())
-
-    all_tows = range(1, 32)
-    sensors  = ["LLS_A", "LLS_B", "LT", "CAM"]
-
-    error_dfs = []
-    for tow in all_tows:
-        try:
-            sensor_data = get_synced_data(tow)
-        except Exception as e:
-            print(f"⚠️  Skipping tow {tow} due to error: {e}")
-            continue
-
-        # build a dict of Series for this tow
-        tow_dict = {}
-        for s in sensors:
-            err_col = f"error_{s}"
-            if s in sensor_data and err_col in sensor_data[s].columns:
-                tow_dict[err_col] = sensor_data[s][err_col].reset_index(drop=True)
-            else:
-                print(f"  ⚠️  Warning: missing {s}/{err_col} in tow {tow}")
-                tow_dict[err_col] = pd.Series(dtype=float)
-
-        df_err = pd.DataFrame(tow_dict)
-        df_err["tow"] = tow
-        error_dfs.append(df_err)
-
-    if not error_dfs:
-        print("No valid tow data to process. Exiting.")
-        return
-
-    df_error_all = pd.concat(error_dfs, axis=0, ignore_index=True)
-    print(f"Loaded errors for {len(error_dfs)} valid tows; combined shape = {df_error_all.shape}")
-
-    df_only_errors = df_error_all[[f"error_{s}" for s in sensors]]
-
-    mean, median, std, minimum, maximum = statistical_values(df_only_errors)
-    labels = [
-        "Tape Width Before Compression",
-        "Tape Width After Compression",
-        "Robot Position",
-        "Tape Lateral Movement"
-    ]
-    for i, label in enumerate(labels):
-        print(f"{label}: mean={mean[i]:.3f}, median={median[i]:.3f}, "
-              f"std={std[i]:.3f}, min={minimum[i]:.3f}, max={maximum[i]:.3f}")
-
-    my_bin_widths = [0.01, 0.01, 0.02, 0.03]
     plot_histograms(
-        df_only_errors,
-        title="Sensor Error Histograms (All Successful Tows)",
-        bin_widths=my_bin_widths
+        df,
+        title="Sensor Error Histograms (Tow 1)",
+        bin_widths=[0.01, 0.01, 0.02, 0.03]
     )
 
 if __name__ == "__main__":
     main()
-
 
