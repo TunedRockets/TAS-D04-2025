@@ -117,7 +117,7 @@ def tow_visualizer(tow: pd.DataFrame, name: str):
     plt.figure(figsize=(15, 2))
     
     #make the plot
-    plt.plot(x, centerline, label="centerline", linestyle='dashed', color='grey') #plots the centerline
+    plt.plot(x, centerline, label="actual centerline", linestyle='dashed', color='grey') #plots the centerline
     plt.plot(x, centerline + 0.5 * width, label="actual tow edge", linestyle='solid', color='black') #plots the top edge
     plt.plot(x, centerline - 0.5 * width, linestyle='solid', color='black') #plots the bottom edge
 
@@ -126,10 +126,11 @@ def tow_visualizer(tow: pd.DataFrame, name: str):
     plt.plot([tow['x'].iloc[-1], tow['x'].iloc[-1]], [tow['center_CAM'].iloc[-1] - 0.5 * tow['width_LLS_B'].iloc[-1], tow['center_CAM'].iloc[-1] + 0.5 * tow['width_LLS_B'].iloc[-1]], linestyle='solid', color='black')
 
     #plot the programmed path (just a rectangle)
-    plt.plot([0,1000], [tow_width_specified * 0.5, tow_width_specified * 0.5], 'g', label='programmed tow edge')
-    plt.plot([0,1000], [-tow_width_specified * 0.5, -tow_width_specified * 0.5], 'g')
-    plt.plot([0,0], [tow_width_specified * 0.5, -tow_width_specified * 0.5], 'g')
-    plt.plot([1000,1000], [tow_width_specified * 0.5, -tow_width_specified * 0.5], 'g')
+    plt.plot([0,1000], [tow_width_specified * 0.5, tow_width_specified * 0.5], color='green', label='programmed tow edge')
+    plt.plot([0,1000], [-tow_width_specified * 0.5, -tow_width_specified * 0.5], color='green')
+    plt.plot([0,0], [tow_width_specified * 0.5, -tow_width_specified * 0.5], color='green')
+    plt.plot([1000,1000], [tow_width_specified * 0.5, -tow_width_specified * 0.5], color='green')
+    plt.plot([0,1000], [0,0], color='green', linestyle='dashed', label='programmed centerline')
 
     #plot info
     plt.xlabel("x-position [mm]")
