@@ -226,14 +226,93 @@ def predict_next_error(x_value, slope, intercept, x_binned, bin_edges, x_sorted,
     }
 
 
-result = predict_next_error(
-    x_value=0.2,
-    slope=slope,
-    intercept=intercept,
-    x_binned=x_binned,
-    bin_edges=bin_edges,
-    x_sorted=x_sorted,
-    deviations_per_bin=deviations_per_bin,
-    confidence=99
+#result = predict_next_error(x_value=0.2,slope=slope,intercept=intercept,x_binned=x_binned,bin_edges=bin_edges,x_sorted=x_sorted,deviations_per_bin=deviations_per_bin,confidence=99)
+#print(result)
+
+# Choose the bin index you want to visualize
+#selected_bin_index = 1  # Change this to any index from 0 to num_bins - 1
+#selected_devs = deviations_per_bin[selected_bin_index]
+#selected_bin_x_values = x_sorted[bin_edges[selected_bin_index]:bin_edges[selected_bin_index + 1]]
+#mu, std = stats.norm.fit(selected_devs)
+
+# Plot histogram and fitted normal curve
+#plt.figure(figsize=(8, 5))
+#plt.hist(selected_devs, bins=30, edgecolor='black', color='skyblue', density=True, label='Deviation Histogram')
+
+# Generate and plot the normal PDF
+#x_fit = np.linspace(min(selected_devs), max(selected_devs), 100)
+#p_fit = stats.norm.pdf(x_fit, mu, std)
+#plt.plot(x_fit, p_fit, 'r', linewidth=2, label='Fitted Normal Curve')
+
+# Annotate and label
+#x_min = np.min(selected_bin_x_values)
+#x_max = np.max(selected_bin_x_values)
+#annotation = f"Bin {selected_bin_index} (x ∈ [{x_min:.2f}, {x_max:.2f}] mm)\nμ = {mu:.4f} mm, σ = {std:.4f} mm"
+#plt.title("Deviation Distribution for Selected Bin")
+#plt.xlabel("Deviation (mm)")
+#plt.ylabel("Density")
+#plt.legend(loc='upper left')  # Move legend to avoid overlap with annotation
+#plt.grid(True)
+#plt.text(0.95, 0.95, annotation, transform=plt.gca().transAxes,verticalalignment='top', horizontalalignment='right',fontsize=10, bbox=dict(facecolor='white'))
+
+#plt.tight_layout()
+#plt.show()
+
+
+
+
+
+
+
+
+def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0):
+    np.random.seed(random_seed)
+    error_path = [start_error]
+    x_current = start_error
+
+    for _ in range(n_steps):
+        # Predict mean of next error
+        y_pred = slope * x_current + intercept
+
+        # Find correct bin
+        bin_index = None
+        for i in range(len(bin_edges) - 1):
+            bin_start = bin_edges[i]
+            bin_end = bin_edges[i + 1]
+            bin_x_min = x_sorted[bin_start]
+            bin_x_max = x_sorted[bin_end - 1]
+            if bin_x_min <= x_current <= bin_x_max:
+                bin_index = i
+                break
+        # Use edge bin if out of range
+        if bin_index is None:
+            bin_index = 0 if x_current < x_sorted[0] else len(bin_edges) - 2
+
+        # Get deviation stats and sample a deviation
+        deviations = deviations_per_bin[bin_index]
+        mu, sigma = stats.norm.fit(deviations)
+        sampled_deviation = np.random.normal(mu, sigma) 
+
+        # Next error
+        next_error = y_pred + sampled_deviation
+        error_path.append(next_error)
+        x_current = next_error
+
+    return np.array(error_path)
+
+# === USAGE (after your current setup) ===
+n_steps = 372
+start_error = 0
+
+error_path = generate_error_path(
+    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin
 )
-print(result)
+
+plt.figure(figsize=(12, 5))
+plt.plot(error_path, label="Simulated Error Path")
+plt.xlabel("Step")
+plt.ylabel("Error")
+plt.title("Simulated Machine Error Path Over Time")
+plt.grid(True)
+plt.legend()
+plt.show()

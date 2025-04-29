@@ -2,16 +2,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from Handling_ALL_Functions import get_processed_data
+from scipy.stats import norm, gamma, skewnorm
 
 """ Written by Manuel and Diogo, this python imports the processed data from 
     Handling_ALL_Functions and makes the different error plots for the sensors"""
+
+# TODO: Change the code, now the data is synced, the synced_data is a big dataframe.
+# TODO: We can probably just call the column with the error directly and plot it.
 
 def get_all_sensor_data():
     results_LLSA = []
     results_LLSB = []
     results_LT = []
     results_CAM = []
-
 
     # ---------------------------
     # Process LLS_A sensor data
@@ -35,14 +38,6 @@ def get_all_sensor_data():
     # ---------------------------
     for j in range(1, 32):
         processed_data_LLSB = get_processed_data(tow=j, sensor_type="LLS_B", overwrite=False)
-
-
-        if processed_data_LLSB.shape[1] > 4:
-            processed_data_LLSB = processed_data_LLSB.iloc[:, :4]
-        # If only 3 columns, insert a placeholder at index 1 (assuming 'width' is missing)
-        elif processed_data_LLSB.shape[1] == 3:
-            processed_data_LLSB.insert(1, "temp", np.nan)
-
         processed_data_LLSB.columns = ["time", "width", "center", "error_LLS_B"]
         results_LLSB.append(processed_data_LLSB)
 
@@ -51,7 +46,6 @@ def get_all_sensor_data():
     # ---------------------------
     for k in range(1, 32):
         processed_data_LT = get_processed_data(tow=k, sensor_type="LT", overwrite=False)
-
         processed_data_LT = processed_data_LT[["time", "error_LT"]]
         results_LT.append(processed_data_LT)
 
@@ -61,6 +55,8 @@ def get_all_sensor_data():
     for w in range(1, 32):
         processed_data_CAM = get_processed_data(tow=w, sensor_type="CAM", overwrite=False)
 
+        # rename camera's "width error" column to "error_CAM"
+        processed_data_CAM["error_CAM"] = -processed_data_CAM["center"] # Added minus sign because camera was inverted
         processed_data_CAM = processed_data_CAM[["time", "error_CAM"]]
         results_CAM.append(processed_data_CAM)
 
@@ -78,6 +74,9 @@ def get_all_sensor_data():
 
 
 def statistical_values(data: pd.DataFrame):
+    # Print the column labels of the incoming DataFrame
+    print("Input DataFrame columns:", data.columns.tolist())
+
     errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
     mean = []
     median = []
@@ -94,29 +93,70 @@ def statistical_values(data: pd.DataFrame):
 
     return mean, median, std, minimum, maximum
 
-def plot_histograms(data: pd.DataFrame, title: str):
+
+def plot_histograms(data: pd.DataFrame,
+                    title: str,
+                    bin_widths: list[float] = None):
     fig, ax = plt.subplots(2, 2, figsize=(10, 8))
     fig.suptitle(title)
 
     errors = [data['error_LLS_A'], data['error_LLS_B'], data['error_LT'], data['error_CAM']]
-    errors_names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
-    titles = ['Error Tape width',
+    names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
+    titles = ['Error Tape width before compaction',
               'Error Tape width after compaction',
               'Error robot position',
               'Error tape lateral movement']
+    if bin_widths is None:
+        bin_widths = [None]*4
 
-    for i, error in enumerate(errors):
-        row = i // 2
-        col = i % 2
-        ax[row, col].hist(error, bins=40, color='skyblue', edgecolor='black')
+    for i, vals in enumerate(errors):
+        row, col = divmod(i, 2)
+        clean = vals.dropna().to_numpy()
+        mn, mx = clean.min(), clean.max()
+        bw = bin_widths[i]
+        bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
+
+        counts, bin_edges, _ = ax[row, col].hist(clean, bins=bins,
+                                                edgecolor='black', alpha=0.6, density=True)
+        bin_width = bin_edges[1] - bin_edges[0]
+
+        x = np.linspace(mn, mx, 200)
+        pdf = None
+        if i == 0:
+            # Fit skew-normal for top-left (captures asymmetry)
+            mu, sigma = norm.fit(clean)
+            pdf = norm.pdf(x, mu, sigma)
+        elif i == 1:
+            # Fit normal for top-right
+            mu, sigma = norm.fit(clean)
+            pdf = norm.pdf(x, mu, sigma)
+        elif i == 3:
+            # Fit gamma for bottom-right
+            a, loc, scale = gamma.fit(clean)
+            pdf = gamma.pdf(x, a, loc, scale)
+
+        if pdf is not None:
+            # plot PDF directly since hist is density-scaled
+            ax[row, col].plot(x, pdf, 'r-', lw=2, label='Fit')
+
+        # Zoom settings
+        if i == 1:
+            ax[row, col].set_xlim(-0.4, 0.2)
+        elif i == 2:
+            ax[row, col].set_xlim(-1.2, 1.0)
+        elif i == 3:
+            ax[row, col].set_xlim(-0.75, 1)
+
         ax[row, col].set_title(titles[i])
-        ax[row, col].set_xlabel(errors_names[i])
-        ax[row, col].set_ylabel('Frequency')
-
-        # Calculate the mean of the error data
-        mean_val = error.mean()
-        ax[row, col].axvline(mean_val, color='red', linestyle='-', label='Mean')
+        ax[row, col].set_xlabel(names[i])
+        ax[row, col].set_ylabel('Density')
+        mean_val = clean.mean()
+        ax[row, col].axvline(mean_val, linestyle='-', label=f'Mean = {mean_val:.2f}')
         ax[row, col].legend()
+
+    plt.tight_layout(rect=[0, 0, 1, 1])
+    plt.show()
+
 
 def main():
     # Gather data
@@ -131,9 +171,11 @@ def main():
     ], axis=1)
     df_error.columns = ["error_LLS_A", "error_LLS_B", "error_LT", "error_CAM"]
 
+    # Print columns of the error DataFrame
+    print("Error DataFrame columns:", df_error.columns.tolist())
+
     # Compute stats
     mean, median, std, minimum, maximum = statistical_values(df_error)
-
 
     labels = ["Tape Width Before Compression", 
               "Tape Width After Compression", 
@@ -149,11 +191,15 @@ def main():
         print(f"  Max: {maximum[i]}")
         print()
 
-
-
     # Plot histograms
-    plot_histograms(df_error, "Sensor Error Histograms")
-    plt.show()
+    my_bin_widths = [0.01, 0.01, 0.02, 0.03]
+
+    plot_histograms(
+        df_error,
+        title="Sensor Error Histograms",
+        bin_widths=my_bin_widths)
 
 if __name__ == '__main__':
     main()
+
+

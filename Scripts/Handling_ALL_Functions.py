@@ -19,36 +19,47 @@ from constants import z_ref
 import Data_LLS_AB_importer
 import Data_LT_importer
 import Data_CAM_importer
+import Model_ALL_Syncing
 
 ################################################################################################################
 """Functions for Laser Tracker"""
 
-def _handle_LT(time: list, x: list, y: list, z: list, tow: int) -> pd.DataFrame:
-    """"This function takes the processed data and
-        creates new data points for each time stamp
-        where each point in time has a corresponding
-        position, and its errors in position"""
-    
+def _handle_LT(time: list,
+               x: list,
+               y: list,
+               z: list,
+               tow: int) -> pd.DataFrame:
+    """
+    Build the LT DataFrame and then drop any points
+    where y decreases (i.e. the gantry returning).
+    """
+    import numpy as np
+    import pandas as pd
+
+    # 1) build the raw table exactly as before
     rows = len(time)
-    columns = 6
-    shape = (rows, columns)
-    pandas_table = np.empty(shape)
+    tbl = np.empty((rows, 6))
     error_y, error_z = _error_LT(y, z, tow)
-    zero_time = time_to_float(time[0])
+    t0 = time_to_float(time[0])
 
-    for i in range(len(x)):
-        pandas_table[i][0] = time_to_float(time[i]) - zero_time
-        pandas_table[i][1] = x[i]
-        pandas_table[i][2] = y[i]
-        pandas_table[i][3] = z[i]
-        pandas_table[i][4] = error_y[i] # This is the y-error, it is just a better naming
-        pandas_table[i][5] = error_z[i]
-    # (Optional) Rename the columns to something more readable:
-    pandas_table = pd.DataFrame(pandas_table)
+    for i in range(rows):
+        tbl[i,0] = time_to_float(time[i]) - t0
+        tbl[i,1] = x[i]
+        tbl[i,2] = y[i]
+        tbl[i,3] = z[i]
+        tbl[i,4] = error_y[i]
+        tbl[i,5] = error_z[i]
 
-    pandas_table.columns = ["time", "x", "y", "z", "error_LT", "z error"]
+    df = pd.DataFrame(tbl, columns=[
+        "time","x","y","z","error_LT","z error"
+    ])
 
-    return pandas_table
+    # 2) KEEP ONLY THE OUTBOUND SWEEP: drop rows where y dips
+    #    for the very first row, diff() is NaN → fill with True so we keep it
+    forward_mask = df["y"].diff().fillna(1) > 0
+    df = df[forward_mask].reset_index(drop=True)
+
+    return df
 
 def _error_LT(y: list, z: list, tow_number)->list:
     """"This function takes a given tow path
@@ -102,20 +113,23 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list, width:list) -> pd
 ################################################################################################################
 """Functions for Camera"""
 
-def _handle_camera(time: list, left_edge: list, right_edge: list) -> pd.DataFrame:
+def _handle_camera(time: list, left_edge: list, right_edge: list, width:list) -> pd.DataFrame:
+
     rows = len(time)
     columns = 4
     shape = (rows, columns)
     pandas_table = np.empty(shape)
     zero_time = time_to_float(time[0])
 
+    # Sign flipped since camera is flipped
     for i in range(len(time)):
         pandas_table[i][0] = time_to_float(time[i]) - zero_time
-        pandas_table[i][1] = (right_edge[i] - left_edge[i]) # width
-        pandas_table[i][2] = 0.5 * (right_edge[i] + left_edge[i])
-        pandas_table[i][3] = (right_edge[i] - left_edge[i]) - 6.35  # assume width error
+        pandas_table[i][1] = width[i] # width
+        pandas_table[i][2] = 0.5*(right_edge[i] + left_edge[i]) # center
+        pandas_table[i][3] = abs(pandas_table[i][1] - (-6.35))
+    
     pandas_table = pd.DataFrame(pandas_table)
-    pandas_table.columns = ["time", "width", "center", "error_CAM"]
+    pandas_table.columns = ["time", "width", "center","width error"]
 
     return pandas_table
 
@@ -205,7 +219,7 @@ def create_cache()->None:
             get_processed_data(tow,code, True)
     print("Cache created!")
 
-def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
+def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)->pd.DataFrame:
     '''
     This function handles ALL the grabbing and processing of the raw data\n
     call this and it will do all the stuff for you, no other functions needed\n
@@ -215,7 +229,9 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
     sensor_type:str, the type of data to get. valid keys are: "LT","LLS_A","LLS_B","CAM"\n
     overwrite:bool (optional), If this is true, the function will ignore the cache\n
     and reprocess the raw data. False by default. only do this if something in the processing\n
-    has changed, or if the raw data has changed.
+    has changed, or if the raw data has changed.\n
+    helper is a variable that should always be false when using (it's just to make it work with get synced data)\n
+    (it circumvents the messages and the saving process since sync will save instead)
     '''
 
     # generate consistent name:
@@ -227,15 +243,15 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
         raise IndexError(f"Tow ID {tow} is out of range")
     # set the name
     name = sensor_type + "_" + str(tow)
+    if not helper: # ignore all the data
+        # check if file exists:
+        data = _load_table(name)
 
-    # check if file exists:
-    data = _load_table(name)
-
-    if data is not None and not overwrite:
-        #if true the data already exists, return it:
-        return data
-    # else the data doesn't exist, grab it
-    print(f"No file with code {name} cached. Generating new data...")
+        if data is not None and not overwrite:
+            #if true the data already exists, return it:
+            return data
+        # else the data doesn't exist, grab it
+        print(f"No file with code {name} cached. Generating new data...")
     match sensor_type:
         case "LT":
             # Laser Tracker
@@ -245,7 +261,7 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
         case "CAM":
             # Camera Data
             data = np.array(Data_CAM_importer.CAM_exceltolist()[tow-1]).T
-            processesed_data = _handle_camera(*data[:3])
+            processesed_data = _handle_camera(*data[:4])
 
         case "LLS_A":
             # Laser Line Sensor 1
@@ -256,16 +272,63 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False)->pd.DataFrame:
             # Laser Line Sensor 2
             data = np.array(Data_LLS_AB_importer.LLS_exceltoarray()[tow*2-1]).T
             processesed_data = _handle_LLS(*data[:4])
-    _save_table(processesed_data, name) # save the data
+    if not helper:
+        _save_table(processesed_data, name) # save the data
     return processesed_data
+
+
+def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd.DataFrame:
+    '''Returns a massive DataFrame that is synced and cleaned\n
+    uses the syncing.py file functions, but use this function to keep everything organized\n
+    if spacesynced is true it will sync the points in space, otherwise it will be synced in time'''
+
+    name = "proccessed_" + str(tow)
+    name += ("_space" if spacesynced else "_time")
+    # first check the cache
+    data = _load_table(name)
+    if data is not None and not overwrite:
+        #if true the data already exists, return it:
+        return data
+    # else the data doesn't exist, grab it
+    print(f"No file with code {name} cached. Generating new data...")
+
+
+
+
+    synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, overwrite=overwrite)
+    # cut data:
+    x_list = synced["x"]
+    # get index of point 0:
+    index_0 = 0
+    while x_list[index_0]< 0:
+        index_0 += 1
+    # now index is the first positive x
+
+    # get index of point 1000
+    index_1000 = len(x_list) - 1
+    while x_list[index_1000] >= 1000:
+        index_1000 -=1
+
+    synced = synced.truncate(index_0,index_1000)
+
+    if spacesynced:
+        raise NotImplementedError
+
+    _save_table(synced, name) # save the data
+
+    return synced
+
+
+
 
 ################################################################################################################
 
 def main():
-    # add testing code here
-    for k in range(1,32):
-        print(get_processed_data(1,"LLS_A"))
-    pass
+    # force-recompute LT data for tows 1–31 and print first rows
+
+    for k in range(1, 32):
+        df = get_synced_data(k, overwrite=False)
+        print(df.head())
 
 
 if __name__ == "__main__":

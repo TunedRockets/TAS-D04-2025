@@ -1,28 +1,36 @@
-#Way the model works: We input our current error, which we will call x
-# we calculate the mean of the next error, which we call y from the regression model
-#the value of x, the previous error, corresponds to a certain bin which contains a normal curve the randomness in the deviation of y 
-#we extract a random point from the normal curve 
-#we add this value to the before calculated mean
 
-#Note: we cant create a value of the mean or the histogram/normal curve of the devation for a certain data point of x(previous error), 
-#       because we don’t have enough data points at that precise point. This is why bins have been created: 
-#       this works, but will obtain a slight bias, because the deviation normal curve does not 
-#       correspond to the exact value of x, but only to the values around it
-
-
+'''
+    Way the model works: We input our current error, which we will call x
+    A regression model is made by binning the data, calculate the mean of each bin and find a regression line
+    we calculate the mean of the next error from the regression model which we call y
+    the value of x, the previous error, corresponds to a certain bin which contains a normal curve the randomness in the deviation of y 
+    we extract a random point from the normal curve, and we add this value to the before calculated mean
+    
+    Note: we cant create a value of the mean or the histogram/normal curve of the devation for a certain data point of x(previous error),
+    because we don’t have enough data points at that precise point. This is why bins have been created: 
+    this works, but will obtain a slight bias, because the deviation normal curve does not 
+    correspond to the exact value of x, but only to the values around it
+'''
+    
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 from sklearn.model_selection import train_test_split
 from scipy.stats import linregress
-from Data_CAM_importer import CAM_exceltolist
+def CAM_exceltolist(file_path):
+    excel_data = pd.read_excel(file_path, sheet_name=None)
+    CAM_sheets_data = []
+    for sheet_name, sheet_df in excel_data.items():
+        if sheet_name.startswith("Sheet"):
+            CAM_sheet_df = sheet_df.iloc[:, 0:]
+            CAM_sheets_data.append(CAM_sheet_df)
+    return CAM_sheets_data
+
 
 def load_and_prepare_data(file_path, column_index=4): #CHANGE USED COLUMN
     all_sheets_data = CAM_exceltolist(file_path)  #USE different data loader
-    column_arrays = [
-        sheet_df.iloc[:, column_index].dropna().to_numpy() for sheet_df in all_sheets_data
-    ]
+    column_arrays = [sheet_df.iloc[:, column_index].dropna().to_numpy() for sheet_df in all_sheets_data]
     combined_array = np.concatenate(column_arrays, axis=0)
     x_values = combined_array[:-1]
     y_values = combined_array[1:]
@@ -142,17 +150,69 @@ def plot_deviation_histograms(x_sorted, bin_edges, deviations_per_bin):
 # -------------------
 # Example usage:
 # -------------------
-CAM_file_path = r'Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx'
-x_train, x_test, y_train, y_test = load_and_prepare_data(CAM_file_path)
-x_sorted, y_sorted, bin_edges, x_binned, y_binned = bin_data(x_train, y_train, num_bins=40)
-slope, intercept, *_ = linregress(x_binned, y_binned)
-deviations_per_bin = compute_deviations(x_sorted, y_sorted, bin_edges, slope, intercept)
-bin_stats_df = summarize_bins(x_sorted, y_binned, bin_edges, deviations_per_bin)
+#CAM_file_path = r'Data\Data Sans Camera\Camera data\Cameradata_Modified.xlsx'
+#x_train, x_test, y_train, y_test = load_and_prepare_data(CAM_file_path)
+#x_sorted, y_sorted, bin_edges, x_binned, y_binned = bin_data(x_train, y_train, num_bins=40)
+#slope, intercept, *_ = linregress(x_binned, y_binned)
+#deviations_per_bin = compute_deviations(x_sorted, y_sorted, bin_edges, slope, intercept)
+#bin_stats_df = summarize_bins(x_sorted, y_binned, bin_edges, deviations_per_bin)
 
-plot_regression_with_bins(x_train, y_train, x_binned, y_binned, slope, intercept)
-plot_deviation_histograms(x_sorted, bin_edges, deviations_per_bin)
+#plot_regression_with_bins(x_train, y_train, x_binned, y_binned, slope, intercept)
+#plot_deviation_histograms(x_sorted, bin_edges, deviations_per_bin)
 
-x_input = 0
-prediction_df = predict_next_error(x_input, slope, intercept, x_sorted, bin_edges, deviations_per_bin, 99)
-print("Prediction result:")
-print(prediction_df)
+#x_input = 0
+#prediction_df = predict_next_error(x_input, slope, intercept, x_sorted, bin_edges, deviations_per_bin, 99)
+#print("Prediction result:")
+#print(prediction_df)
+
+def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0):
+    np.random.seed(random_seed)
+    error_path = [start_error]
+    x_current = start_error
+
+    for _ in range(n_steps):
+        # Predict mean of next error
+        y_pred = slope * x_current + intercept
+
+        # Find correct bin
+        bin_index = None
+        for i in range(len(bin_edges) - 1):
+            bin_start = bin_edges[i]
+            bin_end = bin_edges[i + 1]
+            bin_x_min = x_sorted[bin_start]
+            bin_x_max = x_sorted[bin_end - 1]
+            if bin_x_min <= x_current <= bin_x_max:
+                bin_index = i
+                break
+        # Use edge bin if out of range
+        if bin_index is None:
+            bin_index = 0 if x_current < x_sorted[0] else len(bin_edges) - 2
+
+        # Get deviation stats and sample a deviation
+        deviations = deviations_per_bin[bin_index]
+        mu, sigma = stats.norm.fit(deviations)
+        sampled_deviation = np.random.normal(mu, sigma) 
+
+        # Next error
+        next_error = y_pred + sampled_deviation
+        error_path.append(next_error)
+        x_current = next_error
+
+    return np.array(error_path)
+
+# === USAGE (after your current setup) ===
+n_steps = 1000
+start_error = 0
+
+error_path = generate_error_path(
+    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin
+)
+
+plt.figure(figsize=(12, 5))
+plt.plot(error_path, label="Simulated Error Path")
+plt.xlabel("Step")
+plt.ylabel("Error")
+plt.title("Simulated Machine Error Path Over Time")
+plt.grid(True)
+plt.legend()
+plt.show()

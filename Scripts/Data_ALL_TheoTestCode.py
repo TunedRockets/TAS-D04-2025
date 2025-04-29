@@ -21,7 +21,22 @@ from scipy.stats import linregress
 from Data_CAM_importer import CAM_exceltolist
 from Handling_ALL_Functions import get_processed_data
 
-def load_and_prepare_data(sensor, error="0", train_ratio=0.5, random_state=42): #CHANGE USED COLUMN
+def load_and_prepare_data(sensor, error, train_ratio=0.5, random_state=42): #CHANGE USED COLUMN
+
+    """
+
+    Possible sensor values:
+    "LT" ; "CAM" ; "LLS_A" ; "LLS_B"
+
+    For LT, specify error, possible values:
+    "y" ; "z"
+
+    For CAM, specify error, possible values:
+    "width" ; "center"
+
+    """
+
+
     # Wrong sensor error message
     if not sensor == "LT" and not sensor == "CAM" and not sensor == "LLS_A" and not sensor == "LLS_B":
         raise ValueError("Invalid sensor type. Possible values are 'LT', 'CAM', 'LLS_A', and 'LLS_B'.")
