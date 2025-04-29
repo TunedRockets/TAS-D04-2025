@@ -148,7 +148,7 @@ def blue_dot_LT(LT_x,LT_time):
 
     return ti, xi, index, t_width
 
-def find_x930(LT_x: list, LT_time: list):
+def find_x930(LT_x: list, LT_time: list, data_state: str):
     """This function grabs a sample of the LT data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
@@ -157,55 +157,64 @@ def find_x930(LT_x: list, LT_time: list):
         Then the coressponding time at xi is ti and this time can be used to sync the LT data with
         other data sets\n
         
-        returns value xi, time ti, and the width of the stop"""
+        returns value xi, time ti, and the width of the stop
+        
+        p = processed data and s = synced data"""
 
-    beta = 2
-    delta_x_values = []
-    x_values = []
+    if data_state == "p":
 
-    for i in range(int(len(LT_x)*0.2), int(len(LT_x)*0.6)):
-        delta_x = (LT_x[i+1] - LT_x[i])/0.010 # Divided by the rate at which the LT scans
-        x = LT_x[i]
-        delta_x_values.append(delta_x)
-        x_values.append(x)
+        beta = 2
+        delta_x_values = []
+        x_values = []
 
-    sorted_values = sorted(set(delta_x_values))  # Remove duplicates and sort
-    delta_x_min = sorted_values[0]  # Smallest value
-    xi_list = []
-    ti_list = []
-    delta_xi_list = []
+        for i in range(int(len(LT_x)*0.38), int(len(LT_x)*0.4)):
+            delta_x = (LT_x[i+1] - LT_x[i])/0.010 # Divided by the rate at which the LT scans
+            x = LT_x[i]
+            delta_x_values.append(delta_x)
+            x_values.append(x)
 
-    for j in range(int(len(LT_x)*0.6), int(len(LT_x))):
-        if (LT_x[j+1] - LT_x[j])/0.010 < (delta_x_min/beta):
-            xi_list.append(LT_x[j])
-            ti_list.append(LT_time[j])
-            delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)
-            if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta):
-                break
+        sorted_values = sorted(set(delta_x_values))  # Remove duplicates and sort
+        delta_x_min = sorted_values[0]  # Smallest value
+        xi_list = []
+        ti_list = []
+        delta_xi_list = []
 
-    k = len(ti_list) - 1
-    index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
-    xi = xi_list[index_delta_xi_min]
-    ti = ti_list[index_delta_xi_min]
-    t_width = (ti_list[k] - ti_list[0])*2
+        for j in range(int(len(LT_x)*0.6), int(len(LT_x))):
+            if (LT_x[j+1] - LT_x[j])/0.010 < (delta_x_min/beta):
+                xi_list.append(LT_x[j])
+                ti_list.append(LT_time[j])
+                delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)
+                if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta):
+                    break
+
+        k = len(ti_list) - 1
+        index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
+        xi = xi_list[index_delta_xi_min]
+        ti = ti_list[index_delta_xi_min]
+        t_width = (ti_list[k] - ti_list[0])/3
+
+
+    if data_state == "s":
+        raise NotImplementedError
 
     # Plot the data
-    # plt.figure(figsize=(8, 5))
-    # plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
+    plt.figure(figsize=(8, 5))
+    plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
     # Mark the detected tape cut point
-    # plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
+    plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
     # Labels and legend
-    # plt.xlabel("Time [s]")
-    # plt.ylabel("X Position [mm]")
-    # plt.title("X vs Time with Tape Cut Detection")
-    # plt.legend()
-    # plt.grid(True)
-    # plt.show()
+    plt.xlabel("Time [s]")
+    plt.ylabel("X Position [mm]")
+    plt.title("X vs Time with Tape Cut Detection")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
     return xi, ti, t_width
 
 def LLS_sync(widths, times, sensor_type, x930):
     width_velocities = [] # Set up list of velocities
+    print(t_width)
     NONE, NONE2, t_width = x930
 
     for i in range(len(widths)-1):
@@ -427,7 +436,7 @@ def closest_idx(lst, K): # stolen from geeksforgeeks.com
     '''return index of the closest value to K'''
     return min(range(len(lst)), key = lambda i: abs(lst[i]-K))
 
-# def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
+def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
     '''gets the synced data of the given tow\n
     DONT USE THIS ONE! USE THE ONE IN THE HANDLING FILE'''
 
@@ -441,7 +450,7 @@ def closest_idx(lst, K): # stolen from geeksforgeeks.com
     # get the list of dataframes (and rename the columns to avoid duplicate):
 
     frame_LT = Handling_ALL_Functions.get_processed_data(tow,"LT",overwrite, helper=True)
-
+    
     frame_CAM = Handling_ALL_Functions.get_processed_data(tow,"CAM",overwrite, helper=True)
     frame_CAM.columns = ["time", "width_CAM", "center_CAM", "error_CAM"]
     
@@ -517,10 +526,11 @@ def main():
     # for k in range(1,32):
         k = 8
         # print(k)
-        print(Handling_ALL_Functions.get_synced_data(10)["time"])
-        width_LLS_A = Handling_ALL_Functions.get_synced_data(k)["width_LLS_A"]
-        time = Handling_ALL_Functions.get_synced_data(k)["time"]
-        LT_x = Handling_ALL_Functions.get_synced_data(k)["x"]
+        print(Handling_ALL_Functions.get_processed_data(k,"LT"))
+        # width_LLS_A = Handling_ALL_Functions.get_synced_data(k)["width_LLS_A"]
+        # time = Handling_ALL_Functions.get_synced_data(k)["time"]
+        # LT_x = Handling_ALL_Functions.get_synced_data(k)["x"]
+        find_x930(Handling_ALL_Functions.get_processed_data(k,"LT")["x"], Handling_ALL_Functions.get_processed_data(k,"LT")["time"], "p")
         # print(time)
         # LLS_sync(width_LLS_A, time, "LLS_A", find_x930(LT_x, time))
 

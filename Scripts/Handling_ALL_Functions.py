@@ -301,7 +301,6 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
 
 
 
-
     synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, spacesynced=spacesynced, overwrite=overwrite)
     # cut data:
     x_list = synced["x"]
