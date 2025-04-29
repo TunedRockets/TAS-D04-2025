@@ -7,6 +7,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 from Handling_ALL_Functions import get_synced_data
+from constants import tow_width_specified
 
 def tow_plotter(tow: pd.DataFrame, name: str):
     
@@ -17,7 +18,6 @@ def tow_plotter(tow: pd.DataFrame, name: str):
     x = tow["x"]                  #take the x-position from LT
     
     # make the plot
-    
     plt.plot(x, centerline, label="centerline", linestyle='dashed') #plots the centerline
     plt.plot(x, centerline + 0.5 * width, label="top edge", linestyle='solid') #plots the top edge
     plt.plot(x, centerline - 0.5 * width, label="bottom edge", linestyle='solid') #plots the bottom edge
@@ -25,6 +25,12 @@ def tow_plotter(tow: pd.DataFrame, name: str):
     #plots the start end endlines of the tow
     plt.plot([tow['x'].iloc[0], tow['x'].iloc[0]], [tow['center_CAM'].iloc[0] - 0.5 * tow['width_LLS_B'].iloc[0], tow['center_CAM'].iloc[0] + 0.5 * tow['width_LLS_B'].iloc[0]], linestyle='solid', label="starting line")
     plt.plot([tow['x'].iloc[-1], tow['x'].iloc[-1]], [tow['center_CAM'].iloc[-1] - 0.5 * tow['width_LLS_B'].iloc[-1], tow['center_CAM'].iloc[-1] + 0.5 * tow['width_LLS_B'].iloc[-1]], linestyle='solid', label="cut off line")
+
+    #plot the programmed path (just a rectangle)
+    plt.plot([0,1000], [tow_width_specified * 0.5, tow_width_specified * 0.5])
+    plt.plot([0,1000], [-tow_width_specified * 0.5, -tow_width_specified * 0.5])
+    plt.plot([0,0], [tow_width_specified * 0.5, -tow_width_specified * 0.5])
+    plt.plot([1000,1000], [tow_width_specified * 0.5, -tow_width_specified * 0.5])
 
     #plot info
     plt.xlabel("x-position [mm]")
