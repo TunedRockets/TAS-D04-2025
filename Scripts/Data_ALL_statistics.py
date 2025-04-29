@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from Handling_ALL_Functions import get_synced_data
-from scipy.stats import norm, gamma, skewnorm, logistic, beta, expon, lognorm
+from scipy.stats import norm, gamma, skewnorm, logistic, beta, expon, lognorm, skewnorm
 import warnings
 
 
@@ -10,11 +10,11 @@ def best_fit_distribution(data, bins=40, distributions=None):
     y, bin_edges = np.histogram(data, bins=bins, density=True)
     x_mid = (bin_edges[:-1] + bin_edges[1:]) / 2.0
     if distributions is None:
-        distributions = [norm, logistic, gamma, beta, expon, lognorm]
+        distributions = [norm, logistic, gamma, beta, expon, lognorm, skewnorm]
     best = {'dist': None, 'params': None, 'sse': np.inf}
     for dist in distributions:
         # skip distributions that can't handle negative values
-        if data.min() < 0 and dist in (gamma, beta, expon, lognorm):
+        if data.min() < 0 and dist in (gamma, beta, expon, lognorm, skewnorm):
             continue
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore')
