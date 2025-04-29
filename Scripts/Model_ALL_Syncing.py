@@ -420,7 +420,7 @@ def _space_time_shift(xx,tt,dx)->np.ndarray:
             # this datapoint doesn't exist
             # let future Johannes deal with that:
             dt.append(np.nan)
-            print(f"This resulted in an IndexError")
+            print(f"This resulted in an IndexError") # added by Martijn 29-04 around 20:45
     return dt
 
 def closest_idx(lst, K): # stolen from geeksforgeeks.com
