@@ -7,24 +7,9 @@ from dataclasses import dataclass
 from constants import tow_width_specified
 
 from Handling_ALL_Functions import get_synced_data
-#from Model_LT_TheoChangeName import generate_error_path as get_LT_dist
-#from Model_CAM_ import generate_error_path as get_CAM_dist
-#from Model_LLSA import generate_error_path as get_LLSA_dist
-#from Model_LLSB import generate_error_path as get_LLSB_dist
 
-from Model_LT_TheoChangeName import generate_error_path as get_LT_path
-from Model_CAM_ import generate_error_path as get_CAM_path
-from Model_LLSA import generate_error_path as get_LLSA_path
-from Model_LLSB import generate_error_path as get_LLSB_path
-
-
-###### just testing some stuff
-from Handling_ALL_Functions import get_synced_data
-
-data = get_synced_data(5)
-
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-    print(data)
+from Model_ALL_ConsecutiveErrorTheo import consecutive_error, generate_error_path
+from Data_ALL_statistics import main as real_hist
 
 def save_distribution_data():
     def export_data(data_table: pd.DataFrame, short_name):
@@ -40,10 +25,10 @@ def save_distribution_data():
 
 def save_all_distribution_data(_save_path, LT_short_name, CAM_short_name, LLSA_short_name, LLSB_short_name):
     '''This function saves all the data of the distributions generated of the consecutive data.'''
-    LT_dist =
-    CAM_dist =
-    LLSA_dist =
-    LLSB_dist =
+    LT_dist = consecutive_error('LT')
+    CAM_dist = consecutive_error('CAM')
+    LLSA_dist = consecutive_error('LLS_A')
+    LLSB_dist = consecutive_error('LLS_B')
 
     LT_dist.columns = ["LT_mean", "LT_std"]
     #LT_dist.columns = ["LT_mean", "LT_std"]
@@ -59,7 +44,7 @@ def save_all_distribution_data(_save_path, LT_short_name, CAM_short_name, LLSA_s
 
 
 
-def run_model(dx, save_data: bool=False, use_saved: bool=False):
+def run_model(save_data: bool=False, use_saved: bool=False):
     if use_saved:
         _save_path = "Script\\"
         LT_short_name = 'LT_Dist_Data'
@@ -74,20 +59,60 @@ def run_model(dx, save_data: bool=False, use_saved: bool=False):
         LLSA_dist = pd.read_pickle(_save_path + LLSA_short_name + ".pkl")
         LLSB_dist = pd.read_pickle(_save_path + LLSB_short_name + ".pkl")
 
-    LT_error_list = get_LT_path()
-    CAM_error_list = get_CAM_path()
-    LLSA_error_list = get_LLSA_path()
-    LLSB_error_list = get_LLSB_path()
 
-    generated_data = []
-    x = 0
-    for i in range(len(LT_error_list)):
-        centerline_error = LT_error_list[i] + CAM_error_list[i]
-        width_error = LLSB_error_list[i]
-        x +=dx
-        generated_data.append([x, centerline_error, width_error])
+    num_bins = 50
+    rs = 42
+    LT_dist = consecutive_error('LT', random_state=rs, num_bins=num_bins)
+    CAM_dist = consecutive_error('CAM', random_state=rs, num_bins=num_bins)
+    LLSA_dist = consecutive_error('LLS_A', random_state=rs, num_bins=num_bins)
+    LLSB_dist = consecutive_error('LLS_B', random_state=rs, num_bins=num_bins)
 
-    generated_data = pd.DataFrame(generated_data, columns = ['x', 'error'])
+    n_runs = 200
+    total_data = []
+    n_steps = 289
+    total_error = [[], [], [], []]
+    for run in range(n_runs):
+        LT_error_list = generate_error_path(-0.9, n_steps, LT_dist[1], LT_dist[2], LT_dist[-3], LT_dist[-2],
+                                            LT_dist[-1], random_seed=run)
+        CAM_error_list = generate_error_path(0.2, n_steps, CAM_dist[1], CAM_dist[2], CAM_dist[-3], CAM_dist[-2],
+                                             CAM_dist[-1], random_seed=run)
+        LLSA_error_list = generate_error_path(-0.25, n_steps, LLSA_dist[1], LLSA_dist[2], LLSA_dist[-3],
+                                              LLSA_dist[-2], LLSA_dist[-1], random_seed=run)
+        LLSB_error_list = generate_error_path(-0.2, n_steps, LLSB_dist[1], LLSB_dist[2], LLSB_dist[-3],
+                                              LLSB_dist[-2], LLSB_dist[-1], random_seed=run)
+
+
+        total_error[0] = (total_error[0] + list(LT_error_list))
+        total_error[1] = (total_error[1] + list(CAM_error_list))
+        total_error[2] = (total_error[2] + list(LLSA_error_list))
+        total_error[3] = (total_error[3] + list(LLSB_error_list))
+
+        #generated_data = []
+        #x = 0
+        #for i in range(len(LT_error_list)):
+        #    centerline_error = LT_error_list[i] + CAM_error_list[i]
+        #    width_error = LLSB_error_list[i]
+        #    x +=dx
+        #    generated_data.append([x, centerline_error, width_error])
+        #
+        #generated_data = pd.DataFrame(generated_data, columns = ['x', 'error'])
+
+    print('total number of data points = ', len(total_error[0]))
+    plt.subplot(221)
+    plt.hist(total_error[0], bins=50)
+    plt.title('LT')
+    plt.subplot(222)
+    plt.hist(total_error[1], bins=50)
+    plt.title('CAM')
+    plt.subplot(223)
+    plt.hist(total_error[2], bins=50)
+    plt.title('LLSA')
+    plt.subplot(224)
+    plt.hist(total_error[3], bins=50)
+    plt.title('LLSB')
+    plt.show()
+
+    real_hist()
 
 
 
