@@ -187,63 +187,61 @@ def find_x930(LT_x: list, LT_time: list, data_state: str):
                 delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)
                 if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta):
                     break
-
+        
         k = len(ti_list) - 1
         index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
         xi = xi_list[index_delta_xi_min]
         ti = ti_list[index_delta_xi_min]
-        t_width = (ti_list[k] - ti_list[0])*2
+        if len(ti_list) < 2:
+            print("⚠️  Warning: Not enough cut points detected — using default t_width")
+            t_width = 0.9  # fallback value, adjust as needed
+        else:
+            t_width = (ti_list[k] - ti_list[0])
 
     if data_state == "s":
         raise NotImplementedError
 
     # Plot the data
-    # plt.figure(figsize=(8, 5))
-    # plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
+    plt.figure(figsize=(8, 5))
+    plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
     # Mark the detected tape cut point
-    # plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
+    plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
     # Labels and legend
-    # plt.xlabel("X Position [mm]")
-    # plt.ylabel("X Width [mm/s]")
-    # plt.title("X vs X Width with Tape Cut Detection")
-    # plt.legend()
-    # plt.grid(True)
-    # plt.show()
+    plt.xlabel("X Position [mm]")
+    plt.ylabel("X Width [mm/s]")
+    plt.title("X vs X Width with Tape Cut Detection")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
     return xi, ti, t_width
 
 def LLS_sync(widths, times, sensor_type, x930p):
     width_velocities = [] # Set up list of velocities
-    t_width = x930p
+    t_width = float(x930p[2])
     print(t_width)
 
     for i in range(len(widths)-1):
-        width_velocities.append(widths[i+1] - widths[i])
+        width_velocities.append((widths[i+1] - widths[i]) / 0.004)
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
-
 
     if sensor_type == "LLS_B":
         t_width = 2*t_width
         start_time = 4
         end_time = 5.5
     if sensor_type == "LLS_A":
-        t_width = 1*t_width
-        start_time = 4.5
-        end_time = 6
+        t_width = 0.55*t_width
+        start_time = 4
+        end_time = 5.7
     index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time)    
 
     ##########################################################################################################
 
-    #Loop over all the data points and store results
-    for i in range(len(widths)-1): 
-        width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
-        width_velocities.append(width_velocity)
-
-    plt.plot(times, width_velocities)
+    plt.plot(times, width_velocities, zorder=1)
+    plt.scatter([time_stop], [0], color="red", edgecolor="black", s=100, zorder=5, label="Min point")
     plt.title("Width velocity")
     plt.xlabel("Time [s]")
     plt.ylabel("Rate of change of tow width [m/s]")
-    plt.plot(time_stop,0, "-o")
     plt.grid()
     plt.show() 
     return time_stop
@@ -523,17 +521,17 @@ def _sync_time_data():
     raise NotImplementedError
 
 def main():
-    # for k in range(1,32):
-        # if k == 2: # TODO process tow 2 properly
-            # continue  # Skip number 2 bcs its not processed properly
-        k = 8
-        # print(Handling_ALL_Functions.get_processed_data(k, "LLS_A"))
+    for k in range(1,32):
+        if k == 2: # TODO process tow 2 properly
+            continue  # Skip number 2 bcs its not processed properly
+        # k = 10
+        print(k)
         width_LLS_A = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["width"]
-        time = Handling_ALL_Functions.get_processed_data(k, "LT")["time"]
+        LT_time = Handling_ALL_Functions.get_processed_data(k, "LT")["time"]
         LT_x = Handling_ALL_Functions.get_processed_data(k, "LT")["x"]
-        find_x930(LT_x, time, "p")
-        # find_x930(LT_x, time, "p") #PROPER 930 FIND USING PROCESSED DATA
-        LLS_sync(width_LLS_A, time, "LLS_A", find_x930(LT_x, time, "p"))
+        LLS_A_time = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["time"]
+        # find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"], "p") #PROPER X930 FIND USING PROCESSED DATA
+        LLS_sync(width_LLS_A, LLS_A_time, "LLS_A", find_x930(LT_x, LT_time, "p")) # TODO There seems to be an issue with tow 1 so process tow 1 properly and also check why some tows dont give a t_width. After this all the syncs in time should work and work can be continued on adaprting the function x930 to also include the time sync.
 
 if __name__ == "__main__":
     main()
