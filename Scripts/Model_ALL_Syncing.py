@@ -357,13 +357,13 @@ def camera_sync(centers, times, t_width):
         # width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
         # width_velocities.append(width_velocity)
 
-    plt.plot(times, center_velocities, label="center_velocities", color="red")
-    plt.title("center velocity")
-    plt.xlabel("Time [s]")
-    plt.ylabel("Rate of change of tow center [m/s]")
-    plt.plot(time_stop,0, "-o")
-    plt.grid()
-    plt.show() 
+    # plt.plot(times, center_velocities, label="center_velocities", color="red")
+    # plt.title("center velocity")
+    # plt.xlabel("Time [s]")
+    # plt.ylabel("Rate of change of tow center [m/s]")
+    # plt.plot(time_stop,0, "-o")
+    # plt.grid()
+    # plt.show() 
 
     return time_stop
 
