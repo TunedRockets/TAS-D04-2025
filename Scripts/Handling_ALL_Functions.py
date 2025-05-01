@@ -58,8 +58,8 @@ def _handle_LT(time: list,
 
     # 2) KEEP ONLY THE OUTBOUND SWEEP: drop rows where y dips
     #    for the very first row, diff() is NaN → fill with True so we keep it
-    forward_mask = df["y"].diff().fillna(1) > 0
-    df = df[forward_mask].reset_index(drop=True)
+    # forward_mask = df["y"].diff().fillna(1) > 0
+    # df = df[forward_mask].reset_index(drop=True)
 
     return df
 
