@@ -43,7 +43,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     all_pairs = []
 
     # Loop through tow numbers from 1 to 31
-    for tow_number in range(1, 10):
+    for tow_number in range(2, 10):
         # Get processed data for the current tow and sensor type
         tow_data_bef = get_synced_data(tow_number)
 
