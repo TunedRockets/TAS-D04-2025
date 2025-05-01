@@ -11,7 +11,7 @@ from Handling_ALL_Functions import get_synced_data
 import math
 from scipy.stats import truncnorm
 
-def consecutive_error(sensor, test_ratio=0.8, num_bins = 68, random_state=42, bins_show = False, plot_fit=True):
+def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bins_show = False):
     """
         Analyze consecutive error pairs and their distributions from processed sensor data.
 
@@ -98,22 +98,24 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 68, random_state=42, bi
     slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
     print(r_value)
 
+
+
     # Define error label
     error_labels = {"LT": "y error", "CAM": "position error", "LLS_A": "width error", "LLS_B": "width error"}
     error_label = error_labels[sensor]
 
     # Plot scatter + binned fit
-    if plot_fit:
-        plt.figure(figsize=(8, 6))
-        plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
-        plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
-        plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
-        plt.xlabel("$ε_{i}$ [mm]")
-        plt.ylabel("$ε_{i+1}$ [mm]")
-        plt.title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+    plt.figure(figsize=(8, 6))
+    plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
+    plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
+    plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
+    plt.xlabel("$ε_{i}$ [mm]")
+    plt.ylabel("$ε_{i+1}$ [mm]")
+    plt.title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
     # Compute Deviations per Bin
 
     deviations_per_bin = []
@@ -299,15 +301,4 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
     plt.show()
     MSE = np.sum((synced_data_cam_tow_1 - simulated_tow_path_cam) ** 2)
     print("mean squared error is:", MSE)
-
-if __name__ == "__main__":
-
-    # Test your function here
-    generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False)
-    # generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=True, errorCor_show=False, bins_show=False)
-    # print(get_synced_data(tow=1))
-
-    # consecutive_error('CAM', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
-    # consecutive_error('LT', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
-    # consecutive_error('LLS_A', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
-    # consecutive_error('LLS_B', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
+print(get_synced_data(tow=1))
