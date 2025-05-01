@@ -343,7 +343,7 @@ def camera_sync(centers, times, t_width):
         center_velocities.append(centers[i+1] - centers[i])
     center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
 
-    t_width = 1.5*t_width
+    t_width = 0.5*t_width
     start_time = 4.5
     end_time = 5.75
     index_stop, time_stop = scan_for_min(t_width, times, center_velocities, start_time, end_time)    
@@ -354,8 +354,8 @@ def camera_sync(centers, times, t_width):
 
     # #Loop over all the data points and store results
     # for i in range(len(widths)-1): 
-    #     width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
-    #     width_velocities.append(width_velocity)
+        # width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
+        # width_velocities.append(width_velocity)
 
     # plt.plot(times, center_velocities, label="center_velocities", color="red")
     # plt.title("center velocity")
@@ -562,13 +562,14 @@ def main():
     for k in range(1,32):
         # k = 5
         print(k)
-        width_LLS_B = Handling_ALL_Functions.get_processed_data(k, "LLS_B")["width"]
+        centers = Handling_ALL_Functions.get_processed_data(k, "CAM")["center"]
         LT_time = Handling_ALL_Functions.get_processed_data(k, "LT")["time"]
         LT_x = Handling_ALL_Functions.get_processed_data(k, "LT")["x"]
-        LLS_B_time = Handling_ALL_Functions.get_processed_data(k, "LLS_B")["time"]
+        time = Handling_ALL_Functions.get_processed_data(k, "CAM")["time"]
         # find_x930(Handling_ALL_Functions.get_processed_data(k, "LT")["x"], Handling_ALL_Functions.get_processed_data(k, "LT")["time"], "p") #PROPER X930 FIND USING PROCESSED DATA
         # LLS_sync(Handling_ALL_Functions.get_processed_data(k, "LLS_A")["width"], Handling_ALL_Functions.get_processed_data(k, "LLS_A")["time"], "LLS_A", find_x930(LT_x, LT_time, "p")) #PROPER LLSA FIND USING PROCESSED DATA
-        LLS_sync(width_LLS_B, LLS_B_time, "LLS_B", find_x930(LT_x, LT_time, "p"))
+        # LLS_sync(Handling_ALL_Functions.get_processed_data(k, "LLS_B")["width"], Handling_ALL_Functions.get_processed_data(k, "LLS_B")["time"], "LLS_B", find_x930(LT_x, LT_time, "p"))
+        camera_sync(centers, time, find_x930(LT_x, LT_time)[2])
 if __name__ == "__main__":
     main()
 
