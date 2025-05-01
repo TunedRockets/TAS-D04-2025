@@ -13,7 +13,7 @@ from scipy.stats import (norm, logistic, gamma, beta, expon, lognorm, skewnorm,
 
 
 # TODO: check if this function is necessary now.
-def get_all_sensor_data():
+'''def get_all_sensor_data():
     results_LLSA, results_LLSB, results_LT, results_CAM = [], [], [], []
 
     for i in range(1, 32):
@@ -43,7 +43,7 @@ def get_all_sensor_data():
     return {"LLS_A": pd.concat(results_LLSA, ignore_index=True),
             "LLS_B": pd.concat(results_LLSB, ignore_index=True),
             "LT":    pd.concat(results_LT,   ignore_index=True),
-            "CAM":   pd.concat(results_CAM,  ignore_index=True)}
+            "CAM":   pd.concat(results_CAM,  ignore_index=True)}'''
 
 
 '''Get relevant statistical values for each error dataset'''
@@ -220,7 +220,7 @@ def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[f
 
         ax.axvline(mean_val, color='orange', linestyle='-',
                              label=rf'Mean = {mean_val:.2f}' + '\n' + rf'$\sigma$ = {std_val:.2f}')
-        ax.axvline(0.0, color='black')
+        ax.axvline(0.0, color='black', linestyle='dashed')
 
 
         # All distributions are shown with this x-axis range
@@ -285,11 +285,11 @@ def best_fit_distribution(data, bins=40, distributions=None):
 '''Actually calling the plots'''
 #! TODO: CHANGE range(1, 9) -> range(1, 31)
 def main():
-    df = pd.concat((get_synced_data(t, spacesynced=False) for t in range(1,10)), ignore_index=True)
+    df = pd.concat((get_synced_data(t, spacesynced=True) for t in range(1,10)), ignore_index=True)
 
     #! TODO: The following line is a dirty work, it has to be solved
     #! TODO: LLS_B data is screwd!
-    df = df[df['width error_LLS_B'] >= -0.4].reset_index(drop=True)
+    df = df[df['width error_LLS_B'] >= -0.3].reset_index(drop=True)
     plot_histograms(
         df,
         title="Sensor Error Histograms (ONLY 9 TOWS)",
