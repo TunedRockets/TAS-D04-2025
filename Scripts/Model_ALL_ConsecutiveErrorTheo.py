@@ -1,3 +1,5 @@
+'''Consecutive Error Error'''
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -41,7 +43,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     all_pairs = []
 
     # Loop through tow numbers from 1 to 31
-    for tow_number in range(1, 10):
+    for tow_number in range(2, 10):
         # Get processed data for the current tow and sensor type
         tow_data_bef = get_synced_data(tow_number)
 
@@ -95,6 +97,8 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     # scatter Plot with Binned Averages and regression model
     slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
     print(r_value)
+
+
 
     # Define error label
     error_labels = {"LT": "y error", "CAM": "position error", "LLS_A": "width error", "LLS_B": "width error"}
@@ -205,6 +209,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     print(bin_stats_df)
 
     return bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin
+    
 
 def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0,use_truncnorm=False):
     np.random.seed(random_seed)
@@ -247,43 +252,65 @@ def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_ed
 
     return np.array(error_path)
 
-if __name__ == "__main__":
-    # Test your function here
 
-    bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin = consecutive_error("CAM", 0.0001, num_bins=20, bins_show=False)
-    bin_stats_df1, slope1, intercept1, r_value1, p_value1, std_err1, x_sorted1, bin_edges1, deviations_per_bin1 = consecutive_error("LT", 0.0001, num_bins=20, bins_show=False)
+def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_show=False, bins_show=False):
+    bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin = consecutive_error(
+        "CAM", 0.0001, num_bins=20, bins_show=bins_show)
+    bin_stats_df1, slope1, intercept1, r_value1, p_value1, std_err1, x_sorted1, bin_edges1, deviations_per_bin1 = consecutive_error(
+        "LT", 0.0001, num_bins=20, bins_show=bins_show)
+    bin_stats_df2, slope2, intercept2, r_value2, p_value2, std_err2, x_sorted2, bin_edges2, deviations_per_bin2 = consecutive_error(
+        "LLS_B", 0.0001, num_bins=20, bins_show=bins_show)
 
-
-
-    synced_data_tow_1 = get_synced_data(tow=2).to_numpy()
-    synced_data_cam_tow_1 = synced_data_tow_1[:,13]
+    synced_data_tow_1 = get_synced_data(tow=n_real_tow).to_numpy()
+    synced_data_cam_tow_1 = synced_data_tow_1[:, 13]
     start_error = synced_data_cam_tow_1[0]
     n_steps = len(synced_data_cam_tow_1) - 1
     simulated_tow_path_cam = generate_error_path(
-    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=10
+        start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=10
     )
 
-    synced_data_LT_tow_1 = synced_data_tow_1[:,4]
-    start_error1 = synced_data_LT_tow_1[0]  
+    synced_data_LT_tow_1 = synced_data_tow_1[:, 4]
+    start_error1 = synced_data_LT_tow_1[0]
     simulated_tow_path_LT = generate_error_path(
-    start_error1, n_steps, slope1, intercept1, x_sorted1, bin_edges1, deviations_per_bin1, random_seed=10
+        start_error1, n_steps, slope1, intercept1, x_sorted1, bin_edges1, deviations_per_bin1, random_seed=10
     )
-    simulated_total_offset_centerline = simulated_tow_path_LT+simulated_tow_path_cam
-    total_offset_real = synced_data_cam_tow_1+synced_data_LT_tow_1
+    simulated_total_offset_centerline = simulated_tow_path_LT + simulated_tow_path_cam
+    total_offset_real = synced_data_cam_tow_1 + synced_data_LT_tow_1
 
+    synced_data_LLS_B_tow_1 = synced_data_tow_1[:, 9]
+    start_error2 = synced_data_LLS_B_tow_1[0] - 6
+    simulated_tow_width_LLS_B = generate_error_path(
+        start_error2, n_steps, slope2, intercept2, x_sorted2, bin_edges2, deviations_per_bin2, random_seed=10
+    ) + 6
+    simulated_upper_boundary = simulated_total_offset_centerline + 0.5 * simulated_tow_width_LLS_B
+    simulated_lower_boundary = simulated_total_offset_centerline - 0.5 * simulated_tow_width_LLS_B
+    real_upper_boundary = total_offset_real + 0.5 * synced_data_LLS_B_tow_1
+    real_lower_boundary = total_offset_real - 0.5 * synced_data_LLS_B_tow_1
     plt.figure(figsize=(12, 5))
-    plt.plot(simulated_tow_path_cam, label="Simulated Error Path CAM")
-    plt.plot(synced_data_cam_tow_1,label="real data cam",linestyle="--")
-    plt.plot(simulated_tow_path_LT,label="Simulated path LT",linestyle=":")
-    plt.plot(simulated_total_offset_centerline, label="Total offset")
-    plt.plot(total_offset_real,label="real total offset")
-    plt.plot()
+    plt.plot(simulated_total_offset_centerline, label=" total offset simulated", c="b")
+    plt.plot(simulated_upper_boundary, label="upper boundary simulated", c="b")
+    plt.plot(simulated_lower_boundary, label="lower boundary simulated", c="b")
+    plt.plot(total_offset_real, label="real total offset", c="r")
+    plt.plot(real_upper_boundary, label="real upper boundary", c="r")
+    plt.plot(real_lower_boundary, label="real lower boundary", c="r")
     plt.xlabel("Step")
     plt.ylabel("Error")
     plt.title("Simulated Machine Error Path Over Time")
     plt.grid(True)
     plt.legend()
     plt.show()
-    MSE=np.sum((synced_data_cam_tow_1- simulated_tow_path_cam) ** 2)
+    MSE = np.sum((synced_data_cam_tow_1 - simulated_tow_path_cam) ** 2)
     print("mean squared error is:", MSE)
 print(get_synced_data(tow=1))
+
+if __name__ == "__main__":
+
+    # Test your function here
+    generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False)
+    # generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=True, errorCor_show=False, bins_show=False)
+    # print(get_synced_data(tow=1))
+
+    # consecutive_error('CAM', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
+    # consecutive_error('LT', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
+    # consecutive_error('LLS_A', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
+    # consecutive_error('LLS_B', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)

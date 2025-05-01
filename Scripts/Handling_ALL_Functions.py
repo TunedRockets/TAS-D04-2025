@@ -58,8 +58,8 @@ def _handle_LT(time: list,
 
     # 2) KEEP ONLY THE OUTBOUND SWEEP: drop rows where y dips
     #    for the very first row, diff() is NaN → fill with True so we keep it
-    forward_mask = df["y"].diff().fillna(1) > 0
-    df = df[forward_mask].reset_index(drop=True)
+    # forward_mask = df["y"].diff().fillna(1) > 0
+    # df = df[forward_mask].reset_index(drop=True)
 
     return df
 
@@ -110,8 +110,6 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list, width:list) -> pd
 
     return pandas_table
 
-
-
 ################################################################################################################
 """Functions for Camera"""
 
@@ -144,9 +142,6 @@ def time_to_float(date:str)->float:
     date = date.strip("'").split(" ")[1]
     hour, minute, second = date.split(":")
     return float(second) + float(minute) * 60 + float(hour) * 3600
-
-
-
 
 def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
     '''This function converts the coordinate into a new
@@ -221,6 +216,15 @@ def create_cache()->None:
             get_processed_data(tow,code, True)
     print("Cache created!")
 
+def create_processed_cache()->None:
+    '''generates the cache for the time and space synced tows'''
+    print("Let there be cache...")
+    tows = range(1,32)
+    for tow in tows:
+        get_synced_data(tow, spacesynced=False, overwrite=True)
+        get_synced_data(tow, spacesynced=True, overwrite=True)
+    print("Cache created!")
+
 def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)->pd.DataFrame:
     '''
     This function handles ALL the grabbing and processing of the raw data\n
@@ -278,7 +282,6 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)-
         _save_table(processesed_data, name) # save the data
     return processesed_data
 
-
 def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd.DataFrame:
     '''Returns a massive DataFrame that is synced and cleaned\n
     uses the syncing.py file functions, but use this function to keep everything organized\n
@@ -295,7 +298,6 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
         return data
     # else the data doesn't exist, grab it
     print(f"No file with code {name} cached. Generating new data...")
-
 
 
 
@@ -321,9 +323,6 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
 
     return synced
 
-
-
-
 ################################################################################################################
 pd.set_option('display.max_columns', None)
 
@@ -338,7 +337,6 @@ def main():
     '''for k in range(1, 32):
         df = get_synced_data(k, overwrite=False)
         print(df.head())'''
-
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
