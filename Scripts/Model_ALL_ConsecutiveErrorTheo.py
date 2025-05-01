@@ -254,6 +254,7 @@ def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_ed
 
 
 def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_show=False, bins_show=False):
+    # Get binned models from historical data
     bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin = consecutive_error(
         "CAM", 0.0001, num_bins=20, bins_show=bins_show)
     bin_stats_df1, slope1, intercept1, r_value1, p_value1, std_err1, x_sorted1, bin_edges1, deviations_per_bin1 = consecutive_error(
@@ -261,33 +262,83 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
     bin_stats_df2, slope2, intercept2, r_value2, p_value2, std_err2, x_sorted2, bin_edges2, deviations_per_bin2 = consecutive_error(
         "LLS_B", 0.0001, num_bins=20, bins_show=bins_show)
 
-    synced_data_tow_1 = get_synced_data(tow=n_real_tow).to_numpy()
-    synced_data_cam_tow_1 = synced_data_tow_1[:, 13]
+    # Load real tow data
+    synced_data_tow_1 = get_synced_data(tow=n_real_tow)
+
+    # --- CAM Error ---
+    synced_data_cam_tow_1 = synced_data_tow_1["center_CAM"].values
     start_error = synced_data_cam_tow_1[0]
     n_steps = len(synced_data_cam_tow_1) - 1
     simulated_tow_path_cam = generate_error_path(
-        start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=10
+        start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=rdm_seed
     )
 
-    synced_data_LT_tow_1 = synced_data_tow_1[:, 4]
+    # --- LT Error ---
+    synced_data_LT_tow_1 = synced_data_tow_1["error_LT"].values
     start_error1 = synced_data_LT_tow_1[0]
     simulated_tow_path_LT = generate_error_path(
-        start_error1, n_steps, slope1, intercept1, x_sorted1, bin_edges1, deviations_per_bin1, random_seed=10
+        start_error1, n_steps, slope1, intercept1, x_sorted1, bin_edges1, deviations_per_bin1, random_seed=rdm_seed
     )
-    simulated_total_offset_centerline = simulated_tow_path_LT + simulated_tow_path_cam
-    total_offset_real = synced_data_cam_tow_1 + synced_data_LT_tow_1
 
-    synced_data_LLS_B_tow_1 = synced_data_tow_1[:, 9]
-    start_error2 = synced_data_LLS_B_tow_1[0] - 6
+    # --- Centerline Offset ---
+    simulated_total_offset_centerline = simulated_tow_path_LT + simulated_tow_path_cam
+    total_offset_real = synced_data_LT_tow_1 + synced_data_cam_tow_1
+
+    # --- LLS_B Width ---
+    synced_data_LLS_B_tow_error = synced_data_tow_1["width error_LLS_B"].values
+    synced_data_LLS_B_tow_width = synced_data_tow_1["width_LLS_B"].values
+    start_error2 = synced_data_LLS_B_tow_error[0]
     simulated_tow_width_LLS_B = generate_error_path(
-        start_error2, n_steps, slope2, intercept2, x_sorted2, bin_edges2, deviations_per_bin2, random_seed=10
-    ) + 6
+        start_error2, n_steps, slope2, intercept2, x_sorted2, bin_edges2, deviations_per_bin2, random_seed=rdm_seed
+    )+6.35 # MISTAKE HERE, !NEEDS TO BE CALCULATED FROM REGRESSION MODEL!
+
+    # --- Compute Boundaries ---
     simulated_upper_boundary = simulated_total_offset_centerline + 0.5 * simulated_tow_width_LLS_B
     simulated_lower_boundary = simulated_total_offset_centerline - 0.5 * simulated_tow_width_LLS_B
-    real_upper_boundary = total_offset_real + 0.5 * synced_data_LLS_B_tow_1
-    real_lower_boundary = total_offset_real - 0.5 * synced_data_LLS_B_tow_1
+    real_upper_boundary = total_offset_real + 0.5 * synced_data_LLS_B_tow_width
+    real_lower_boundary = total_offset_real - 0.5 * synced_data_LLS_B_tow_width
+
+    # --- Plot 4 Separate Real vs Simulated Error Paths ---
+    fig, axs = plt.subplots(4, 1, figsize=(12, 16), sharex=True)
+
+    # 1. CAM Error
+    axs[0].plot(synced_data_cam_tow_1, label="Real CAM Error", color="red")
+    axs[0].plot(simulated_tow_path_cam, label="Simulated CAM Error", color="blue")
+    axs[0].set_ylabel("Error [mm]")
+    axs[0].set_title("CAM Error")
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # 2. LT Error
+    axs[1].plot(synced_data_LT_tow_1, label="Real LT Error", color="red")
+    axs[1].plot(simulated_tow_path_LT, label="Simulated LT Error", color="blue")
+    axs[1].set_ylabel("Error [mm]")
+    axs[1].set_title("LT Error")
+    axs[1].legend()
+    axs[1].grid(True)
+
+    # 3. Centerline Offset
+    axs[2].plot(total_offset_real, label="Real Total Offset", color="red")
+    axs[2].plot(simulated_total_offset_centerline, label="Simulated Total Offset", color="blue")
+    axs[2].set_ylabel("Offset [mm]")
+    axs[2].set_title("Total Offset from Centerline")
+    axs[2].legend()
+    axs[2].grid(True)
+
+    # 4. Width LLS_B
+    axs[3].plot(synced_data_LLS_B_tow_width, label="Real Width LLS_B", color="red")
+    axs[3].plot(simulated_tow_width_LLS_B, label="Simulated Width LLS_B", color="blue")
+    axs[3].set_ylabel("Width [mm]")
+    axs[3].set_xlabel("Step")
+    axs[3].set_title("Tow Width (LLS_B)")
+    axs[3].legend()
+    axs[3].grid(True)
+
+    plt.tight_layout()
+    plt.show()
+    # --- Overlay Plot with Upper/Lower Boundaries ---
     plt.figure(figsize=(12, 5))
-    plt.plot(simulated_total_offset_centerline, label=" total offset simulated", c="b")
+    plt.plot(simulated_total_offset_centerline, label="total offset simulated", c="b")
     plt.plot(simulated_upper_boundary, label="upper boundary simulated", c="b")
     plt.plot(simulated_lower_boundary, label="lower boundary simulated", c="b")
     plt.plot(total_offset_real, label="real total offset", c="r")
@@ -299,10 +350,7 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
     plt.grid(True)
     plt.legend()
     plt.show()
-    MSE = np.sum((synced_data_cam_tow_1 - simulated_tow_path_cam) ** 2)
-    print("mean squared error is:", MSE)
 print(get_synced_data(tow=1))
-
 if __name__ == "__main__":
 
     # Test your function here
