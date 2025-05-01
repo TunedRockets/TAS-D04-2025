@@ -20,3 +20,6 @@ TCP_CAM = -roller_diameter * 3.1415926 / 4
 
 # specified tow witdh
 tow_width_specified = 6.35 #mm
+
+# programmed y-offset between consecutive tows
+y_increment_programmed = 12.5 #mm
