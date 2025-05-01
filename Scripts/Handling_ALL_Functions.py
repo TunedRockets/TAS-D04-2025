@@ -110,8 +110,6 @@ def _handle_LLS(time: list, left_edge: list, right_edge: list, width:list) -> pd
 
     return pandas_table
 
-
-
 ################################################################################################################
 """Functions for Camera"""
 
@@ -144,9 +142,6 @@ def time_to_float(date:str)->float:
     date = date.strip("'").split(" ")[1]
     hour, minute, second = date.split(":")
     return float(second) + float(minute) * 60 + float(hour) * 3600
-
-
-
 
 def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
     '''This function converts the coordinate into a new
@@ -221,6 +216,15 @@ def create_cache()->None:
             get_processed_data(tow,code, True)
     print("Cache created!")
 
+def create_processed_cache()->None:
+    '''generates the cache for the time and space synced tows'''
+    print("Let there be cache...")
+    tows = range(1,32)
+    for tow in tows:
+        get_synced_data(tow, spacesynced=False, overwrite=True)
+        get_synced_data(tow, spacesynced=True, overwrite=True)
+    print("Cache created!")
+
 def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)->pd.DataFrame:
     '''
     This function handles ALL the grabbing and processing of the raw data\n
@@ -278,13 +282,13 @@ def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)-
         _save_table(processesed_data, name) # save the data
     return processesed_data
 
-
 def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd.DataFrame:
     '''Returns a massive DataFrame that is synced and cleaned\n
     uses the syncing.py file functions, but use this function to keep everything organized\n
     this one takes care of the saving and loading\n
     if spacesynced is true it will sync the points in space, otherwise it will be synced in time'''
 
+    
     name = "proccessed_" + str(tow)
     name += ("_space" if spacesynced else "_time")
     # first check the cache
@@ -297,8 +301,7 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
 
 
 
-
-    synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, overwrite=overwrite)
+    synced:pd.DataFrame = Model_ALL_Syncing._get_synced_data(tow, spacesynced=spacesynced, overwrite=overwrite)
     # cut data:
     x_list = synced["x"]
     # get index of point 0:
@@ -314,15 +317,11 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
 
     synced = synced.truncate(index_0,index_1000)
 
-    if spacesynced:
-        raise NotImplementedError
+   
 
     _save_table(synced, name) # save the data
 
     return synced
-
-
-
 
 ################################################################################################################
 pd.set_option('display.max_columns', None)
@@ -338,7 +337,6 @@ def main():
     '''for k in range(1, 32):
         df = get_synced_data(k, overwrite=False)
         print(df.head())'''
-
 
 if __name__ == "__main__":
     main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
