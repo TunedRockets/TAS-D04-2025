@@ -218,8 +218,6 @@ def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
                 if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta):
                     print("x930 Found")
                     break
-                else:
-                    print("x930 Not Found")
         
         k = len(ti_list) - 1
         index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
@@ -569,7 +567,7 @@ def main():
         # find_x930(Handling_ALL_Functions.get_processed_data(k, "LT")["x"], Handling_ALL_Functions.get_processed_data(k, "LT")["time"], "p") #PROPER X930 FIND USING PROCESSED DATA
         # LLS_sync(Handling_ALL_Functions.get_processed_data(k, "LLS_A")["width"], Handling_ALL_Functions.get_processed_data(k, "LLS_A")["time"], "LLS_A", find_x930(LT_x, LT_time, "p")) #PROPER LLSA FIND USING PROCESSED DATA
         # LLS_sync(Handling_ALL_Functions.get_processed_data(k, "LLS_B")["width"], Handling_ALL_Functions.get_processed_data(k, "LLS_B")["time"], "LLS_B", find_x930(LT_x, LT_time, "p"))
-        camera_sync(centers, time, find_x930(LT_x, LT_time)[2])
+        # camera_sync(centers, time, find_x930(LT_x, LT_time)[2])
 if __name__ == "__main__":
     main()
 
