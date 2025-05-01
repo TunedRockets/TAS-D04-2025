@@ -559,14 +559,10 @@ def main():
     for k in range(1,32):
         # k = 5
         print(k)
-        centers = Handling_ALL_Functions.get_processed_data(k, "CAM")["center"]
-        LT_time = Handling_ALL_Functions.get_processed_data(k, "LT")["time"]
-        LT_x = Handling_ALL_Functions.get_processed_data(k, "LT")["x"]
-        time = Handling_ALL_Functions.get_processed_data(k, "CAM")["time"]
         # find_x930(Handling_ALL_Functions.get_processed_data(k, "LT")["x"], Handling_ALL_Functions.get_processed_data(k, "LT")["time"], "p") #PROPER X930 FIND USING PROCESSED DATA
         # LLS_sync(Handling_ALL_Functions.get_processed_data(k, "LLS_A")["width"], Handling_ALL_Functions.get_processed_data(k, "LLS_A")["time"], "LLS_A", find_x930(LT_x, LT_time, "p")) #PROPER LLSA FIND USING PROCESSED DATA
         # LLS_sync(Handling_ALL_Functions.get_processed_data(k, "LLS_B")["width"], Handling_ALL_Functions.get_processed_data(k, "LLS_B")["time"], "LLS_B", find_x930(LT_x, LT_time, "p"))
-        # camera_sync(centers, time, find_x930(LT_x, LT_time)[2])
+        # camera_sync(Handling_ALL_Functions.get_processed_data(k, "CAM")["center"], Handling_ALL_Functions.get_processed_data(k, "CAM")["time"], find_x930(LT_x, LT_time)[2])
 if __name__ == "__main__":
     main()
 
