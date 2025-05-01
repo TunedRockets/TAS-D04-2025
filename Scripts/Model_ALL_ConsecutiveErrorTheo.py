@@ -255,11 +255,11 @@ def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_ed
 
 def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_show=False, bins_show=False):
     bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin = consecutive_error(
-        "CAM", 0.0001, num_bins=20, bins_show=bins_show, errorCor_show=errorCor_show)
+        "CAM", 0.0001, num_bins=20, bins_show=bins_show)
     bin_stats_df1, slope1, intercept1, r_value1, p_value1, std_err1, x_sorted1, bin_edges1, deviations_per_bin1 = consecutive_error(
-        "LT", 0.0001, num_bins=20, bins_show=bins_show, errorCor_show=errorCor_show)
+        "LT", 0.0001, num_bins=20, bins_show=bins_show)
     bin_stats_df2, slope2, intercept2, r_value2, p_value2, std_err2, x_sorted2, bin_edges2, deviations_per_bin2 = consecutive_error(
-        "LLS_B", 0.0001, num_bins=20, bins_show=bins_show, errorCor_show=errorCor_show)
+        "LLS_B", 0.0001, num_bins=20, bins_show=bins_show)
 
     synced_data_tow_1 = get_synced_data(tow=n_real_tow).to_numpy()
     synced_data_cam_tow_1 = synced_data_tow_1[:, 13]
@@ -302,3 +302,15 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
     MSE = np.sum((synced_data_cam_tow_1 - simulated_tow_path_cam) ** 2)
     print("mean squared error is:", MSE)
 print(get_synced_data(tow=1))
+
+if __name__ == "__main__":
+
+    # Test your function here
+    generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False)
+    # generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=True, errorCor_show=False, bins_show=False)
+    # print(get_synced_data(tow=1))
+
+    # consecutive_error('CAM', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
+    # consecutive_error('LT', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
+    # consecutive_error('LLS_A', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
+    # consecutive_error('LLS_B', test_ratio=0.001, num_bins=20, random_state=42, bins_show=False, errorCor_show=True)
