@@ -148,7 +148,7 @@ def blue_dot_LT(LT_x,LT_time):
 
     return ti, xi, index, t_width
 
-def find_x930(LT_x: list, LT_time: list, data_state: str):
+def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
     """This function grabs a sample of the LT data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
