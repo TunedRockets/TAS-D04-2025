@@ -60,16 +60,20 @@ def run_model(save_data: bool=False, use_saved: bool=False):
         LLSB_dist = pd.read_pickle(_save_path + LLSB_short_name + ".pkl")
 
 
-    generated_bins_mean_var = []
-    for num_bins in range(6, 56, 5):
+    LT_generated_bins_mean_var = []
+    CAM_generated_bins_mean_var = []
+    LLSA_generated_bins_mean_var = []
+    LLSB_generated_bins_mean_var = []
+    generated_bins_mean_var = [LT_generated_bins_mean_var, CAM_generated_bins_mean_var, LLSA_generated_bins_mean_var, LLSB_generated_bins_mean_var]
+    for num_bins in range(10, 100, 10):
         #num_bins = 30
         rs = 42
-        LT_dist = consecutive_error('LT', random_state=rs, num_bins=num_bins)
-        CAM_dist = consecutive_error('CAM', random_state=rs, num_bins=num_bins)
-        LLSA_dist = consecutive_error('LLS_A', random_state=rs, num_bins=num_bins)
-        LLSB_dist = consecutive_error('LLS_B', random_state=rs, num_bins=num_bins)
+        LT_dist = consecutive_error('LT', random_state=rs, num_bins=num_bins, test_ratio=0.00001)
+        CAM_dist = consecutive_error('CAM', random_state=rs, num_bins=num_bins, test_ratio=0.00001)
+        LLSA_dist = consecutive_error('LLS_A', random_state=rs, num_bins=num_bins, test_ratio=0.00001)
+        LLSB_dist = consecutive_error('LLS_B', random_state=rs, num_bins=num_bins, test_ratio=0.00001)
 
-        n_runs = 200
+        n_runs = 100
         total_data = []
         n_steps = 289
         total_error = [[], [], [], []]
@@ -99,6 +103,16 @@ def run_model(save_data: bool=False, use_saved: bool=False):
             #
             #generated_data = pd.DataFrame(generated_data, columns = ['x', 'error'])
 
+        for i in range(4):
+            mean = float(np.array(total_error[i]).mean())
+            variance = float(np.array(total_error[i]).std())
+            generated_bins_mean_var[i].append([num_bins, mean, variance])
+
+    print(f'LT errors: {LT_generated_bins_mean_var}')
+    print(f'CAM errors: {CAM_generated_bins_mean_var}')
+    print(f'LLSA errors: {LLSA_generated_bins_mean_var}')
+    print(f'LLSB errors: {LLSB_generated_bins_mean_var}')
+
     print('total number of data points = ', len(total_error[0]))
     plt.subplot(223)
     plt.hist(total_error[0], bins=50)
@@ -118,54 +132,144 @@ def run_model(save_data: bool=False, use_saved: bool=False):
 
     real_hist()
 
+    LT_generated_bins_mean_var = np.array(LT_generated_bins_mean_var)
+    CAM_generated_bins_mean_var = np.array(CAM_generated_bins_mean_var)
+    LLSA_generated_bins_mean_var = np.array(LLSA_generated_bins_mean_var)
+    LLSB_generated_bins_mean_var = np.array(LLSB_generated_bins_mean_var)
+
+    plt.subplot(223)
+    plt.plot(LT_generated_bins_mean_var[:, 0], LT_generated_bins_mean_var[:, 1], label='mean')
+    plt.hlines(y=[-0.95], xmin=0, xmax=100, linestyle='dotted')
+    plt.title('LT')
+    plt.legend()
+
+    plt.subplot(224)
+    plt.plot(CAM_generated_bins_mean_var[:, 0], CAM_generated_bins_mean_var[:, 1], label='mean')
+    plt.hlines(y=[0.31], xmin=0, xmax=100, linestyle='dotted')
+    plt.title('CAM')
+    plt.legend()
+
+    plt.subplot(221)
+    plt.plot(LLSA_generated_bins_mean_var[:, 0], LLSA_generated_bins_mean_var[:, 1], label='mean')
+    plt.hlines(y=[-0.26], xmin=0, xmax=100, linestyle='dotted')
+    plt.title('LLSA')
+    plt.legend()
+
+    plt.subplot(222)
+    plt.plot(LLSB_generated_bins_mean_var[:, 0], LLSB_generated_bins_mean_var[:, 1], label='mean')
+    plt.hlines(y=[-0.09], xmin=0, xmax=100, linestyle='dotted')
+    plt.title('LLSB')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+    ###############
+
+    plt.subplot(223)
+    plt.plot(LT_generated_bins_mean_var[:, 0], LT_generated_bins_mean_var[:, 2], label='variance')
+    plt.hlines(y=[0.05], xmin=0, xmax=100, linestyle='dotted')
+    plt.title('LT')
+    plt.legend()
+
+    plt.subplot(224)
+    plt.plot(CAM_generated_bins_mean_var[:, 0], CAM_generated_bins_mean_var[:, 2], label='variance')
+    plt.hlines(y=[0.18], xmin=0, xmax=100, linestyle='dotted')
+    plt.title('CAM')
+    plt.legend()
+
+    plt.subplot(221)
+    plt.plot(LLSA_generated_bins_mean_var[:, 0], LLSA_generated_bins_mean_var[:, 2], label='variance')
+    plt.hlines(y=[0.08], xmin=0, xmax=100, linestyle='dotted')
+    plt.title('LLSA')
+    plt.legend()
+
+    plt.subplot(222)
+    plt.plot(LLSB_generated_bins_mean_var[:, 0], LLSB_generated_bins_mean_var[:, 2], label='variance')
+    plt.hlines(y=[0.07], xmin=0, xmax=100, linestyle='dotted')
+    plt.title('LLSB')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+    means = [-0.95, 0.31, -0.26, -0.09] # TODO: make sure values are correct, same for variance!
+    variances = [0.05, 0.18, 0.08, 0.07]
+    for i in range(len(LT_generated_bins_mean_var[:, 0])):
+        delta_mean = LT_generated_bins_mean_var - means[0]
+
 
 
 
 data = run_model()
 
-def tow_visualizer(tow: pd.DataFrame, name: str):
+def tow_visualizer(tows: list[pd.DataFrame], y_intended: list, name: str, ideal: bool):
     """
-    This function takes a dataframe that contains features of a tow and plots the corresponding tow, as well as the intended tow. 
+    This function takes a list of dataframes that contains features of a tows and plots the corresponding tows in one figure, as well as the ideal tow. 
     The data it takes from that dataframe are
     the centerline, width and x-position. It is important that the columns in the dataframe are properly named.
     For this, check that the centerline column is named "center_CAM", the width after compaction column is named
     "width_LLS_B" and the x-position columns is called "x".
+    
     Arguments are:
-    tow: pd.DataFrame, the dataframe of the tow 
-    name: str, the name of the tow, will be the title of the graph.
+    tows: list[pd.DataFrame], a list with dataframes of the tows
+    y_intended: list, a list of programmed centerline y-values of the tows, IMPORTANT: tows[i] HAS TO CORRESPOND WITH y_intended[i].
+    name: str, the name of the operation that was done to obtain the dataframes of the tows, will be the title of the graph.
+    ideal: bool, plots one ideal tow if true
     
     Author: Martijn
     """
-    #Gets the important data, names called in the dataframe might need to be changed depending on what names are 
-    #in the final synchronized dataframe
-    centerline = tow["center_CAM"]   #take the centerline from CAM
-    width = tow["width_LLS_B"]        #take the width from LLS B
-    x = tow["x"]                  #take the x-position from LT
+    # Check if all elements are DataFrames
+    if not all(isinstance(tow, pd.DataFrame) for tow in tows):
+        raise TypeError("All elements in 'tows' must be pandas DataFrames.")
     
     #set figure size
-    plt.figure(figsize=(15, 2))
+    #plt.figure(figsize=(15, 2))
     
-    #make the plot
-    plt.plot(x, centerline, label="actual centerline", linestyle='dashed', color='grey') #plots the centerline
-    plt.plot(x, centerline + 0.5 * width, label="actual tow edge", linestyle='solid', color='black') #plots the top edge
-    plt.plot(x, centerline - 0.5 * width, linestyle='solid', color='black') #plots the bottom edge
+    for i in range(len(y_intended)):
+        CAM_centerline = tows[i]["center_CAM"] #take the centerline from CAM
+        LT_y = tows[i]["y"] #take the y-position from LT
+        intended_centerline = y_intended[i] #take the programmed y-value for a straight line
+        centerline = CAM_centerline + LT_y + intended_centerline #calculate centerline in space by combining datatypes
+        width = tows[i]["width_LLS_B"] #take the width from LLS B
+        x = tows[i]["x"]  #take the x-position from LT
+        
+        
+        #make the plots
+        if i == 0:
+            plt.plot(x, centerline, label="actual centerline", linestyle='dashed', color='grey') #plots the centerline
+            plt.plot(x, centerline + 0.5 * width, label="actual tow", linestyle='solid', color='black') #plots the top edge
+            plt.plot(x, centerline - 0.5 * width, linestyle='solid', color='black') #plots the bottom edge
+        
+        else: #do not assign a label to all other tows as this makes the legend unreadable
+            plt.plot(x, centerline, linestyle='dashed', color='grey') #plots the centerline
+            plt.plot(x, centerline + 0.5 * width, linestyle='solid', color='black') #plots the top edge
+            plt.plot(x, centerline - 0.5 * width, linestyle='solid', color='black') #plots the bottom edge
 
-    #plots the start end endlines of the tow
-    plt.plot([tow['x'].iloc[0], tow['x'].iloc[0]], [tow['center_CAM'].iloc[0] - 0.5 * tow['width_LLS_B'].iloc[0], tow['center_CAM'].iloc[0] + 0.5 * tow['width_LLS_B'].iloc[0]], linestyle='solid', color='black')
-    plt.plot([tow['x'].iloc[-1], tow['x'].iloc[-1]], [tow['center_CAM'].iloc[-1] - 0.5 * tow['width_LLS_B'].iloc[-1], tow['center_CAM'].iloc[-1] + 0.5 * tow['width_LLS_B'].iloc[-1]], linestyle='solid', color='black')
+        #plots the start end endlines of the tow
+        plt.plot([x.iloc[0], x.iloc[0]], [centerline.iloc[0] - 0.5 * width.iloc[0], centerline.iloc[0] + 0.5 * width.iloc[0]], linestyle='solid', color='black')
+        plt.plot([x.iloc[-1], x.iloc[-1]], [centerline.iloc[-1] - 0.5 * width.iloc[-1], centerline.iloc[-1] + 0.5 * width.iloc[-1]],linestyle='solid', color='black')
+    
+    if ideal == True:
+        #plot the ideal tow (just a rectangle)
+        plt.plot([0,1000], [tow_width_specified * 0.5, tow_width_specified * 0.5], color='green', label='ideal tow')
+        plt.plot([0,1000], [-tow_width_specified * 0.5, -tow_width_specified * 0.5], color='green')
+        plt.plot([0,0], [tow_width_specified * 0.5, -tow_width_specified * 0.5], color='green')
+        plt.plot([1000,1000], [tow_width_specified * 0.5, -tow_width_specified * 0.5], color='green')
+        plt.plot([0,1000], [0,0], color='green', linestyle='dashed', label='ideal centerline')
 
-    #plot the programmed path (just a rectangle)
-    plt.plot([0,1000], [tow_width_specified * 0.5, tow_width_specified * 0.5], color='green', label='programmed tow edge')
-    plt.plot([0,1000], [-tow_width_specified * 0.5, -tow_width_specified * 0.5], color='green')
-    plt.plot([0,0], [tow_width_specified * 0.5, -tow_width_specified * 0.5], color='green')
-    plt.plot([1000,1000], [tow_width_specified * 0.5, -tow_width_specified * 0.5], color='green')
-    plt.plot([0,1000], [0,0], color='green', linestyle='dashed', label='programmed centerline')
 
+    # calculate the dimensions of the plots
+    x_min = min(min(tow["x"].min() for tow in tows) - 50, -50)
+    x_max = max(max(tow["x"].max() for tow in tows) + 50, 1050)
+    y_min = min(min(tow["y"].min() for tow in tows) - 100, -50)
+    y_max = max(max(tow["y"].max() for tow in tows) + 50, 1050)
+    
     #plot info
     plt.xlabel("x-position [mm]")
     plt.ylabel("y-position [mm]")
-    plt.xlim(-50, 1050)
-    plt.ylim(-7, 7)
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
     plt.grid()
     plt.title(name)
     plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
