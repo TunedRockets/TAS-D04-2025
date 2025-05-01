@@ -521,17 +521,16 @@ def _sync_time_data():
     raise NotImplementedError
 
 def main():
-    for k in range(1,32):
-        if k == 2: # TODO process tow 2 properly
-            continue  # Skip number 2 bcs its not processed properly
-        # k = 10
+    # for k in range(1,32):
+        k = 5
         print(k)
         width_LLS_A = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["width"]
         LT_time = Handling_ALL_Functions.get_processed_data(k, "LT")["time"]
         LT_x = Handling_ALL_Functions.get_processed_data(k, "LT")["x"]
         LLS_A_time = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["time"]
-        # find_x930(Handling_ALL_Functions.get_processed_data(tow, "LT")["x"], Handling_ALL_Functions.get_processed_data(tow, "LT")["time"], "p") #PROPER X930 FIND USING PROCESSED DATA
-        LLS_sync(width_LLS_A, LLS_A_time, "LLS_A", find_x930(LT_x, LT_time, "p")) # TODO There seems to be an issue with tow 1 so process tow 1 properly and also check why some tows dont give a t_width. After this all the syncs in time should work and work can be continued on adaprting the function x930 to also include the time sync.
+        find_x930(Handling_ALL_Functions.get_processed_data(k, "LT")["x"], Handling_ALL_Functions.get_processed_data(k, "LT")["time"], "p") #PROPER X930 FIND USING PROCESSED DATA
+        # LLS_sync(width_LLS_A, LLS_A_time, "LLS_A", find_x930(LT_x, LT_time, "p")) # TODO There seems to be an issue with tow 1 so process tow 1 properly and also check why some tows dont give a t_width. After this all the syncs in time should work and work can be continued on adaprting the function x930 to also include the time sync.
 
 if __name__ == "__main__":
     main()
+
