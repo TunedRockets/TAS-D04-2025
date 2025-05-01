@@ -264,7 +264,7 @@ def LLS_sync(widths, times, sensor_type, x930p):
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
 
     if sensor_type == "LLS_B":
-        t_width = 2*t_width
+        t_width = 0.65*t_width
         start_time = 4
         end_time = 5.5
     if sensor_type == "LLS_A":
@@ -562,14 +562,13 @@ def main():
     for k in range(1,32):
         # k = 5
         print(k)
-        width_LLS_A = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["width"]
+        width_LLS_B = Handling_ALL_Functions.get_processed_data(k, "LLS_B")["width"]
         LT_time = Handling_ALL_Functions.get_processed_data(k, "LT")["time"]
         LT_x = Handling_ALL_Functions.get_processed_data(k, "LT")["x"]
-        LLS_A_time = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["time"]
-        # LT_xvelocity(Handling_ALL_Functions.get_processed_data(k, "LT")["x"], Handling_ALL_Functions.get_processed_data(k, "LT")["time"], "p")
+        LLS_B_time = Handling_ALL_Functions.get_processed_data(k, "LLS_B")["time"]
         # find_x930(Handling_ALL_Functions.get_processed_data(k, "LT")["x"], Handling_ALL_Functions.get_processed_data(k, "LT")["time"], "p") #PROPER X930 FIND USING PROCESSED DATA
-        LLS_sync(width_LLS_A, LLS_A_time, "LLS_A", find_x930(LT_x, LT_time, "p")) # TODO There seems to be an issue with tow 1 so process tow 1 properly and also check why some tows dont give a t_width. After this all the syncs in time should work and work can be continued on adaprting the function x930 to also include the time sync.
-
+        # LLS_sync(Handling_ALL_Functions.get_processed_data(k, "LLS_A")["width"], Handling_ALL_Functions.get_processed_data(k, "LLS_A")["time"], "LLS_A", find_x930(LT_x, LT_time, "p")) #PROPER LLSA FIND USING PROCESSED DATA
+        LLS_sync(width_LLS_B, LLS_B_time, "LLS_B", find_x930(LT_x, LT_time, "p"))
 if __name__ == "__main__":
     main()
 
