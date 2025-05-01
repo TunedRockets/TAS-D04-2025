@@ -252,10 +252,9 @@ def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
 
     return xi, ti, t_width
 
-def LLS_sync(widths, times, sensor_type, x930p):
+def LLS_sync(widths, times, sensor_type, t_width:float):
     width_velocities = [] # Set up list of velocities
-    t_width = float(x930p[2])
-    print(t_width)
+
 
     for i in range(len(widths)-1):
         width_velocities.append((widths[i+1] - widths[i]) / 0.004)
