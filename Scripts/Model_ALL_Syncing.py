@@ -8,6 +8,9 @@ authors: Johannes, ...
 '''
 
 import Handling_ALL_Functions
+
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 import pandas as pd
 import numpy as np
 import inspect
@@ -272,13 +275,13 @@ def LLS_sync(widths, times, sensor_type, t_width:float):
 
     ##########################################################################################################
 
-    # plt.plot(times, width_velocities, zorder=1)
-    # plt.scatter([time_stop], [0], color="red", edgecolor="black", s=100, zorder=5, label="Min point")
-    # plt.title("Width velocity")
-    # plt.xlabel("Time [s]")
-    # plt.ylabel("Rate of change of tow width [m/s]")
-    # plt.grid()
-    # plt.show() 
+    plt.plot(times, width_velocities, zorder=1)
+    plt.scatter([time_stop], [0], color="red", edgecolor="black", s=100, zorder=5, label="Min point")
+    plt.title("Width velocity")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Rate of change of tow width [m/s]")
+    plt.grid()
+    plt.show() 
     return time_stop
 
 def scan_for_min(t_len: float, times: list, values: list, start_time: float, end_time: float) -> tuple:
