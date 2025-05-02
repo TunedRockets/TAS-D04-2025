@@ -1,4 +1,9 @@
-'''Consecutive Error Error'''
+#ideas for improvement:
+#Find optimum number of bins
+#only extract value of LLS B width if width_LLSB>width_LLSA
+#to smoothen out curve
+#increase resolution of predicting curve and taking mean of predicted points around real datapoint: more realistic dynamics, smoother paths
+#use relation between errors to improve model
 
 import pandas as pd
 import numpy as np
@@ -11,7 +16,7 @@ from Handling_ALL_Functions import get_synced_data
 import math
 from scipy.stats import truncnorm
 
-def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bins_show = False):
+def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bins_show = False,plot_fit=True):
     """
         Analyze consecutive error pairs and their distributions from processed sensor data.
 
@@ -43,7 +48,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     all_pairs = []
 
     # Loop through tow numbers from 1 to 31
-    for tow_number in range(2, 10):
+    for tow_number in range(2, 32):
         # Get processed data for the current tow and sensor type
         tow_data_bef = get_synced_data(tow_number)
 
@@ -105,16 +110,17 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     error_label = error_labels[sensor]
 
     # Plot scatter + binned fit
-    plt.figure(figsize=(8, 6))
-    plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
-    plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
-    plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
-    plt.xlabel("$ε_{i}$ [mm]")
-    plt.ylabel("$ε_{i+1}$ [mm]")
-    plt.title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    if plot_fit:
+        plt.figure(figsize=(8, 6))
+        plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
+        plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
+        plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
+        plt.xlabel("$ε_{i}$ [mm]")
+        plt.ylabel("$ε_{i+1}$ [mm]")
+        plt.title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
     # Compute Deviations per Bin
 
@@ -256,11 +262,11 @@ def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_ed
 def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_show=False, bins_show=False):
     # Get binned models from historical data
     bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin = consecutive_error(
-        "CAM", 0.0001, num_bins=20, bins_show=bins_show)
+        "CAM", 0.5, num_bins=100, bins_show=bins_show)
     bin_stats_df1, slope1, intercept1, r_value1, p_value1, std_err1, x_sorted1, bin_edges1, deviations_per_bin1 = consecutive_error(
-        "LT", 0.0001, num_bins=20, bins_show=bins_show)
+        "LT", 0.5, num_bins=100, bins_show=bins_show)
     bin_stats_df2, slope2, intercept2, r_value2, p_value2, std_err2, x_sorted2, bin_edges2, deviations_per_bin2 = consecutive_error(
-        "LLS_B", 0.0001, num_bins=20, bins_show=bins_show)
+        "LLS_B", 0.5, num_bins=100, bins_show=bins_show)
 
     # Load real tow data
     synced_data_tow_1 = get_synced_data(tow=n_real_tow)
@@ -290,7 +296,7 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
     start_error2 = synced_data_LLS_B_tow_error[0]
     simulated_tow_width_LLS_B = generate_error_path(
         start_error2, n_steps, slope2, intercept2, x_sorted2, bin_edges2, deviations_per_bin2, random_seed=rdm_seed
-    )+6.35 # MISTAKE HERE, !NEEDS TO BE CALCULATED FROM REGRESSION MODEL!
+    )+6.35 
 
     # --- Compute Boundaries ---
     simulated_upper_boundary = simulated_total_offset_centerline + 0.5 * simulated_tow_width_LLS_B
