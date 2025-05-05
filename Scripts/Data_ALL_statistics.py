@@ -283,7 +283,6 @@ def best_fit_distribution(data, bins=40, distributions=None):
 
 
 '''Actually calling the plots'''
-#! TODO: CHANGE range(1, 9) -> range(1, 31)
 def main():
     df = pd.concat((get_synced_data(t, spacesynced=False) for t in range(1,31)), ignore_index=True)
 
