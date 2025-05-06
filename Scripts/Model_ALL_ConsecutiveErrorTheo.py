@@ -15,7 +15,7 @@
 #ideas for improvement:
 #Find optimum number of bins
 #only extract value of LLS B width if width_LLSB>width_LLSA
-#to smoothen out curve
+#to smoothen out curve if too much waviness
 #increase resolution of predicting curve and taking mean of predicted points around real datapoint: more realistic dynamics, smoother paths
 #use relation between errors to improve model
 
@@ -64,7 +64,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     # Loop through tow numbers from 1 to 31
     for tow_number in range(2, 32):
         # Get processed data for the current tow and sensor type
-        tow_data_bef = get_synced_data(tow_number)
+        tow_data_bef = get_synced_data(tow_number,spacesynced=True)
 
         if sensor == "LT":
             tow_data = tow_data_bef[["time", "x", "y", "z", "error_LT", "z error"]]
@@ -115,7 +115,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
 
     # scatter Plot with Binned Averages and regression model
     slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
-    print(r_value)
+    #print(r_value)
 
 
 
@@ -226,7 +226,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     bin_stats_df = pd.DataFrame(bin_stats)
 
     # Display the table
-    print(bin_stats_df)
+    # print(bin_stats_df)
 
     return bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin
     
@@ -273,16 +273,16 @@ def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_ed
     return np.array(error_path)
 
 
-def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_show=False, bins_show=False):
+def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_show=False, bins_show=False, num_bins=100):
     # Get binned models from historical data
     bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin = consecutive_error(
-        "CAM", 0.5, num_bins=100, bins_show=bins_show)
+        "CAM", 0.5, num_bins=num_bins, bins_show=bins_show)
     bin_stats_df1, slope1, intercept1, r_value1, p_value1, std_err1, x_sorted1, bin_edges1, deviations_per_bin1 = consecutive_error(
-        "LT", 0.5, num_bins=100, bins_show=bins_show)
+        "LT", 0.5, num_bins=num_bins, bins_show=bins_show)
     bin_stats_df2, slope2, intercept2, r_value2, p_value2, std_err2, x_sorted2, bin_edges2, deviations_per_bin2 = consecutive_error(
-        "LLS_B", 0.5, num_bins=100, bins_show=bins_show)
+        "LLS_B", 0.5, num_bins=num_bins, bins_show=bins_show)
     bin_stats_df3, slope3, intercept3, r_value3, p_value3, std_err3, x_sorted3, bin_edges3, deviations_per_bin3 = consecutive_error(
-        "LLS_A", 0.5, num_bins=100, bins_show=bins_show)
+        "LLS_A", 0.5, num_bins=num_bins, bins_show=bins_show)
 
 
 
@@ -290,7 +290,7 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
 
 
     # Load real tow data
-    synced_data_tow_1 = get_synced_data(tow=n_real_tow)
+    synced_data_tow_1 = get_synced_data(tow=n_real_tow,spacesynced=True)
 
     # --- CAM Error ---
     synced_data_cam_tow_1 = synced_data_tow_1["center_CAM"].values
@@ -333,37 +333,224 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
     fig, axs = plt.subplots(4, 1, figsize=(12, 16), sharex=True)
 
     # 1. CAM Error
+
+    sw_cam_real = -1  # sw=-1 means going down and sw=1 means going up
+    peaks_cam_real = 0
+    peak_cam_real_list = []
+    peak_cam_real_idxs = []
+
+    for i in range(len(synced_data_cam_tow_1)-1):
+        if sw_cam_real == -1:
+            if synced_data_cam_tow_1[i+1] > synced_data_cam_tow_1[i]:
+                peaks_cam_real += 1
+                sw_cam_real = 1
+                peak_cam_real_idxs.append(i)
+                peak_cam_real_list.append(synced_data_cam_tow_1[i])
+        if sw_cam_real == 1:
+            if synced_data_cam_tow_1[i+1] < synced_data_cam_tow_1[i]:
+                peaks_cam_real += 1
+                sw_cam_real = -1
+                peak_cam_real_idxs.append(i)
+                peak_cam_real_list.append(synced_data_cam_tow_1[i])
+    print('peaks_cam_real',peaks_cam_real)
+
+    sw_cam_sim = -1  # sw=-1 means going down and sw=1 means going up
+    peaks_cam_sim = 0
+    peak_cam_sim_list = []
+    peak_cam_sim_idxs = []
+
+    for i in range(len(simulated_tow_path_cam) - 1):
+        if sw_cam_sim == -1:
+            if simulated_tow_path_cam[i + 1] > simulated_tow_path_cam[i]:
+                peaks_cam_sim += 1
+                sw_cam_sim = 1
+                peak_cam_sim_idxs.append(i)
+                peak_cam_sim_list.append(simulated_tow_path_cam[i])
+        if sw_cam_sim == 1:
+            if simulated_tow_path_cam[i + 1] < simulated_tow_path_cam[i]:
+                peaks_cam_sim += 1
+                sw_cam_sim = -1
+                peak_cam_sim_idxs.append(i)
+                peak_cam_sim_list.append(simulated_tow_path_cam[i])
+    print('peaks_cam_sim',peaks_cam_sim)
+
+
+
     axs[0].plot(synced_data_cam_tow_1, label="Real CAM Error", color="red")
     axs[0].plot(simulated_tow_path_cam, label="Simulated CAM Error", color="blue")
+    axs[0].scatter(peak_cam_real_idxs, peak_cam_real_list, color="red", marker='o', s=50, label="Peaks Real")
+    axs[0].scatter(peak_cam_sim_idxs, peak_cam_sim_list, color="blue", marker='o', s=50, label="Peaks Sim")
     axs[0].set_ylabel("Error [mm]")
     axs[0].set_title("CAM Error")
     axs[0].legend()
     axs[0].grid(True)
 
+    print('total number of data points CAM', len(synced_data_cam_tow_1))
+
+
     # 2. LT Error
+
+    sw_LT_real = -1  # sw=-1 means going down and sw=1 means going up
+    peaks_LT_real = 0
+    peak_LT_real_list = []
+    peak_LT_real_idxs = []
+
+    for i in range(len(synced_data_LT_tow_1) - 1):
+        if sw_LT_real == -1:
+            if synced_data_LT_tow_1[i + 1] > synced_data_LT_tow_1[i]:
+                peaks_LT_real += 1
+                sw_LT_real = 1
+                peak_LT_real_idxs.append(i)
+                peak_LT_real_list.append(synced_data_LT_tow_1[i])
+        if sw_LT_real == 1:
+            if synced_data_LT_tow_1[i + 1] < synced_data_LT_tow_1[i]:
+                peaks_LT_real += 1
+                sw_LT_real = -1
+                peak_LT_real_idxs.append(i)
+                peak_LT_real_list.append(synced_data_LT_tow_1[i])
+    print("peaks_LT_real", peaks_LT_real)
+
+    sw_LT_sim = -1  # sw=-1 means going down and sw=1 means going up
+    peaks_LT_sim = 0
+    peak_LT_sim_list = []
+    peak_LT_sim_idxs = []
+
+    for i in range(len(simulated_tow_path_LT) - 1):
+        if sw_LT_sim == -1:
+            if simulated_tow_path_LT[i + 1] > simulated_tow_path_LT[i]:
+                peaks_LT_sim += 1
+                sw_LT_sim = 1
+                peak_LT_sim_idxs.append(i)
+                peak_LT_sim_list.append(simulated_tow_path_LT[i])
+        if sw_LT_sim == 1:
+            if simulated_tow_path_LT[i + 1] < simulated_tow_path_LT[i]:
+                peaks_LT_sim += 1
+                sw_LT_sim = -1
+                peak_LT_sim_idxs.append(i)
+                peak_LT_sim_list.append(simulated_tow_path_LT[i])
+    print('peaks_LT_sim',peaks_LT_sim)
+
     axs[1].plot(synced_data_LT_tow_1, label="Real LT Error", color="red")
     axs[1].plot(simulated_tow_path_LT, label="Simulated LT Error", color="blue")
+    axs[1].scatter(peak_LT_real_idxs, peak_LT_real_list, color="red", marker='o', s=50, label="Peaks Real")
+    axs[1].scatter(peak_LT_sim_idxs, peak_LT_sim_list, color="blue", marker='o', s=50, label="Peaks Sim")
     axs[1].set_ylabel("Error [mm]")
     axs[1].set_title("LT Error")
     axs[1].legend()
     axs[1].grid(True)
 
+
+    print('total number of data points LT', len(synced_data_LT_tow_1))
     # 3. Centerline Offset
+
+    sw_offset_real = -1  # sw=-1 means going down and sw=1 means going up
+    peaks_offset_real = 0
+    peak_offset_real_list = []
+    peak_offset_real_idxs = []
+
+    for i in range(len(total_offset_real) - 1):
+        if sw_offset_real == -1:
+            if total_offset_real[i + 1] > total_offset_real[i]:
+                peaks_offset_real += 1
+                sw_offset_real = 1
+                peak_offset_real_idxs.append(i)
+                peak_offset_real_list.append(total_offset_real[i])
+        if sw_offset_real == 1:
+            if total_offset_real[i + 1] < total_offset_real[i]:
+                peaks_offset_real += 1
+                sw_offset_real = -1
+                peak_offset_real_idxs.append(i)
+                peak_offset_real_list.append(total_offset_real[i])
+    print("peaks_offset_real", peaks_offset_real)
+
+    sw_offset_sim = -1  # sw=-1 means going down and sw=1 means going up
+    peaks_offset_sim = 0
+    peak_offset_sim_list = []
+    peak_offset_sim_idxs = []
+
+    for i in range(len(simulated_total_offset_centerline) - 1):
+        if sw_offset_sim == -1:
+            if simulated_total_offset_centerline[i + 1] > simulated_total_offset_centerline[i]:
+                peaks_offset_sim += 1
+                sw_offset_sim = 1
+                peak_offset_sim_idxs.append(i)
+                peak_offset_sim_list.append(simulated_total_offset_centerline[i])
+        if sw_offset_sim == 1:
+            if simulated_total_offset_centerline[i + 1] < simulated_total_offset_centerline[i]:
+                peaks_offset_sim += 1
+                sw_offset_sim = -1
+                peak_offset_sim_idxs.append(i)
+                peak_offset_sim_list.append(simulated_total_offset_centerline[i])
+    print('peaks_offset_sim',peaks_offset_sim)
+
     axs[2].plot(total_offset_real, label="Real Total Offset", color="red")
     axs[2].plot(simulated_total_offset_centerline, label="Simulated Total Offset", color="blue")
+    axs[2].scatter(peak_offset_real_idxs, peak_offset_real_list, color="red", marker='o', s=50, label="Peaks Real")
+    axs[2].scatter(peak_offset_sim_idxs, peak_offset_sim_list, color="blue", marker='o', s=50, label="Peaks Sim")
     axs[2].set_ylabel("Offset [mm]")
     axs[2].set_title("Total Offset from Centerline")
     axs[2].legend()
     axs[2].grid(True)
 
+
+
     # 4. Width LLS_B
+
+    sw_LLS_B_real = -1  # sw=-1 means going down and sw=1 means going up
+    peaks_LLS_B_real = 0
+    peak_LLS_B_real_list = []
+    peak_LLS_B_real_idxs = []
+
+    for i in range(len(synced_data_LLS_B_tow_width) - 1):
+        if sw_LLS_B_real == -1:
+            if synced_data_LLS_B_tow_width[i + 1] > synced_data_LLS_B_tow_width[i]:
+                peaks_LLS_B_real += 1
+                sw_LLS_B_real = 1
+                peak_LLS_B_real_idxs.append(i)
+                peak_LLS_B_real_list.append(synced_data_LLS_B_tow_width[i])
+        if sw_LLS_B_real == 1:
+            if synced_data_LLS_B_tow_width[i + 1] < synced_data_LLS_B_tow_width[i]:
+                peaks_LLS_B_real += 1
+                sw_LLS_B_real = -1
+                peak_LLS_B_real_idxs.append(i)
+                peak_LLS_B_real_list.append(synced_data_LLS_B_tow_width[i])
+    print("peaks_LLS_B_real", peaks_LLS_B_real)
+
+    sw_LLS_B_sim = -1  # sw=-1 means going down and sw=1 means going up
+    peaks_LLS_B_sim = 0
+    peak_LLS_B_sim_list = []
+    peak_LLS_B_sim_idxs = []
+
+    for i in range(len(simulated_tow_width_LLS_B) - 1):
+        if sw_LLS_B_sim == -1:
+            if simulated_tow_width_LLS_B[i + 1] > simulated_tow_width_LLS_B[i]:
+                peaks_LLS_B_sim += 1
+                sw_LLS_B_sim = 1
+                peak_LLS_B_sim_idxs.append(i)
+                peak_LLS_B_sim_list.append(simulated_tow_width_LLS_B[i])
+        if sw_LLS_B_sim == 1:
+            if simulated_tow_width_LLS_B[i + 1] < simulated_tow_width_LLS_B[i]:
+                peaks_LLS_B_sim += 1
+                sw_LLS_B_sim = -1
+                peak_LLS_B_sim_idxs.append(i)
+                peak_LLS_B_sim_list.append(simulated_tow_width_LLS_B[i])
+    print('peaks_LLS_B_sim', peaks_LLS_B_sim)
+
+
     axs[3].plot(synced_data_LLS_B_tow_width, label="Real Width LLS_B", color="red")
     axs[3].plot(simulated_tow_width_LLS_B, label="Simulated Width LLS_B", color="blue")
+    axs[3].scatter(peak_LLS_B_real_idxs, peak_LLS_B_real_list, color="red", marker='o', s=50, label="Peaks Real")
+    axs[3].scatter(peak_LLS_B_sim_idxs, peak_LLS_B_sim_list, color="blue", marker='o', s=50, label="Peaks Sim")
     axs[3].set_ylabel("Width [mm]")
     axs[3].set_xlabel("Step")
     axs[3].set_title("Tow Width (LLS_B)")
     axs[3].legend()
     axs[3].grid(True)
+
+    print('total number of data points LLS_B', len(synced_data_LLS_B_tow_width))
+
+
+
 
     plt.tight_layout()
     plt.show()
@@ -381,11 +568,23 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
     plt.grid(True)
     plt.legend()
     plt.show()
-print(get_synced_data(tow=1))
+
+
+# def peaksVSbins():
+#     for range(1000)
+
+
+
+
+
 if __name__ == "__main__":
 
     # Test your function here
-    generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False)
+    generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False,
+                               num_bins=20)
+    generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False, num_bins=50)
+    generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False,
+                               num_bins=100)
     # generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=True, errorCor_show=False, bins_show=False)
     # print(get_synced_data(tow=1))
 

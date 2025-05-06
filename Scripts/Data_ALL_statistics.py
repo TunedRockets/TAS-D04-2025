@@ -45,7 +45,6 @@ from scipy.stats import (norm, logistic, gamma, beta, expon, lognorm, skewnorm,
             "LT":    pd.concat(results_LT,   ignore_index=True),
             "CAM":   pd.concat(results_CAM,  ignore_index=True)}'''
 
-
 '''Get relevant statistical values for each error dataset'''
 def statistical_values(data: pd.DataFrame):
     errors = [
@@ -64,7 +63,6 @@ def statistical_values(data: pd.DataFrame):
         stats['min'].append(round(e.min(), 4))
         stats['max'].append(round(e.max(), 4))
     return stats
-
 
 '''Plots all histograms in the same Figure. 
 The x-axis is manually set for each plot for better visualization.'''
@@ -281,23 +279,19 @@ def best_fit_distribution(data, bins=40, distributions=None):
     # Return the distribution with the lowest error (SSE)
     return best
 
-
 '''Actually calling the plots'''
 def main():
-    df = pd.concat((get_synced_data(t, spacesynced=False) for t in range(1,32)), ignore_index=True)
+    df = pd.concat((get_synced_data(t, spacesynced=True) for t in range(2,32)), ignore_index=True)
 
-    #! TODO: The following line is a dirty work, it has to be solved
-    #! TODO: LLS_B data is screwd!
-    df = df[df['width error_LLS_B'] >= -0.3].reset_index(drop=True)
     plot_histograms(
         df,
-        title="Sensor Error Histograms (ALL TOWS BUT NOT SPACE SYNCED)",
-        bin_widths=[0.01, 0.01, 0.005, 0.03]
+        title="Sensor Error Histograms (ALL TOWS)",
+        bin_widths=[0.005, 0.005, 0.005, 0.03]
     )
     plot_histograms_separated(
         df,
-        title="Sensor Error Histograms (ALL TOWS BUT NOT SPACE SYNCED)",
-        bin_widths=[0.01, 0.01, 0.02, 0.03]
+        title="Sensor Error Histograms (ALL TOWS)",
+        bin_widths=[0.005, 0.005, 0.005, 0.03]
     )
 
 if __name__ == "__main__":

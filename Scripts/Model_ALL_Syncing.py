@@ -167,13 +167,16 @@ def LT_x_plotter(LT_x: list, LT_time: list, data_state: str = "p"):
     if data_state == "s":
         raise NotImplementedError
 
+ 
+    '''Slice the plt.plot accordingly. Change x_values and delta_x_values starting and finish points, according to needed. 
+        Right now it is perfect for tow 17, but we can use any other tow.'''
     # Plot the data
     plt.figure(figsize=(8, 5))
-    plt.plot(x_values, delta_x_values, label="X Position vs X velocity", color="blue")
+    plt.plot(x_values[600:1280], delta_x_values[600:1280], label="X Position vs X velocity", color="blue")
     # Labels and legend
     plt.xlabel("X Position [mm]")
-    plt.ylabel("X velocity [mm/s]")
-    plt.title("X vs X velocity with Tape Cut Detection")
+    plt.ylabel("X Velocity [mm/s]")
+    plt.title("Layup Velocity Profile (TOW 17)")
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -515,15 +518,14 @@ def _space_time_shift(xx,tt,dx)->np.ndarray:
 
             #now find t closest to x_1
             j = 0
-            while xx[i+j] < x_1:
+            while np.sign(dx)*(x_1-xx[i+j]) < 0: # complicated equality to (hopefully) do the right steps
                 j+= 1 * np.sign(dx)
-            t_1 = tt[i+j] # the nex time
+            t_1 = tt[i+j] # the next time
             dt.append(t_1 - tt[i])
-        except IndexError:
+        except KeyError:
             # this datapoint doesn't exist
             # let future Johannes deal with that:
             dt.append(np.nan)
-            print(f"This resulted in an IndexError") # added by Martijn 29-04 around 20:45
     return dt
 
 def closest_idx(lst, K): # stolen from geeksforgeeks.com
@@ -619,7 +621,11 @@ def _sync_time_data():
 ##################################################################################################################################################################
 
 def main():
-    print("Hello world") # hi
+
+    # This shows Figure 6 of Siddharth Paper. It is exactly the same so it validates the data analysis.
+    LT_x_plotter(Handling_ALL_Functions.get_processed_data(17,"LT")["x"],
+                 Handling_ALL_Functions.get_processed_data(17,"LT")["time"])
+
     
 if __name__ == "__main__":
     main()
