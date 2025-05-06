@@ -284,7 +284,7 @@ def best_fit_distribution(data, bins=40, distributions=None):
 
 '''Actually calling the plots'''
 def main():
-    df = pd.concat((get_synced_data(t, spacesynced=False) for t in range(1,32)), ignore_index=True)
+    df = pd.concat((get_synced_data(t, spacesynced=True) for t in range(1,32)), ignore_index=True)
 
     #! TODO: The following line is a dirty work, it has to be solved
     #! TODO: LLS_B data is screwd!
