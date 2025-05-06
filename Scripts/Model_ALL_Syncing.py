@@ -519,7 +519,7 @@ def _space_time_shift(xx,tt,dx)->np.ndarray:
                 j+= 1 * np.sign(dx)
             t_1 = tt[i+j] # the next time
             dt.append(t_1 - tt[i])
-        except IndexError or KeyError:
+        except KeyError:
             # this datapoint doesn't exist
             # let future Johannes deal with that:
             dt.append(np.nan)
