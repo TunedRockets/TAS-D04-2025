@@ -16,8 +16,8 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins=20, random_state=42, bins
     column = -2 if sensor in ["CAM", "LT"] else -1
     all_pairs = []
 
-    for tow_number in range(2, 32):
-        tow_data_bef = get_synced_data(tow_number)
+    for tow_number in range(1, 32):
+        tow_data_bef = get_synced_data(tow_number, spacesynced = False) #TODO Make space synced True once it has been implemented properly
 
         if sensor == "LT":
             tow_data = tow_data_bef[["time", "x", "y", "z", "error_LT", "z error"]]
@@ -128,7 +128,7 @@ def generate_avg_simulated_vs_real(
         "LLS_B", test_ratio, num_bins=num_bins, bins_show=bins_show, plot_fit=False)
 
     # Load real tow
-    real_data = get_synced_data(tow=n_real_tow)
+    real_data = get_synced_data(tow=n_real_tow, spacesynced = False) #TODO Make space synced True once it has been implemented properly
     n_steps = len(real_data) - 1
 
     real_cam = real_data["center_CAM"].values
