@@ -281,11 +281,11 @@ def best_fit_distribution(data, bins=40, distributions=None):
 
 '''Actually calling the plots'''
 def main():
-    df = pd.concat((get_synced_data(t, spacesynced=True) for t in range(1,32)), ignore_index=True)
+    df = pd.concat((get_synced_data(t, spacesynced=True) for t in range(2,32)), ignore_index=True)
 
     #! TODO: The following line is a dirty work, it has to be solved
     #! TODO: LLS_B data is screwd!
-    df = df[df['width error_LLS_B'] >= -0.3].reset_index(drop=True)
+    #df = df[df['width error_LLS_B'] >= -0.3].reset_index(drop=True)
     plot_histograms(
         df,
         title="Sensor Error Histograms (ALL TOWS)",
