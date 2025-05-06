@@ -290,7 +290,9 @@ def get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool=False)->pd
     this one takes care of the saving and loading\n
     if spacesynced is true it will sync the points in space, otherwise it will be synced in time'''
 
-    
+    if spacesynced:
+        raise NotImplementedError
+
     name = "proccessed_" + str(tow)
     name += ("_space" if spacesynced else "_time")
     # first check the cache
