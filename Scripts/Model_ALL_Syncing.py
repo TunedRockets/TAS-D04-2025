@@ -419,11 +419,11 @@ def _space_time_shift(xx,tt,dx)->np.ndarray:
 
             #now find t closest to x_1
             j = 0
-            while xx[i+j] < x_1:
+            while xx[i+j] < x_1: #fix: equal
                 j+= 1 * np.sign(dx)
-            t_1 = tt[i+j] # the nex time
+            t_1 = tt[i+j] # the next time
             dt.append(t_1 - tt[i])
-        except IndexError:
+        except IndexError or KeyError:
             # this datapoint doesn't exist
             # let future Johannes deal with that:
             dt.append(np.nan)
