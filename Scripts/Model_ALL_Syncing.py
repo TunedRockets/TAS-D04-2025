@@ -8,12 +8,18 @@ authors: Johannes, ...
 '''
 
 import Handling_ALL_Functions
+
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 import pandas as pd
 import numpy as np
 import inspect
 import matplotlib.pyplot as plt
 import itertools
 import constants
+
+##################################################################################################################################################################
+"""Functions for joining data"""
 
 def join_data(frame1:pd.DataFrame, frame2:pd.DataFrame, shift:float)-> pd.DataFrame:
     '''
@@ -138,6 +144,92 @@ def _test_join_function():
     plt.plot(combined["time"],combined["shifted"])
     plt.show()
 
+##################################################################################################################################################################
+"""Functions for plotting data"""
+
+def LT_x_plotter(LT_x: list, LT_time: list, data_state: str = "p"):
+    "This function visually shows the LT_xvelocity data. It is not usefull for anything elsewhere"
+
+    # Example usage: LT_x_plotter(Handling_ALL_Functions.get_processed_data(tow number,"LT")["x"],Handling_ALL_Functions.get_processed_data(tow number,"LT")["time"])
+
+    if data_state == "p":
+
+        beta = 2
+        delta_x_values = []
+        x_values = []
+
+        for i in range(2, int(len(LT_x))):
+            delta_x = (LT_x[i-1] - LT_x[i-2])/0.010 # Divided by the rate at which the LT scans
+            x = LT_x[i]
+            delta_x_values.append(delta_x)
+            x_values.append(x)
+
+    if data_state == "s":
+        raise NotImplementedError
+
+    # Plot the data
+    plt.figure(figsize=(8, 5))
+    plt.plot(x_values, delta_x_values, label="X Position vs X velocity", color="blue")
+    # Labels and legend
+    plt.xlabel("X Position [mm]")
+    plt.ylabel("X velocity [mm/s]")
+    plt.title("X vs X velocity with Tape Cut Detection")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    return
+
+def LLS_plotter(LLS_A_OR_B_width: list, LLS_A_OR_B_time: list, data_state: str = "p"):
+    "This function visually shows the LLS_velocity data. It is not usefull for anything elsewhere"
+
+    # Example usage: LLS_plotter(Handling_ALL_Functions.get_processed_data(tow number,"LLS_A")["width"],Handling_ALL_Functions.get_processed_data(tow number,"LLS_A")["time"])
+
+    if data_state == "p":
+
+        width_velocities = [] # Set up list of velocities
+
+        for i in range(len(LLS_A_OR_B_width)-1):                                            # Loop for calculating all the width velocities
+            width_velocities.append((LLS_A_OR_B_width[i+1] - LLS_A_OR_B_width[i]) / 0.004)  # Append the width velocity values
+        width_velocities.append(width_velocities[-1])                                       # dirty trick to match lengths (doesnt effect final outcome)
+
+    if data_state == "s":
+        raise NotImplementedError
+
+    plt.plot(LLS_A_OR_B_time, width_velocities, zorder=1)
+    plt.title("Width velocity")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Rate of change of tow width [m/s]")
+    plt.grid()
+    plt.show()
+    return
+
+def CAM_plotter(CAM_center: list, CAM_time: list, data_state: str = "p"):
+    "This function visually shows the CAM_velocity data. It is not usefull for anything elsewhere"
+    
+    # Example usage: CAM_plotter(Handling_ALL_Functions.get_processed_data(tow number,"CAM")["center"],Handling_ALL_Functions.get_processed_data(tow number,"CAM")["time"])
+
+    if data_state == "p":
+
+        center_velocities = [] # Set up list of velocities
+
+        for i in range(len(CAM_center)-1):                                              # Loop for calculating all the center velocities
+            center_velocities.append((CAM_center[i+1] - CAM_center[i]) / 0.001)         # Append the center velocity values
+        center_velocities.append(center_velocities[-1])                                 # dirty trick to match lengths (doesnt effect final outcome)
+
+    if data_state == "s":
+        raise NotImplementedError
+
+    plt.plot(CAM_time, center_velocities, zorder=1)
+    plt.title("Center velocity")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Rate of change of tow center line [m/s]")
+    plt.grid()
+    plt.show()
+    return
+
+##################################################################################################################################################################
+"""Functions for finding the sync needed for joining data"""
+
 def blue_dot_LT(LT_x,LT_time):
     '''gets the time at where the LT is 930, also returns the x value of 930\n
     basically wraps find_x930'''
@@ -152,7 +244,7 @@ def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
     """This function grabs a sample of the LT data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
-        the sample, if the distance between them is smaller than some factor beta times the minimum
+        the sample, if the distance between them is smaller than some factor 1/beta times the minimum
         distance found in the sample, then we know that the tape has been cut and xi = 930mm.
         Then the coressponding time at xi is ti and this time can be used to sync the LT data with
         other data sets\n
@@ -164,86 +256,95 @@ def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
     if data_state == "p":
 
 
-        beta = 2
-        delta_x_values = []
-        x_values = []
+        beta = 2                    # Factor for determining when the x velocity goes below a certain value
+        delta_x_values = []         # List to hold the x velocity values in the sample
+        x_values = []               # List to hold the x values in the sample
+        y = int(len(LT_x)*0.45)     # End range for the sample region / Beginning range for the test region
 
-        for i in range(int(len(LT_x)*0.38), int(len(LT_x)*0.5)):
-            delta_x = (LT_x[i+1] - LT_x[i])/0.010 # Divided by the rate at which the LT scans
-            x = LT_x[i]
-            delta_x_values.append(delta_x)
-            x_values.append(x)
+        for i in range(int(len(LT_x)*0.4), y):                  # Loop over sample to determine the smallest x velocity value
+            delta_x_values.append((LT_x[i+1] - LT_x[i])/0.010)  # Append x velocity values in the sample
+            x_values.append(LT_x[i])                            # Append x values in the sample
 
-        sorted_values = sorted(set(delta_x_values))  # Remove duplicates and sort
-        delta_x_min = sorted_values[0]  # Smallest value
-        xi_list = []
-        ti_list = []
-        delta_xi_list = []
+        sorted_values = sorted(set(delta_x_values))             # Remove duplicates and sort the x velocity values in the sample
+        delta_x_min = sorted_values[0]                          # Find the smallest x velocity value to use with the factor beta
+        xi_list = []                                            # List to hold the x values in the test region
+        ti_list = []                                            # List to hold the time values in the test region
+        delta_xi_list = []                                      # List to hold the x velocity values in the test region
 
-        for j in range(int(len(LT_x)*0.5), int(len(LT_x)*0.75)):
-            if (LT_x[j+1] - LT_x[j])/0.010 < (delta_x_min/beta):
-                xi_list.append(LT_x[j])
-                ti_list.append(LT_time[j])
-                delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)
-                if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta):
+        for j in range(y, int(len(LT_x))):                              # Loop over test region to determine the x at 930mm
+            if (LT_x[j+1] - LT_x[j])/0.010 < (delta_x_min/beta):        # If the x velocity suddenly drops below this factor then we know the machine slowed down to cut the tape at 930mm
+                xi_list.append(LT_x[j])                                 # Append x values in the test region
+                ti_list.append(LT_time[j])                              # Append time values in the test region
+                delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)    # Append x velocity values in the test region
+                if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta): # If the x velocity suddenly increases above this factor then we know the machine is speeding back up (leaving the 930mm point)
                     break
-        
-        k = len(ti_list) - 1
-        index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
-        xi = xi_list[index_delta_xi_min]
-        ti = ti_list[index_delta_xi_min]
-        if len(ti_list) < 2:
+                                                     
+        index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))               # The smallest x velocity value is where x = 930mm
+        xi = xi_list[index_delta_xi_min]                                                    # Locate x = 930 mm using the index above (as the lists have the same size)
+        ti = ti_list[index_delta_xi_min]                                                    # Locate the time at x = 930 mm using the index above (as the lists have the same size)
+        if len(ti_list) < 2:                                                                # This is an error check as sometimes the output finds x = 930mm without finding a time region it falls in
             print("⚠️  Warning: Not enough cut points detected — using default t_width")
-            t_width = 0.9  # fallback value, adjust as needed
+            t_width = 0.9  # fallback value, adjust as needed                               # As it still finds x = 930mm it is succesfull, but other functions require the lenght of the time region it falls in. Most of the tows show this region to be between 0.8 and 1.0 (but this does depend on beta) so a default of 0.9 was chosen to still make the future calculation work
+        elif (ti_list[len(ti_list) - 1] - ti_list[0]) < 0.1:                                # This is an error check as sometimes the function finds where the x velocity drops below the factor but not when it exits and this causes an issue where the time region is very small
+            print("⚠️  Warning: Too small t_width detected — using default t_width")
+            t_width = 0.9  # fallback value, adjust as needed                               # As it still finds x = 930mm it is succesfull, but other functions require the lenght of the time region it falls in. Most of the tows show this region to be between 0.8 and 1.0 (but this does depend on beta) so a default of 0.9 was chosen to still make the future calculation work
         else:
-            t_width = (ti_list[k] - ti_list[0])
+            t_width = (ti_list[len(ti_list) - 1] - ti_list[0])                              # If there are no errors in determining the time region t_width then it should be the final value minus the first value
 
     if data_state == "s":
         raise NotImplementedError
 
-    # Plot the data
-    plt.figure(figsize=(8, 5))
-    plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
-    # Mark the detected tape cut point
-    plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
-    # Labels and legend
-    plt.xlabel("X Position [mm]")
-    plt.ylabel("X Width [mm/s]")
-    plt.title("X vs X Width with Tape Cut Detection")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    #################################################################################################
+
+        # Plot the data
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
+        # Mark the detected tape cut point
+    # plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
+        # Labels and legend
+    # plt.xlabel("X Position [mm]")
+    # plt.ylabel("X Width [mm/s]")
+    # plt.title("X vs X Width with Tape Cut Detection")
+    # plt.legend()
+    # plt.grid(True)
+        # Disable scientific notation on both axes
+    # plt.ticklabel_format(style='plain', useOffset=False, axis='both')
+    # plt.show()
 
     return xi, ti, t_width
 
-def LLS_sync(widths, times, sensor_type, x930p):
+def LLS_sync(widths, times, sensor_type, t_width:float):
+    "This function finds the LLS sync for A and B. As identified in the width velocity vs width graph,"
+    "a region can be seen where the width velocity slows down, which corresponds to when the machine"
+    "slows down to make the cut at x = 930mm"
+
     width_velocities = [] # Set up list of velocities
-    t_width = float(x930p[2])
-    print(t_width)
 
-    for i in range(len(widths)-1):
-        width_velocities.append((widths[i+1] - widths[i]) / 0.004)
-    width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
+    for i in range(len(widths)-1):                                  # Loop for calculating all the width velocities
+        width_velocities.append((widths[i+1] - widths[i]) / 0.004)  # Append the width velocity values
+    width_velocities.append(width_velocities[-1])                   # dirty trick to match lengths (doesnt effect final outcome)
 
-    if sensor_type == "LLS_B":
-        t_width = 2*t_width
-        start_time = 4
-        end_time = 5.5
-    if sensor_type == "LLS_A":
-        t_width = 0.55*t_width
-        start_time = 4
-        end_time = 5.7
-    index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time)    
+    if sensor_type == "LLS_B":      # As LLS_A and LLS_B show slightly different velocity graphs they need to be analyzed seperately
+        t_width = 0.65*t_width      # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function for LLS_B
+        start_time = 4              # Observed time at which all of the velocity graphs for LLS_B show that the cut off point happens after this. This is usefull for how the scan_for_min function works
+        end_time = 5.5              # Observed time at which all of the velocity graphs for LLS_B show that the cut off point happens before this. This is usefull for how the scan_for_min function works
+    if sensor_type == "LLS_A":      # As LLS_A and LLS_B show slightly different velocity graphs they need to be analyzed seperately
+        t_width = 0.3*t_width       # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function for LLS_A
+        start_time = 4              # Observed time at which all of the velocity graphs for LLS_A show that the cut off point happens after this. This is usefull for how the scan_for_min function works
+        end_time = 5.2              # Observed time at which all of the velocity graphs for LLS_A show that the cut off point happens before this. This is usefull for how the scan_for_min function works
+    
+    index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time) # Using the scan_for_min function the point in time is found where x = 930mm for the LLS scanners   
 
     ##########################################################################################################
 
-    plt.plot(times, width_velocities, zorder=1)
-    plt.scatter([time_stop], [0], color="red", edgecolor="black", s=100, zorder=5, label="Min point")
-    plt.title("Width velocity")
-    plt.xlabel("Time [s]")
-    plt.ylabel("Rate of change of tow width [m/s]")
-    plt.grid()
-    plt.show() 
+    # plt.plot(times, width_velocities, zorder=1)
+    # plt.scatter([time_stop], [0], color="red", edgecolor="black", s=100, zorder=5, label="Min point")
+    # plt.title("Width velocity")
+    # plt.xlabel("Time [s]")
+    # plt.ylabel("Rate of change of tow width [m/s]")
+    # plt.grid()
+    # plt.show()
+     
     return time_stop
 
 def scan_for_min(t_len: float, times: list, values: list, start_time: float, end_time: float) -> tuple:
@@ -290,34 +391,23 @@ def scan_for_min(t_len: float, times: list, values: list, start_time: float, end
     return min_index, times[min_index]
 
 def camera_sync(centers, times, t_width):
-    """This function grabs a sample of the CAM data where we know the tape is being layed down
-        and then calculates the distance between consecUtive data points. Once the minimum
-        distance between data points has been found in the sample, then for data points after
-        the sample, if the distance between them is smaller than some factor beta times the minimum
-        distance found in the sample, then we know that the tape has been cut and xi = 930mm.
-        Then the corresponding time at xi is ti and this time can be used to sync the CAM data with
-        other data sets"""
+    "This function finds the camera sync. As identified in the center velocity vs center graph,"
+    "a region can be seen where the center velocity slows down, which corresponds to when the machine"
+    "slows down to make the cut at x = 930mm"
 
-    center_velocities = [] # Set up list of velocities
+    center_velocities = [] # Set up list of center velocities
 
+    for i in range(len(centers)-1):                             # Loop for calculating all the center velocities                     
+        center_velocities.append(centers[i+1] - centers[i])     # Append the center velocity values
+    center_velocities.append(center_velocities[-1])             # dirty trick to match lengths
 
-    for i in range(len(centers)-1):
-        center_velocities.append(centers[i+1] - centers[i])
-    center_velocities.append(center_velocities[-1]) # dirty trick to match lengths
+    t_width = 0.5*t_width   # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function
+    start_time = 4.5        # Observed time at which all of the velocity graphs for the camera show that the cut off point happens after this. This is usefull for how the scan_for_min function works
+    end_time = 5.75         # Observed time at which all of the velocity graphs for the camera show that the cut off point happens before this. This is usefull for how the scan_for_min function works
 
-    t_width = 1.5*t_width
-    start_time = 4.5
-    end_time = 5.75
-    index_stop, time_stop = scan_for_min(t_width, times, center_velocities, start_time, end_time)    
+    index_stop, time_stop = scan_for_min(t_width, times, center_velocities, start_time, end_time)    # Using the scan_for_min function the point in time is found where x = 930mm for the camera  
 
     ##########################################################################################################
-
-
-
-    # #Loop over all the data points and store results
-    # for i in range(len(widths)-1): 
-    #     width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
-    #     width_velocities.append(width_velocity)
 
     # plt.plot(times, center_velocities, label="center_velocities", color="red")
     # plt.title("center velocity")
@@ -328,6 +418,9 @@ def camera_sync(centers, times, t_width):
     # plt.show() 
 
     return time_stop
+
+##################################################################################################################################################################
+"""Functions for plotting correlations"""
 
 def least_squares_regression(x, y):
     """
@@ -407,6 +500,9 @@ def plot_two_columns(dataframe1:pd.DataFrame, dataframe2:pd.DataFrame, column1:s
     plt.ylabel("Data (Normalized)")
     plt.legend()
     plt.show()
+
+##################################################################################################################################################################
+"""Miscellaneous functions that are used in other main ones (Particularly from Handling_ALL_functions.py)"""
 
 def _space_time_shift(xx,tt,dx)->np.ndarray:
     '''returns a list of delta t to shift the offset sensor'''
@@ -520,17 +616,11 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
 def _sync_time_data():
     raise NotImplementedError
 
-def main():
-    # for k in range(1,32):
-        k = 5
-        print(k)
-        width_LLS_A = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["width"]
-        LT_time = Handling_ALL_Functions.get_processed_data(k, "LT")["time"]
-        LT_x = Handling_ALL_Functions.get_processed_data(k, "LT")["x"]
-        LLS_A_time = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["time"]
-        find_x930(Handling_ALL_Functions.get_processed_data(k, "LT")["x"], Handling_ALL_Functions.get_processed_data(k, "LT")["time"], "p") #PROPER X930 FIND USING PROCESSED DATA
-        # LLS_sync(width_LLS_A, LLS_A_time, "LLS_A", find_x930(LT_x, LT_time, "p")) # TODO There seems to be an issue with tow 1 so process tow 1 properly and also check why some tows dont give a t_width. After this all the syncs in time should work and work can be continued on adaprting the function x930 to also include the time sync.
+##################################################################################################################################################################
 
+def main():
+    print("Hello world") # hi
+    
 if __name__ == "__main__":
     main()
 

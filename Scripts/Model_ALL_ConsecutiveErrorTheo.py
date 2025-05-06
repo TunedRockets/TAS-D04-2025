@@ -64,7 +64,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     # Loop through tow numbers from 1 to 31
     for tow_number in range(2, 32):
         # Get processed data for the current tow and sensor type
-        tow_data_bef = get_synced_data(tow_number,spacesynced=False)
+        tow_data_bef = get_synced_data(tow_number,spacesynced=True)
 
         if sensor == "LT":
             tow_data = tow_data_bef[["time", "x", "y", "z", "error_LT", "z error"]]
@@ -290,7 +290,7 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
 
 
     # Load real tow data
-    synced_data_tow_1 = get_synced_data(tow=n_real_tow,spacesynced=False)
+    synced_data_tow_1 = get_synced_data(tow=n_real_tow,spacesynced=True)
 
     # --- CAM Error ---
     synced_data_cam_tow_1 = synced_data_tow_1["center_CAM"].values
