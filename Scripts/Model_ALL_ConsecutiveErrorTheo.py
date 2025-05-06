@@ -1,4 +1,23 @@
-'''Consecutive Error Error'''
+'''
+    Way the model works: We input our current error, which we will call x
+    A regression model is made by binning the data, calculate the mean of each bin and find a regression line
+    we calculate the mean of the next error from the regression model which we call y
+    the value of x, the previous error, corresponds to a certain bin which contains a normal curve the randomness in the deviation of y 
+    we extract a random point from the normal curve, and we add this value to the before calculated mean
+    
+    Note: we cant create a value of the mean or the histogram/normal curve of the devation for a certain data point of x(previous error),
+    because we don’t have enough data points at that precise point. This is why bins have been created: 
+    this works, but will obtain a slight bias, because the deviation normal curve does not 
+    correspond to the exact value of x, but only to the values around it
+'''
+
+
+#ideas for improvement:
+#Find optimum number of bins
+#only extract value of LLS B width if width_LLSB>width_LLSA
+#to smoothen out curve
+#increase resolution of predicting curve and taking mean of predicted points around real datapoint: more realistic dynamics, smoother paths
+#use relation between errors to improve model
 
 import pandas as pd
 import numpy as np
@@ -11,7 +30,7 @@ from Handling_ALL_Functions import get_synced_data
 import math
 from scipy.stats import truncnorm
 
-def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bins_show = False):
+def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bins_show = False,plot_fit=True):
     """
         Analyze consecutive error pairs and their distributions from processed sensor data.
 
@@ -43,7 +62,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     all_pairs = []
 
     # Loop through tow numbers from 1 to 31
-    for tow_number in range(2, 10):
+    for tow_number in range(2, 32):
         # Get processed data for the current tow and sensor type
         tow_data_bef = get_synced_data(tow_number)
 
@@ -105,16 +124,17 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     error_label = error_labels[sensor]
 
     # Plot scatter + binned fit
-    plt.figure(figsize=(8, 6))
-    plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
-    plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
-    plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
-    plt.xlabel("$ε_{i}$ [mm]")
-    plt.ylabel("$ε_{i+1}$ [mm]")
-    plt.title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    if plot_fit:
+        plt.figure(figsize=(8, 6))
+        plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
+        plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
+        plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
+        plt.xlabel("$ε_{i}$ [mm]")
+        plt.ylabel("$ε_{i+1}$ [mm]")
+        plt.title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
     # Compute Deviations per Bin
 
@@ -254,40 +274,102 @@ def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_ed
 
 
 def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_show=False, bins_show=False):
+    # Get binned models from historical data
     bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin = consecutive_error(
-        "CAM", 0.0001, num_bins=20, bins_show=bins_show)
+        "CAM", 0.5, num_bins=100, bins_show=bins_show)
     bin_stats_df1, slope1, intercept1, r_value1, p_value1, std_err1, x_sorted1, bin_edges1, deviations_per_bin1 = consecutive_error(
-        "LT", 0.0001, num_bins=20, bins_show=bins_show)
+        "LT", 0.5, num_bins=100, bins_show=bins_show)
     bin_stats_df2, slope2, intercept2, r_value2, p_value2, std_err2, x_sorted2, bin_edges2, deviations_per_bin2 = consecutive_error(
-        "LLS_B", 0.0001, num_bins=20, bins_show=bins_show)
+        "LLS_B", 0.5, num_bins=100, bins_show=bins_show)
+    bin_stats_df3, slope3, intercept3, r_value3, p_value3, std_err3, x_sorted3, bin_edges3, deviations_per_bin3 = consecutive_error(
+        "LLS_A", 0.5, num_bins=100, bins_show=bins_show)
 
-    synced_data_tow_1 = get_synced_data(tow=n_real_tow).to_numpy()
-    synced_data_cam_tow_1 = synced_data_tow_1[:, 13]
+
+
+
+
+
+    # Load real tow data
+    synced_data_tow_1 = get_synced_data(tow=n_real_tow)
+
+    # --- CAM Error ---
+    synced_data_cam_tow_1 = synced_data_tow_1["center_CAM"].values
     start_error = synced_data_cam_tow_1[0]
     n_steps = len(synced_data_cam_tow_1) - 1
     simulated_tow_path_cam = generate_error_path(
-        start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=10
+        start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=rdm_seed
     )
 
-    synced_data_LT_tow_1 = synced_data_tow_1[:, 4]
+    # --- LT Error ---
+    synced_data_LT_tow_1 = synced_data_tow_1["error_LT"].values
     start_error1 = synced_data_LT_tow_1[0]
     simulated_tow_path_LT = generate_error_path(
-        start_error1, n_steps, slope1, intercept1, x_sorted1, bin_edges1, deviations_per_bin1, random_seed=10
+        start_error1, n_steps, slope1, intercept1, x_sorted1, bin_edges1, deviations_per_bin1, random_seed=rdm_seed
     )
-    simulated_total_offset_centerline = simulated_tow_path_LT + simulated_tow_path_cam
-    total_offset_real = synced_data_cam_tow_1 + synced_data_LT_tow_1
 
-    synced_data_LLS_B_tow_1 = synced_data_tow_1[:, 9]
-    start_error2 = synced_data_LLS_B_tow_1[0] - 6
+    # --- Centerline Offset ---
+    simulated_total_offset_centerline = simulated_tow_path_LT + simulated_tow_path_cam
+    total_offset_real = synced_data_LT_tow_1 + synced_data_cam_tow_1
+
+
+
+
+
+    # --- LLS_B Width ---
+    synced_data_LLS_B_tow_error = synced_data_tow_1["width error_LLS_B"].values
+    synced_data_LLS_B_tow_width = synced_data_tow_1["width_LLS_B"].values
+    start_error2 = synced_data_LLS_B_tow_error[0]
     simulated_tow_width_LLS_B = generate_error_path(
-        start_error2, n_steps, slope2, intercept2, x_sorted2, bin_edges2, deviations_per_bin2, random_seed=10
-    ) + 6
+        start_error2, n_steps, slope2, intercept2, x_sorted2, bin_edges2, deviations_per_bin2, random_seed=rdm_seed
+    )+6.35 
+
+    # --- Compute Boundaries ---
     simulated_upper_boundary = simulated_total_offset_centerline + 0.5 * simulated_tow_width_LLS_B
     simulated_lower_boundary = simulated_total_offset_centerline - 0.5 * simulated_tow_width_LLS_B
-    real_upper_boundary = total_offset_real + 0.5 * synced_data_LLS_B_tow_1
-    real_lower_boundary = total_offset_real - 0.5 * synced_data_LLS_B_tow_1
+    real_upper_boundary = total_offset_real + 0.5 * synced_data_LLS_B_tow_width
+    real_lower_boundary = total_offset_real - 0.5 * synced_data_LLS_B_tow_width
+
+    # --- Plot 4 Separate Real vs Simulated Error Paths ---
+    fig, axs = plt.subplots(4, 1, figsize=(12, 16), sharex=True)
+
+    # 1. CAM Error
+    axs[0].plot(synced_data_cam_tow_1, label="Real CAM Error", color="red")
+    axs[0].plot(simulated_tow_path_cam, label="Simulated CAM Error", color="blue")
+    axs[0].set_ylabel("Error [mm]")
+    axs[0].set_title("CAM Error")
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # 2. LT Error
+    axs[1].plot(synced_data_LT_tow_1, label="Real LT Error", color="red")
+    axs[1].plot(simulated_tow_path_LT, label="Simulated LT Error", color="blue")
+    axs[1].set_ylabel("Error [mm]")
+    axs[1].set_title("LT Error")
+    axs[1].legend()
+    axs[1].grid(True)
+
+    # 3. Centerline Offset
+    axs[2].plot(total_offset_real, label="Real Total Offset", color="red")
+    axs[2].plot(simulated_total_offset_centerline, label="Simulated Total Offset", color="blue")
+    axs[2].set_ylabel("Offset [mm]")
+    axs[2].set_title("Total Offset from Centerline")
+    axs[2].legend()
+    axs[2].grid(True)
+
+    # 4. Width LLS_B
+    axs[3].plot(synced_data_LLS_B_tow_width, label="Real Width LLS_B", color="red")
+    axs[3].plot(simulated_tow_width_LLS_B, label="Simulated Width LLS_B", color="blue")
+    axs[3].set_ylabel("Width [mm]")
+    axs[3].set_xlabel("Step")
+    axs[3].set_title("Tow Width (LLS_B)")
+    axs[3].legend()
+    axs[3].grid(True)
+
+    plt.tight_layout()
+    plt.show()
+    # --- Overlay Plot with Upper/Lower Boundaries ---
     plt.figure(figsize=(12, 5))
-    plt.plot(simulated_total_offset_centerline, label=" total offset simulated", c="b")
+    plt.plot(simulated_total_offset_centerline, label="total offset simulated", c="b")
     plt.plot(simulated_upper_boundary, label="upper boundary simulated", c="b")
     plt.plot(simulated_lower_boundary, label="lower boundary simulated", c="b")
     plt.plot(total_offset_real, label="real total offset", c="r")
@@ -299,10 +381,7 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
     plt.grid(True)
     plt.legend()
     plt.show()
-    MSE = np.sum((synced_data_cam_tow_1 - simulated_tow_path_cam) ** 2)
-    print("mean squared error is:", MSE)
 print(get_synced_data(tow=1))
-
 if __name__ == "__main__":
 
     # Test your function here

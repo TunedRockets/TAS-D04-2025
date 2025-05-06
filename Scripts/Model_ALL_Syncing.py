@@ -10,6 +10,7 @@ authors: Johannes, ...
 import Handling_ALL_Functions
 import pandas as pd
 import numpy as np
+import inspect
 import matplotlib.pyplot as plt
 import itertools
 import constants
@@ -140,14 +141,14 @@ def _test_join_function():
 def blue_dot_LT(LT_x,LT_time):
     '''gets the time at where the LT is 930, also returns the x value of 930\n
     basically wraps find_x930'''
-    xi,ti, t_width = find_x930(LT_x, LT_time)
+    xi,ti, t_width = find_x930(LT_x, LT_time, "p")
     index = 0
     while LT_x[index] < xi:
         index +=1
 
     return ti, xi, index, t_width
 
-def find_x930(LT_x: list, LT_time: list):
+def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
     """This function grabs a sample of the LT data where we know the tape is being layed down
         and then calculates the distance between consective data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
@@ -156,86 +157,93 @@ def find_x930(LT_x: list, LT_time: list):
         Then the coressponding time at xi is ti and this time can be used to sync the LT data with
         other data sets\n
         
-        returns value xi, time ti, and the width of the stop"""
+        returns value xi, time ti, and the width of the stop
+        
+        p = processed data and s = synced data"""
 
-    beta = 2
-    delta_x_values = []
-    x_values = []
+    if data_state == "p":
 
-    for i in range(int(len(LT_x)*0.45), int(len(LT_x)*0.48)):
-        delta_x = (LT_x[i+1] - LT_x[i])/0.010 # Divided by the rate at which the LT scans
-        x = LT_x[i]
-        delta_x_values.append(delta_x)
-        x_values.append(x)
 
-    sorted_values = sorted(set(delta_x_values))  # Remove duplicates and sort
-    delta_x_min = sorted_values[0]  # Smallest value
-    xi_list = []
-    ti_list = []
-    delta_xi_list = []
+        beta = 2
+        delta_x_values = []
+        x_values = []
 
-    for j in range(int(len(LT_x)*0.50), int(len(LT_x)*0.75)):
-        if (LT_x[j+1] - LT_x[j])/0.010 < (delta_x_min/beta):
-            xi_list.append(LT_x[j])
-            ti_list.append(LT_time[j])
-            delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)
-            if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta):
-                break
+        for i in range(int(len(LT_x)*0.38), int(len(LT_x)*0.5)):
+            delta_x = (LT_x[i+1] - LT_x[i])/0.010 # Divided by the rate at which the LT scans
+            x = LT_x[i]
+            delta_x_values.append(delta_x)
+            x_values.append(x)
 
-    k = len(ti_list) - 1
-    index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
-    xi = xi_list[index_delta_xi_min]
-    ti = ti_list[index_delta_xi_min]
-    t_width = (ti_list[k] - ti_list[0])/3 # The time seems to be off by a factor of 3 in the data?
+        sorted_values = sorted(set(delta_x_values))  # Remove duplicates and sort
+        delta_x_min = sorted_values[0]  # Smallest value
+        xi_list = []
+        ti_list = []
+        delta_xi_list = []
+
+        for j in range(int(len(LT_x)*0.5), int(len(LT_x)*0.75)):
+            if (LT_x[j+1] - LT_x[j])/0.010 < (delta_x_min/beta):
+                xi_list.append(LT_x[j])
+                ti_list.append(LT_time[j])
+                delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)
+                if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta):
+                    break
+        
+        k = len(ti_list) - 1
+        index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))
+        xi = xi_list[index_delta_xi_min]
+        ti = ti_list[index_delta_xi_min]
+        if len(ti_list) < 2:
+            print("⚠️  Warning: Not enough cut points detected — using default t_width")
+            t_width = 0.9  # fallback value, adjust as needed
+        else:
+            t_width = (ti_list[k] - ti_list[0])
+
+    if data_state == "s":
+        raise NotImplementedError
 
     # Plot the data
-    # plt.figure(figsize=(8, 5))
-    # plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
+    plt.figure(figsize=(8, 5))
+    plt.plot(xi_list, delta_xi_list, label="LT_x vs LT_time", color="blue")
     # Mark the detected tape cut point
-    # plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
+    plt.scatter(xi, ti, color="red", label=f"Tape Cut at (t={ti:.2f}, x={xi:.2f})", zorder=3)
     # Labels and legend
-    # plt.xlabel("Time [s]")
-    # plt.ylabel("X Position [mm]")
-    # plt.title("X vs Time with Tape Cut Detection")
-    # plt.legend()
-    # plt.grid(True)
-    # plt.show()
+    plt.xlabel("X Position [mm]")
+    plt.ylabel("X Width [mm/s]")
+    plt.title("X vs X Width with Tape Cut Detection")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
     return xi, ti, t_width
 
-def LLS_sync(widths, times, sensor_type, t_width):
+def LLS_sync(widths, times, sensor_type, x930p):
     width_velocities = [] # Set up list of velocities
-
+    t_width = float(x930p[2])
+    print(t_width)
 
     for i in range(len(widths)-1):
-        width_velocities.append(widths[i+1] - widths[i])
+        width_velocities.append((widths[i+1] - widths[i]) / 0.004)
     width_velocities.append(width_velocities[-1]) # dirty trick to match lengths
-
 
     if sensor_type == "LLS_B":
         t_width = 2*t_width
         start_time = 4
         end_time = 5.5
     if sensor_type == "LLS_A":
-        t_width = 1.5*t_width
+        t_width = 0.55*t_width
         start_time = 4
-        end_time = 5.5
+        end_time = 5.7
     index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time)    
 
     ##########################################################################################################
 
-    # #Loop over all the data points and store results
-    # for i in range(len(widths)-1): 
-    #     width_velocity = (widths[i+1] - widths[i]) / (times[i+1] - times[i])
-    #     width_velocities.append(width_velocity)
-
-    # plt.plot(times, width_velocities, label="width_velocities", color="red")
-    # plt.title("Width velocity")
-    # plt.xlabel("Time [s]")
-    # plt.ylabel("Rate of change of tow width [m/s]")
-    # plt.plot(time_stop,0, "-o")
-    # plt.grid()
-    # plt.show() 
+    plt.plot(times, width_velocities, zorder=1)
+    plt.scatter([time_stop], [0], color="red", edgecolor="black", s=100, zorder=5, label="Min point")
+    plt.title("Width velocity")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Rate of change of tow width [m/s]")
+    plt.grid()
+    plt.show() 
     return time_stop
 
 def scan_for_min(t_len: float, times: list, values: list, start_time: float, end_time: float) -> tuple:
@@ -283,11 +291,11 @@ def scan_for_min(t_len: float, times: list, values: list, start_time: float, end
 
 def camera_sync(centers, times, t_width):
     """This function grabs a sample of the CAM data where we know the tape is being layed down
-        and then calculates the distance between consective data points. Once the minimum
+        and then calculates the distance between consecUtive data points. Once the minimum
         distance between data points has been found in the sample, then for data points after
         the sample, if the distance between them is smaller than some factor beta times the minimum
         distance found in the sample, then we know that the tape has been cut and xi = 930mm.
-        Then the coressponding time at xi is ti and this time can be used to sync the CAM data with
+        Then the corresponding time at xi is ti and this time can be used to sync the CAM data with
         other data sets"""
 
     center_velocities = [] # Set up list of velocities
@@ -419,16 +427,19 @@ def _space_time_shift(xx,tt,dx)->np.ndarray:
             # this datapoint doesn't exist
             # let future Johannes deal with that:
             dt.append(np.nan)
+            print(f"This resulted in an IndexError") # added by Martijn 29-04 around 20:45
     return dt
 
 def closest_idx(lst, K): # stolen from geeksforgeeks.com
     '''return index of the closest value to K'''
     return min(range(len(lst)), key = lambda i: abs(lst[i]-K))
 
-
 def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)->pd.DataFrame:
     '''gets the synced data of the given tow\n
     DONT USE THIS ONE! USE THE ONE IN THE HANDLING FILE'''
+
+    if inspect.stack()[1][3] != 'get_synced_data':
+        raise UserWarning("I Told you to not call this function >:(. use the one in Handling_ALL_Functions.py instead")
 
     # checks that inputs are valid:
     if tow not in range(1,32):
@@ -468,7 +479,7 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
         # do this by shifting the data in time, which makes it line up in space.
         timeshift_CAM = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_CAM)
         timeshift_LLS_A = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_LLS_A)
-        timeshift_LLS_B = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_CAM)
+        timeshift_LLS_B = _space_time_shift(frame_LT["x"],frame_LT["time"],constants.TCP_LLS_B) # changed by Martijn 29-04 at around 19:55 from ".TCP_CAM" to ".TCP_LLS_B"
 
         # fix the CAM:
         #find closest point index in time:
@@ -510,9 +521,16 @@ def _sync_time_data():
     raise NotImplementedError
 
 def main():
-    _get_synced_data(5)
-    for k in range(1,32):
-        _get_synced_data(k)
+    # for k in range(1,32):
+        k = 5
+        print(k)
+        width_LLS_A = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["width"]
+        LT_time = Handling_ALL_Functions.get_processed_data(k, "LT")["time"]
+        LT_x = Handling_ALL_Functions.get_processed_data(k, "LT")["x"]
+        LLS_A_time = Handling_ALL_Functions.get_processed_data(k, "LLS_A")["time"]
+        find_x930(Handling_ALL_Functions.get_processed_data(k, "LT")["x"], Handling_ALL_Functions.get_processed_data(k, "LT")["time"], "p") #PROPER X930 FIND USING PROCESSED DATA
+        # LLS_sync(width_LLS_A, LLS_A_time, "LLS_A", find_x930(LT_x, LT_time, "p")) # TODO There seems to be an issue with tow 1 so process tow 1 properly and also check why some tows dont give a t_width. After this all the syncs in time should work and work can be continued on adaprting the function x930 to also include the time sync.
 
 if __name__ == "__main__":
     main()
+

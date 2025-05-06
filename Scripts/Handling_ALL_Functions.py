@@ -1,17 +1,17 @@
 """
 For getting data from wherever we save it, and saving the data in that place
 
-Everything is wrapped up in get_processed_data(), just use that and everything will just work :)
-╔═══════════════════════════════════════════════════════╗
-║                                                       ║
-║  USE GET PROCESSED DATA AND IT DEALS WITH EVERYTHING! ║
-║  NO NEED TO DO ANITHING ELSE, IT FIXES EVERYTHING!    ║
-║                                                       ║
-╚═══════════════════════════════════════════════════════╝
+Everything is wrapped up in get_processed_data() or get_synced_data, just use that and everything will just work :)
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║  USE GET PROCESSED/SYNCED DATA AND IT DEALS WITH EVERYTHING! ║
+║  NO NEED TO DO ANITHING ELSE, IT FIXES EVERYTHING!           ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
 
-Now the get_synced_data() also exists, use that to get one (1) dataframe with all the data
+get_synced_data() outputs one (1) dataframe with all the data!
 
-authors: Johannes, ...
+authors: Johannes, Martijn, CJ, Sam
 """
 
 import numpy as np
@@ -134,8 +134,7 @@ def _handle_camera(time: list, left_edge: list, right_edge: list, width:list) ->
     return pandas_table
 
 ################################################################################################################
-
-'''extra stuff'''
+'''Extra functions that might be needed'''
 
 def time_to_float(date:str)->float:
     """converts a string into a float of time"""
@@ -159,7 +158,7 @@ def convert_coordinates(start:tuple,end:tuple, coord:tuple)->tuple:
     return proj_tangent, proj_normal 
 
 ################################################################################################################
-"""saving and loading data"""
+"""Functions for purging, saving and loading data"""
 
 _save_path = "Processed data\\"
 
@@ -224,6 +223,9 @@ def create_processed_cache()->None:
         get_synced_data(tow, spacesynced=False, overwrite=True)
         get_synced_data(tow, spacesynced=True, overwrite=True)
     print("Cache created!")
+
+################################################################################################################
+"""Functions for calling data"""
 
 def get_processed_data(tow:int, sensor_type:str, overwrite=False, helper=False)->pd.DataFrame:
     '''
