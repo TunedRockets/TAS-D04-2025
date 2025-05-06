@@ -6,21 +6,6 @@ from Handling_ALL_Functions import get_synced_data
 
 
 def plot_variable_relationships(test_ratio=0.5, show=True, save=False, save_path="variable_relationships.png"):
-    """
-    Plot pairwise relationships between key sensor variables across all tows,
-    using a train-test split.
-
-    Parameters
-    ----------
-    test_ratio : float
-        Proportion of data to reserve for testing.
-    show : bool
-        Whether to display the plot interactively.
-    save : bool
-        Whether to save the plot to disk.
-    save_path : str
-        Path to save the plot image if save is True.
-    """
     # Load and concatenate data from all tows
     all_data = []
     for tow_number in range(1, 32):
