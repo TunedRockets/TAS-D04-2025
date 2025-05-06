@@ -515,7 +515,7 @@ def _space_time_shift(xx,tt,dx)->np.ndarray:
 
             #now find t closest to x_1
             j = 0
-            while xx[i+j] < x_1: #fix: equal
+            while np.sign(dx)*(x_1-xx[i+j]) < 0: # complicated equality to (hopefully) do the right steps
                 j+= 1 * np.sign(dx)
             t_1 = tt[i+j] # the next time
             dt.append(t_1 - tt[i])
