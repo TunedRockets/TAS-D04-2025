@@ -1,3 +1,17 @@
+'''
+    Way the model works: We input our current error, which we will call x
+    A regression model is made by binning the data, calculate the mean of each bin and find a regression line
+    we calculate the mean of the next error from the regression model which we call y
+    the value of x, the previous error, corresponds to a certain bin which contains a normal curve the randomness in the deviation of y 
+    we extract a random point from the normal curve, and we add this value to the before calculated mean
+    
+    Note: we cant create a value of the mean or the histogram/normal curve of the devation for a certain data point of x(previous error),
+    because we don’t have enough data points at that precise point. This is why bins have been created: 
+    this works, but will obtain a slight bias, because the deviation normal curve does not 
+    correspond to the exact value of x, but only to the values around it
+'''
+
+
 #ideas for improvement:
 #Find optimum number of bins
 #only extract value of LLS B width if width_LLSB>width_LLSA
@@ -267,6 +281,13 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
         "LT", 0.5, num_bins=100, bins_show=bins_show)
     bin_stats_df2, slope2, intercept2, r_value2, p_value2, std_err2, x_sorted2, bin_edges2, deviations_per_bin2 = consecutive_error(
         "LLS_B", 0.5, num_bins=100, bins_show=bins_show)
+    bin_stats_df3, slope3, intercept3, r_value3, p_value3, std_err3, x_sorted3, bin_edges3, deviations_per_bin3 = consecutive_error(
+        "LLS_A", 0.5, num_bins=100, bins_show=bins_show)
+
+
+
+
+
 
     # Load real tow data
     synced_data_tow_1 = get_synced_data(tow=n_real_tow)
@@ -289,6 +310,10 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
     # --- Centerline Offset ---
     simulated_total_offset_centerline = simulated_tow_path_LT + simulated_tow_path_cam
     total_offset_real = synced_data_LT_tow_1 + synced_data_cam_tow_1
+
+
+
+
 
     # --- LLS_B Width ---
     synced_data_LLS_B_tow_error = synced_data_tow_1["width error_LLS_B"].values
