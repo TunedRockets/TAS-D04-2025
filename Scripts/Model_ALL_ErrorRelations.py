@@ -5,6 +5,10 @@ from sklearn.model_selection import train_test_split
 from Handling_ALL_Functions import get_synced_data
 
 
+
+
+
+
 def plot_variable_relationships(test_ratio=0.5, show=True, save=False, save_path="variable_relationships.png"):
     # Load and concatenate data from all tows
     all_data = []
