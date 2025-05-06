@@ -9,7 +9,7 @@ from constants import tow_width_specified
 from Handling_ALL_Functions import get_synced_data
 
 from Model_ALL_ConsecutiveErrorTheo import consecutive_error, generate_error_path
-from Data_ALL_statistics import main as real_hist
+from Data_ALL_statistics import main as real_hist, statistical_values, plot_histograms_separated, best_fit_distribution
 
 def save_distribution_data():
     def export_data(data_table: pd.DataFrame, short_name):
@@ -41,10 +41,107 @@ def save_all_distribution_data(_save_path, LT_short_name, CAM_short_name, LLSA_s
     save_distribution_data(data, LLSB_short_name)
 
 
+def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_widths: list[float] = None):
+    distribution_labels = {
+        'norm': 'Normal Distribution',
+        'logistic': 'Logistic Distribution',
+        'skewnorm': 'Skew-Normal Distribution',
+        'genextreme': 'Generalized Extreme Value'}
+
+    fig, ax = plt.subplots(2, 2, figsize=(10, 8))
+    fig.suptitle(title)
+    errors = [
+        real_data['width error_LLS_A'],
+        real_data['width error_LLS_B'],
+        real_data['error_LT'],
+        real_data['center_CAM']]
+
+    names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
+
+    titles = [
+        'Error Tape width before compaction',
+        'Error Tape width after compaction',
+        'Error robot position',
+        'Error tape lateral movement']
+
+    if bin_widths is None:
+        bin_widths = [None] * 4
+
+    for i, vals in enumerate(errors):
+        # print(f'TESTTEST: i={i}, vals={vals} #######################')
+        row, col = divmod(i, 2)
+        clean = vals.dropna().to_numpy()
+        mn, mx = clean.min(), clean.max()
+        bw = bin_widths[i]
+        bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
+
+        ax[row, col].hist(clean, bins=bins, alpha=0.6, density=True, label='real')
+        ax[row, col].hist(sim_data[i], bins=bins, alpha=0.6, density=True, label='simulated')
+        best = best_fit_distribution(clean, bins=len(bins) - 1)
+        dist, params = best['dist'], best['params']
+        friendly = distribution_labels.get(dist.name, dist.name)
+
+
+
+
+        # print(f"{names[i]} best fit: {friendly}")
+
+        x = np.linspace(mn, mx, 200)
+        pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
+
+        ax[row, col].plot(x, pdf, '-', lw=2, label=friendly)
+        ax[row, col].text(0.02, 0.95, friendly, transform=ax[row, col].transAxes,
+                          va='top', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+
+
+        ################
+        #ax[row, col].hist(sim_data[i], bins=bins, alpha=0.5, density=True, label='simulated', color='red')
+        #best = best_fit_distribution(sim_data[i], bins=len(bins) - 1)
+        #dist, params = best['dist'], best['params']
+        #friendly = distribution_labels.get(dist.name, dist.name)
+#
+        #ax[row, col].hist(sim_data[i], bins=bins, alpha=0.6, density=True, label='simulated')
+#
+        ## print(f"{names[i]} best fit: {friendly}")
+#
+        #x = np.linspace(mn, mx, 200)
+        #pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
+#
+        #ax[row, col].plot(x, pdf, '-', lw=2, label=friendly)
+        #ax[row, col].text(0.02, 0.95, friendly, transform=ax[row, col].transAxes,
+        #                  va='top', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+        ################
+
+        # Fix limits for individual plots for better visualization
+        if i == 1:
+            ax[row, col].set_xlim(-0.4, 0.2)
+        elif i == 2:
+            ax[row, col].set_xlim(-1.2, -0.75)
+        elif i == 3:
+            ax[row, col].set_xlim(-0.5, 1)
+
+        mean_val = clean.mean()
+        std_val = clean.std()
+        sim_mean = np.array(sim_data[i]).mean()
+        sim_std = np.array(sim_data[i]).std()
+
+        ax[row, col].axvline(mean_val, color='purple', linestyle='-',
+                             label=rf'Mean = {mean_val:.2f}' + '\n' + rf'$\sigma$ = {std_val:.2f}')
+        ax[row, col].axvline(sim_mean, color='red', linestyle='-',
+                             label=rf'Mean = {sim_mean:.2f}' + '\n' + rf'$\sigma$ = {sim_std:.2f}')
+
+        ax[row, col].set_title(titles[i])
+        ax[row, col].set_xlabel(names[i])
+        ax[row, col].set_ylabel('Density')
+        ax[row, col].legend()
+
+    plt.tight_layout(rect=[0, 0, 1, 1])
+    plt.show()
 
 
 
 def run_model(save_data: bool=False, use_saved: bool=False):
+    real_data = pd.concat((get_synced_data(t, spacesynced=False) for t in range(1, 32)), ignore_index=True)
     if use_saved:
         _save_path = "Script\\"
         LT_short_name = 'LT_Dist_Data'
@@ -65,15 +162,15 @@ def run_model(save_data: bool=False, use_saved: bool=False):
     LLSA_generated_bins_mean_var = []
     LLSB_generated_bins_mean_var = []
     generated_bins_mean_var = [LT_generated_bins_mean_var, CAM_generated_bins_mean_var, LLSA_generated_bins_mean_var, LLSB_generated_bins_mean_var]
-    for num_bins in range(10, 100, 10):
+    for num_bins in range(90, 96, 5):
         #num_bins = 30
         rs = 42
-        LT_dist = consecutive_error('LT', random_state=rs, num_bins=num_bins, test_ratio=0.00001)
-        CAM_dist = consecutive_error('CAM', random_state=rs, num_bins=num_bins, test_ratio=0.00001)
-        LLSA_dist = consecutive_error('LLS_A', random_state=rs, num_bins=num_bins, test_ratio=0.00001)
-        LLSB_dist = consecutive_error('LLS_B', random_state=rs, num_bins=num_bins, test_ratio=0.00001)
+        LT_dist = consecutive_error('LT', random_state=rs, num_bins=num_bins, test_ratio=0.00001, plot_fit=False)
+        CAM_dist = consecutive_error('CAM', random_state=rs, num_bins=num_bins, test_ratio=0.00001, plot_fit=False)
+        LLSA_dist = consecutive_error('LLS_A', random_state=rs, num_bins=num_bins, test_ratio=0.00001, plot_fit=False)
+        LLSB_dist = consecutive_error('LLS_B', random_state=rs, num_bins=num_bins, test_ratio=0.00001, plot_fit=False)
 
-        n_runs = 100
+        n_runs = 200
         total_data = []
         n_steps = 289
         total_error = [[], [], [], []]
@@ -93,6 +190,7 @@ def run_model(save_data: bool=False, use_saved: bool=False):
             total_error[2] = (total_error[2] + list(LLSA_error_list))
             total_error[3] = (total_error[3] + list(LLSB_error_list))
 
+
             #generated_data = []
             #x = 0
             #for i in range(len(LT_error_list)):
@@ -102,6 +200,13 @@ def run_model(save_data: bool=False, use_saved: bool=False):
             #    generated_data.append([x, centerline_error, width_error])
             #
             #generated_data = pd.DataFrame(generated_data, columns = ['x', 'error'])
+
+        plot_histograms(
+            real_data,
+            [total_error[2], total_error[3], total_error[0], total_error[1]],
+            title="Sensor Error Histograms (ALL TOWS BUT NOT SPACE SYNCED), num_bins=" + str(num_bins),
+            bin_widths=[0.01, 0.01, 0.005, 0.03]
+        )
 
         for i in range(4):
             mean = float(np.array(total_error[i]).mean())
@@ -137,35 +242,40 @@ def run_model(save_data: bool=False, use_saved: bool=False):
     LLSA_generated_bins_mean_var = np.array(LLSA_generated_bins_mean_var)
     LLSB_generated_bins_mean_var = np.array(LLSB_generated_bins_mean_var)
 
+    # plotting mean
     plt.subplot(223)
     plt.plot(LT_generated_bins_mean_var[:, 0], LT_generated_bins_mean_var[:, 1], label='mean')
-    plt.hlines(y=[-0.95], xmin=0, xmax=100, linestyle='dotted')
+    plt.hlines(y=[-0.94], xmin=0, xmax=100, linestyle='dotted')
     plt.title('LT')
+    # plt.ylim((min(LT_generated_bins_mean_var[:, 0]), max(LT_generated_bins_mean_var[:, 0])))
     plt.legend()
 
     plt.subplot(224)
     plt.plot(CAM_generated_bins_mean_var[:, 0], CAM_generated_bins_mean_var[:, 1], label='mean')
-    plt.hlines(y=[0.31], xmin=0, xmax=100, linestyle='dotted')
+    plt.hlines(y=[0.32], xmin=0, xmax=100, linestyle='dotted')
     plt.title('CAM')
+    # plt.ylim((min(CAM_generated_bins_mean_var[:, 1]), max(CAM_generated_bins_mean_var[:, 1])))
     plt.legend()
 
     plt.subplot(221)
     plt.plot(LLSA_generated_bins_mean_var[:, 0], LLSA_generated_bins_mean_var[:, 1], label='mean')
-    plt.hlines(y=[-0.26], xmin=0, xmax=100, linestyle='dotted')
+    plt.hlines(y=[-0.25], xmin=0, xmax=100, linestyle='dotted')
     plt.title('LLSA')
+    # plt.ylim((min(LLSA_generated_bins_mean_var[:, 1]), max(LLSA_generated_bins_mean_var[:, 1])))
     plt.legend()
 
     plt.subplot(222)
     plt.plot(LLSB_generated_bins_mean_var[:, 0], LLSB_generated_bins_mean_var[:, 1], label='mean')
-    plt.hlines(y=[-0.09], xmin=0, xmax=100, linestyle='dotted')
+    plt.hlines(y=[-0.08], xmin=0, xmax=100, linestyle='dotted')
     plt.title('LLSB')
+    # plt.ylim((min(LLSB_generated_bins_mean_var[:, 1]), max(LLSB_generated_bins_mean_var[:, 1])))
     plt.legend()
 
     plt.tight_layout()
     plt.show()
 
     ###############
-
+    # plotting variance
     plt.subplot(223)
     plt.plot(LT_generated_bins_mean_var[:, 0], LT_generated_bins_mean_var[:, 2], label='variance')
     plt.hlines(y=[0.05], xmin=0, xmax=100, linestyle='dotted')
