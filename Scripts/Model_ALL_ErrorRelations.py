@@ -51,7 +51,7 @@ def plot_variable_relationships(test_ratio=0.5, show=True, save=False, save_path
     # Create subplots for pairwise relationships
     variables = df_train.columns
     n = len(variables)
-    fig, axes = plt.subplots(n, n, figsize=(4.5 * n, 6.5 * n))  # Further increased vertical spacing
+    fig, axes = plt.subplots(n, n, figsize=(4.5 * n, 6.5 * n))  
 
     for i in range(n):
         for j in range(n):
