@@ -59,7 +59,7 @@ def draw_menu():
     button_width, button_height = 200, 50
     button_spacing = 20
     start_y = HEIGHT // 2 - (3 * button_height + 2 * button_spacing) // 2
-    buttons = ["Simulations", "Settings", "Quit"]
+    buttons = ["Simulation", "Settings", "Quit"]
 
     for i, label in enumerate(buttons):
         rect = pygame.Rect(WIDTH // 2 - button_width // 2,
