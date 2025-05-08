@@ -10,6 +10,7 @@ from Handling_ALL_Functions import get_synced_data
 
 from Model_ALL_ConsecutiveErrorTheo import consecutive_error, generate_error_path
 from Data_ALL_statistics import main as real_hist, statistical_values, plot_histograms_separated, best_fit_distribution
+import random
 
 def save_distribution_data():
     def export_data(data_table: pd.DataFrame, short_name):
@@ -142,6 +143,11 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
 
 def run_model(save_data: bool=False, use_saved: bool=False):
     real_data = pd.concat((get_synced_data(t, spacesynced=False) for t in range(1, 32)), ignore_index=True)
+
+    cam_start_range = (-0.4, 0.6)
+    lt_start_range = (-1, -0.8)
+    llsb_start_range = (-0.15, -0.02)
+
     if use_saved:
         _save_path = "Script\\"
         LT_short_name = 'LT_Dist_Data'
@@ -175,13 +181,16 @@ def run_model(save_data: bool=False, use_saved: bool=False):
         n_steps = 289
         total_error = [[], [], [], []]
         for run in range(n_runs):
-            LT_error_list = generate_error_path(-0.9, n_steps, LT_dist[1], LT_dist[2], LT_dist[-3], LT_dist[-2],
+            start_cam = random.uniform(*cam_start_range)
+            start_lt = random.uniform(*lt_start_range)
+            start_llsb = random.uniform(*llsb_start_range)
+            LT_error_list = generate_error_path(start_lt, n_steps, LT_dist[1], LT_dist[2], LT_dist[-3], LT_dist[-2],
                                                 LT_dist[-1], random_seed=run)
-            CAM_error_list = generate_error_path(0.2, n_steps, CAM_dist[1], CAM_dist[2], CAM_dist[-3], CAM_dist[-2],
+            CAM_error_list = generate_error_path(start_cam, n_steps, CAM_dist[1], CAM_dist[2], CAM_dist[-3], CAM_dist[-2],
                                                  CAM_dist[-1], random_seed=run)
             LLSA_error_list = generate_error_path(-0.25, n_steps, LLSA_dist[1], LLSA_dist[2], LLSA_dist[-3],
                                                   LLSA_dist[-2], LLSA_dist[-1], random_seed=run)
-            LLSB_error_list = generate_error_path(-0.2, n_steps, LLSB_dist[1], LLSB_dist[2], LLSB_dist[-3],
+            LLSB_error_list = generate_error_path(start_llsb, n_steps, LLSB_dist[1], LLSB_dist[2], LLSB_dist[-3],
                                                   LLSB_dist[-2], LLSB_dist[-1], random_seed=run)
 
 
