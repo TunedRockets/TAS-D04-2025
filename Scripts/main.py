@@ -13,10 +13,5 @@ start = time.time()
 # Handling_ALL_Functions.purge_cache() # argument is false so nobody accidentally does this (:
 # Handling_ALL_Functions.create_cache()
 # Handling_ALL_Functions.create_processed_cache()
-
-# run tow visualizer
-tow_visualizer()
-
-
 print(f"elapsed time: {time.time() - start} (s)")
 # will take some time to run
