@@ -550,24 +550,27 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
     print('total number of data points LLS_B', len(synced_data_LLS_B_tow_width))
 
 
-
-
-    plt.tight_layout()
-    plt.show()
     # --- Overlay Plot with Upper/Lower Boundaries ---
     plt.figure(figsize=(12, 5))
-    plt.plot(simulated_total_offset_centerline, label="total offset simulated", c="b")
+
+    # Simulated and real total offset (center lines) with dashed style
+    plt.plot(simulated_total_offset_centerline, label="total offset simulated", c="b", linestyle="--")
+    plt.plot(total_offset_real, label="real total offset", c="r", linestyle="--")
+
+    # Simulated and real upper/lower boundaries
     plt.plot(simulated_upper_boundary, label="upper boundary simulated", c="b")
     plt.plot(simulated_lower_boundary, label="lower boundary simulated", c="b")
-    plt.plot(total_offset_real, label="real total offset", c="r")
     plt.plot(real_upper_boundary, label="real upper boundary", c="r")
     plt.plot(real_lower_boundary, label="real lower boundary", c="r")
+
     plt.xlabel("Step")
     plt.ylabel("Error")
     plt.title("Simulated Machine Error Path Over Time")
     plt.grid(True)
     plt.legend()
+    plt.tight_layout()
     plt.show()
+
 
 
 # def peaksVSbins():

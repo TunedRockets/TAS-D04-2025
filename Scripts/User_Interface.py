@@ -47,7 +47,6 @@ def generate_multitow_layout_wrapped(num_tows, tow_width, tow_length):
     plt.show = original_show  # Restore show
     return fig
 
-
 def draw_button(text, rect, active=True):
     color = (70, 130, 180) if active else (100, 100, 100)
     pygame.draw.rect(screen, color, rect)
@@ -163,12 +162,26 @@ def draw_simulation():
     # Create a Pygame surface from the buffer
     image = pygame.image.frombuffer(buf, (width, height), "RGBA")
 
-    # Optionally, scale the image to fit the screen (optional)
-    image = pygame.transform.smoothscale(image, (WIDTH, HEIGHT))  # Resize if necessary
+    # Calculate the scaling factor to maintain aspect ratio
+    aspect_ratio = width / height
+    if width > HEIGHT or height > WIDTH:
+        # Resize to fit within the screen while maintaining aspect ratio
+        if aspect_ratio > 1:
+            new_width = min(width, WIDTH)
+            new_height = int(new_width / aspect_ratio)
+        else:
+            new_height = min(height, HEIGHT)
+            new_width = int(new_height * aspect_ratio)
+        
+        # Resize the image
+        image = pygame.transform.smoothscale(image, (new_width, new_height))
+    else:
+        # No resizing needed, use original size
+        new_width, new_height = width, height
 
     # Center the image in the Pygame window
-    x = (WIDTH - width) // 2
-    y = (HEIGHT - height) // 2
+    x = (WIDTH - new_width) // 2
+    y = (HEIGHT - new_height) // 2
     screen.blit(image, (x, y))  # Blit the image to the screen
 
     # Draw "Back" button
