@@ -137,9 +137,9 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     print(f"Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
 
     return gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent
-gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=1)
 
 def main():
+    gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=1)
     # Plot the gap(s) over steps (not time)
     plt.figure(figsize=(12, 5))
     for column in gap_overlap_df.columns:

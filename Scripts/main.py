@@ -17,6 +17,5 @@ start = time.time()
 num_tows = 1
 gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows)
 
-
 print(f"elapsed time: {time.time() - start} (s)")
 # will take some time to run
