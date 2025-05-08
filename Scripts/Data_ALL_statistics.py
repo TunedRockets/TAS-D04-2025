@@ -346,12 +346,12 @@ def main():
         df,
         title="Sensor Error Histograms (ALL TOWS)",
         bin_widths=[0.005, 0.005, 0.005, 0.03],
-        run = True)
+        run = False)
 
     plot_LLSA_vs_LLSB(df,
         title="Error LLS A vs. Error LLS B (ALL TOWS)",
         bin_widths=[0.005, 0.005],
-        run = False)
+        run = True)
 
 if __name__ == "__main__":
     main()
