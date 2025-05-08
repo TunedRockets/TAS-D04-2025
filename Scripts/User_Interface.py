@@ -29,23 +29,43 @@ state = MENU
 
 # Default settings
 num_tows = 2
-tow_width = 6
-tow_length = 100
+tow_width = 6.35
+tow_length = 500
 tow_positions = [(50, 50), (150, 150)]
 active_input_field = None
 input_text = ""
+
+def generate_multitow_layout_wrapped(num_tows, tow_width, tow_length):
+    # Save and override plt.show
+    original_show = plt.show
+    plt.show = lambda *args, **kwargs: None  # Disable showing
+
+    plt.clf()
+    gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows, tow_width, tow_length)
+    fig = plt.gcf()
+
+    plt.show = original_show  # Restore show
+    return fig, gap_percent, overlap_percent
 
 def draw_button(text, rect, active=True):
     color = (70, 130, 180) if active else (100, 100, 100)
     pygame.draw.rect(screen, color, rect)
     label = font.render(text, True, (255, 255, 255))
-    screen.blit(label, (rect.x + 10, rect.y + 10))
+    label_rect = label.get_rect(center=rect.center)
+    screen.blit(label, label_rect)
 
 def draw_menu():
     screen.fill((30, 30, 30))
-    draw_button("Simulations", pygame.Rect(WIDTH//2 - 100, HEIGHT//2 - 100, 200, 50))
-    draw_button("Settings", pygame.Rect(WIDTH//2 - 100, HEIGHT//2, 200, 50))
-    draw_button("Quit", pygame.Rect(WIDTH//2 - 100, HEIGHT//2 + 100, 200, 50))
+    button_width, button_height = 200, 50
+    button_spacing = 20
+    start_y = HEIGHT // 2 - (3 * button_height + 2 * button_spacing) // 2
+    buttons = ["Simulations", "Settings", "Quit"]
+
+    for i, label in enumerate(buttons):
+        rect = pygame.Rect(WIDTH // 2 - button_width // 2,
+                        start_y + i * (button_height + button_spacing),
+                        button_width, button_height)
+        draw_button(label, rect)
 
 def draw_settings():
     screen.fill((40, 40, 40))
@@ -101,9 +121,9 @@ def handle_settings_events(event):
     elif event.type == pygame.KEYDOWN and active_input_field is not None:
         if event.key == pygame.K_RETURN:
             try:
-                value = int(input_text)
+                value = float(input_text)
                 if active_input_field == 0:
-                    num_tows = value
+                    num_tows = int(value)
                 elif active_input_field == 1:
                     tow_width = value
                 elif active_input_field == 2:
@@ -117,7 +137,7 @@ def handle_settings_events(event):
             input_text = input_text[:-1]
         else:
             char = event.unicode
-            if char.isdigit():
+            if char.isdigit() or (char == '.' and '.' not in input_text):
                 input_text += char
 
 def wait_for_back():
@@ -133,64 +153,56 @@ def wait_for_back():
                 state = MENU
                 return
 
-def generate_multitow_layout_wrapped(num_tows, tow_width, tow_length):
-    # Save and override plt.show to disable automatic display
-    original_show = plt.show
-    plt.show = lambda *args, **kwargs: None  # Disable showing
-
-    plt.clf()  # Clear any previous plots
-    generate_multitow_layout(num_tows, tow_width, tow_length)
-    fig = plt.gcf()  # Get the current figure
-
-    plt.show = original_show  # Restore plt.show to default behavior
-    return fig
-
 def draw_simulation():
     screen.fill((0, 0, 0))  # Clear screen
 
-    # Generate figure when the simulation screen is active
-    fig = generate_multitow_layout_wrapped(num_tows, tow_width, tow_length)
+    # Get the Matplotlib figure and values
+    fig, gap_percent, overlap_percent = generate_multitow_layout_wrapped(num_tows, tow_width, tow_length)
 
     # Render the figure to a buffer (Agg backend)
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
-    
-    # Convert the buffer into a Pygame-compatible image
-    buf = canvas.buffer_rgba()  # Buffer contains RGBA data
-    width, height = canvas.get_width_height()  # Get figure dimensions
+    buf = canvas.buffer_rgba()
+    width, height = canvas.get_width_height()
 
-    # Create a Pygame surface from the buffer
     image = pygame.image.frombuffer(buf, (width, height), "RGBA")
 
     # Calculate the scaling factor to maintain aspect ratio
     aspect_ratio = width / height
     if width > HEIGHT or height > WIDTH:
-        # Resize to fit within the screen while maintaining aspect ratio
         if aspect_ratio > 1:
             new_width = min(width, WIDTH)
             new_height = int(new_width / aspect_ratio)
         else:
             new_height = min(height, HEIGHT)
             new_width = int(new_height * aspect_ratio)
-        
-        # Resize the image
         image = pygame.transform.smoothscale(image, (new_width, new_height))
     else:
-        # No resizing needed, use original size
         new_width, new_height = width, height
 
-    # Center the image in the Pygame window
+    # Center the image
     x = (WIDTH - new_width) // 2
     y = (HEIGHT - new_height) // 2
-    screen.blit(image, (x, y))  # Blit the image to the screen
+    screen.blit(image, (x, y))
 
-    # Draw "Back" button
+    # Draw percentages below the image
+    info_text = f"Gap %: {gap_percent:.2f}    Overlap %: {overlap_percent:.2f}"
+    info_surface = font.render(info_text, True, (255, 255, 255))
+    info_rect = info_surface.get_rect(center=(WIDTH // 2, y + new_height + 30))
+    screen.blit(info_surface, info_rect)
+
+    # Draw Back button
     draw_button("Back", pygame.Rect(50, HEIGHT - 70, 100, 40))
 
-    pygame.display.flip()  # Update the display
-
-    # Wait for user to click "Back"
+    pygame.display.flip()
     wait_for_back()
+
+def draw_loading_screen():
+    screen.fill((20, 20, 20))
+    loading_text = font.render("Generating simulation...", True, (255, 255, 255))
+    loading_rect = loading_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    screen.blit(loading_text, loading_rect)
+    pygame.display.flip()
 
 def main():
     global state
@@ -202,19 +214,37 @@ def main():
 
             if state == MENU:
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    sim_rect = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 - 100, 200, 50)
-                    settings_rect = pygame.Rect(WIDTH//2 - 100, HEIGHT//2, 200, 50)
-                    quit_rect = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 + 100, 200, 50)
+                    button_width, button_height = 200, 50
+                    button_spacing = 20
+                    start_y = HEIGHT // 2 - (3 * button_height + 2 * button_spacing) // 2
+                    button_labels = ["Simulations", "Settings", "Quit"]
 
-                    if sim_rect.collidepoint(event.pos):
-                        state = SIMULATION  # Enter the simulation state
-                        draw_simulation()  # Generate the figure and render it
-                        state = MENU  # Return to the menu after simulation
-                    elif settings_rect.collidepoint(event.pos):
-                        state = SETTINGS
-                    elif quit_rect.collidepoint(event.pos):
-                        pygame.quit()
-                        sys.exit()
+                    for i, label in enumerate(button_labels):
+                        rect = pygame.Rect(
+                            WIDTH // 2 - button_width // 2,
+                            start_y + i * (button_height + button_spacing),
+                            button_width,
+                            button_height
+                        )
+                        if rect.collidepoint(event.pos):
+                            if label == "Simulations":
+                                # Step 2: Draw loading screen
+                                screen.fill((0, 0, 0))
+                                loading_text = font.render("Loading simulation...", True, (255, 255, 255))
+                                loading_rect = loading_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+                                screen.blit(loading_text, loading_rect)
+                                pygame.display.flip()  # Force update to show loading screen
+
+                                # Continue to simulation
+                                state = SIMULATION
+                                draw_simulation()
+                                state = MENU
+                            elif label == "Settings":
+                                state = SETTINGS
+                            elif label == "Quit":
+                                pygame.quit()
+                                sys.exit()
+
 
             elif state == SETTINGS:
                 handle_settings_events(event)

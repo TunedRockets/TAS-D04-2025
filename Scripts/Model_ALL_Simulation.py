@@ -99,7 +99,7 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     plt.legend(loc="upper right", ncol=2)
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
+    
 
     #gaps and overlaps calculation
     #Compute vertical gaps between adjacent tows
@@ -137,6 +137,7 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     print(f"Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
 
     return gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent
+
 gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=1)
 
 # Plot the gap(s) over steps (not time)
@@ -147,15 +148,11 @@ for column in gap_overlap_df.columns:
 plt.xlabel("Step")
 plt.ylabel("Distance between tows (mm): positive for gap, negative for overlap")
 plt.title(f"Vertical Gaps Between Adjacent Tows Over Steps\n"
-          f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
+        f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
 plt.axhline(0, color='gray', linestyle='--', linewidth=1)
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.show()
-
-
-
 
 
 
@@ -224,4 +221,10 @@ def calculate_real_gap_overlap_percentages(num_tows=5, tow_spacing_mm=6.35):
     print(f"[REAL] Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
 
     return gap_overlap_data, gap_percent, overlap_percent
-real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
+
+def main():
+
+    real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
+    
+if __name__ == "__main__":
+    main()
