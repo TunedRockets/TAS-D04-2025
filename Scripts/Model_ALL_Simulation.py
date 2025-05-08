@@ -1,10 +1,47 @@
-
+from Model_ALL_ConsecutiveErrorTheo import *
 import numpy as np
 import matplotlib.pyplot as plt
-import random
-from Model_ALL_ConsecutiveErrorTheo import consecutive_error, generate_error_path
+import scipy.stats as stats
 from Handling_ALL_Functions import get_synced_data
+import random
 import pandas as pd
+
+#starting error distribution can be found here, but is assumed to be uniform based on these graphs ranges of values
+def fit_starting_error_distribution(sensor: str, plot=True):
+    column_map = {
+        "CAM": "center_CAM",
+        "LT": "error_LT",
+        "LLS_A": "width error_LLS_A",
+        "LLS_B": "width error_LLS_B"
+    }
+
+    col_name = column_map[sensor]
+    first_values = []
+
+    for tow in range(2, 32):
+        df = get_synced_data(tow, spacesynced=True)
+
+        if col_name in df.columns and not df[col_name].isna().all():
+            value = df[col_name].dropna().values[0]  # get first non-NaN value
+            first_values.append(value)
+ 
+
+    mu, sigma = stats.norm.fit(first_values)
+
+    if plot:
+        plt.figure(figsize=(8, 5))
+        count, bins, _ = plt.hist(first_values, bins=len(first_values), density=True, edgecolor="black", alpha=0.7, label="Start Values")
+        x = np.linspace(min(bins), max(bins), 100)
+        plt.plot(x, stats.norm.pdf(x, mu, sigma), 'r--', label=f"Fit: μ={mu:.2f}, σ={sigma:.2f}")
+        plt.title(f"Start Error Distribution - {sensor}")
+        plt.xlabel("Start Error [mm]")
+        plt.ylabel("Density")
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
+    return mu, sigma, first_values
 
 
 
@@ -62,7 +99,7 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     plt.legend(loc="upper right", ncol=2)
     plt.grid(True)
     plt.tight_layout()
-    
+    plt.show()
 
     #gaps and overlaps calculation
     #Compute vertical gaps between adjacent tows
@@ -100,8 +137,7 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     print(f"Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
 
     return gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent
-
-gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=1)
+gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=10)
 
 # Plot the gap(s) over steps (not time)
 plt.figure(figsize=(12, 5))
@@ -111,11 +147,15 @@ for column in gap_overlap_df.columns:
 plt.xlabel("Step")
 plt.ylabel("Distance between tows (mm): positive for gap, negative for overlap")
 plt.title(f"Vertical Gaps Between Adjacent Tows Over Steps\n"
-        f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
+          f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
 plt.axhline(0, color='gray', linestyle='--', linewidth=1)
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
+plt.show()
+
+
+
 
 
 
@@ -184,10 +224,4 @@ def calculate_real_gap_overlap_percentages(num_tows=5, tow_spacing_mm=6.35):
     print(f"[REAL] Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
 
     return gap_overlap_data, gap_percent, overlap_percent
-
-def main():
-
-    real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
-    
-if __name__ == "__main__":
-    main()
+real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
