@@ -66,217 +66,222 @@ def statistical_values(data: pd.DataFrame):
 
 '''Plots all histograms in the same Figure. 
 The x-axis is manually set for each plot for better visualization.'''
-def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = None):
-    distribution_labels = {
-        'norm':     'Normal Distribution',
-        'logistic': 'Logistic Distribution',
-        'skewnorm': 'Skew-Normal Distribution',
-        'genextreme':'Generalized Extreme Value'}
+def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = None, run = bool):
+
+    if run == True:
+        distribution_labels = {
+            'norm':     'Normal Distribution',
+            'logistic': 'Logistic Distribution',
+            'skewnorm': 'Skew-Normal Distribution',
+            'genextreme':'Generalized Extreme Value'}
 
 
-    fig, ax = plt.subplots(2, 2, figsize=(10, 8))
-    fig.suptitle(title)
-    errors = [
-        data['width error_LLS_A'],
-        data['width error_LLS_B'],
-        data['error_LT'],
-        data['center_CAM']]
-    
-    names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
-
-    titles = [
-        'Error Tape width before compaction',
-        'Error Tape width after compaction',
-        'Error robot position',
-        'Error tape lateral movement']
-    
-
-    if bin_widths is None:
-        bin_widths = [None] * 4
-
-    for i, vals in enumerate(errors):
-        row, col = divmod(i, 2)
-        clean = vals.dropna().to_numpy()
-        mn, mx = clean.min(), clean.max()
-        bw = bin_widths[i]
-        bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
-
-        ax[row, col].hist(clean, bins=bins, alpha=0.6, density=True)
-        best = best_fit_distribution(clean, bins=len(bins) - 1)
-        dist, params = best['dist'], best['params']
-        friendly = distribution_labels.get(dist.name, dist.name)
-
-        print(f"{names[i]} best fit: {friendly}")
-
-        x = np.linspace(mn, mx, 200)
-        pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
+        fig, ax = plt.subplots(2, 2, figsize=(10, 8))
+        fig.suptitle(title)
+        errors = [
+            data['width error_LLS_A'],
+            data['width error_LLS_B'],
+            data['error_LT'],
+            data['center_CAM']]
         
-        ax[row, col].plot(x, pdf, '-', lw=2, label=friendly)
-        ax[row, col].text(0.02, 0.95, friendly, transform=ax[row, col].transAxes,
-                         va='top', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+        names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
+
+        titles = [
+            'Error Tape width before compaction',
+            'Error Tape width after compaction',
+            'Error robot position',
+            'Error tape lateral movement']
         
-        # Fix limits for individual plots for better visualization
-        if i == 1:
-            ax[row, col].set_xlim(-0.4, 0.2)
-        elif i == 2:
-            ax[row, col].set_xlim(-1.2, -0.75)
-        elif i == 3:
-            ax[row, col].set_xlim(-0.5, 1)
+
+        if bin_widths is None:
+            bin_widths = [None] * 4
+
+        for i, vals in enumerate(errors):
+            row, col = divmod(i, 2)
+            clean = vals.dropna().to_numpy()
+            mn, mx = clean.min(), clean.max()
+            bw = bin_widths[i]
+            bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
+
+            ax[row, col].hist(clean, bins=bins, alpha=0.6, density=True)
+            best = best_fit_distribution(clean, bins=len(bins) - 1)
+            dist, params = best['dist'], best['params']
+            friendly = distribution_labels.get(dist.name, dist.name)
+
+            print(f"{names[i]} best fit: {friendly}")
+
+            x = np.linspace(mn, mx, 200)
+            pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
+            
+            ax[row, col].plot(x, pdf, '-', lw=2, label=friendly)
+            ax[row, col].text(0.02, 0.95, friendly, transform=ax[row, col].transAxes,
+                            va='top', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+            
+            # Fix limits for individual plots for better visualization
+            if i == 1:
+                ax[row, col].set_xlim(-0.4, 0.2)
+            elif i == 2:
+                ax[row, col].set_xlim(-1.2, -0.75)
+            elif i == 3:
+                ax[row, col].set_xlim(-0.5, 1)
 
 
-        mean_val = clean.mean()
-        std_val  = clean.std()
+            mean_val = clean.mean()
+            std_val  = clean.std()
 
-        ax[row, col].axvline(mean_val, color='black', linestyle='-',
-                             label=rf'Mean = {mean_val:.2f}' + '\n' + rf'$\sigma$ = {std_val:.2f}')
+            ax[row, col].axvline(mean_val, color='black', linestyle='-',
+                                label=rf'Mean = {mean_val:.2f}' + '\n' + rf'$\sigma$ = {std_val:.2f}')
 
 
-        ax[row, col].set_title(titles[i])
-        ax[row, col].set_xlabel(names[i])
-        ax[row, col].set_ylabel('Density')
-        ax[row, col].legend()
+            ax[row, col].set_title(titles[i])
+            ax[row, col].set_xlabel(names[i])
+            ax[row, col].set_ylabel('Density')
+            ax[row, col].legend()
 
-    plt.tight_layout(rect=[0, 0, 1, 1])
-    plt.show()
+        plt.tight_layout(rect=[0, 0, 1, 1])
+        plt.show()
 
 '''Plots all histograms in different Figures. 
 The x-axis has the same range for all figures.'''
-def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[float] = None):
-    
-    distribution_labels = {
-        'norm':     'Normal Distribution',
-        'logistic': 'Logistic Distribution',
-        'skewnorm': 'Skew-Normal Distribution',
-        'genextreme':'Generalized Extreme Value'}
+def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[float] = None, run = bool):
 
-    errors = [
-        data['width error_LLS_A'],
-        data['width error_LLS_B'],
-        data['error_LT'],
-        data['center_CAM']]
+    if run == True:
+        distribution_labels = {
+            'norm':     'Normal Distribution',
+            'logistic': 'Logistic Distribution',
+            'skewnorm': 'Skew-Normal Distribution',
+            'genextreme':'Generalized Extreme Value'}
 
-    names = [
-        'width error_LLS_A',
-        'width error_LLS_B',
-        'error_LT',
-        'error_CAM']
+        errors = [
+            data['width error_LLS_A'],
+            data['width error_LLS_B'],
+            data['error_LT'],
+            data['center_CAM']]
 
-    titles = [
-        'Error Tape Width Before Compaction',
-        'Error Tape Width After Compaction',
-        'Error Robot Position',
-        'Error Tape Lateral Movement']
-    
+        names = [
+            'width error_LLS_A',
+            'width error_LLS_B',
+            'error_LT',
+            'error_CAM']
 
-    if bin_widths is None:
-        bin_widths = [None] * 4
+        titles = [
+            'Error Tape Width Before Compaction',
+            'Error Tape Width After Compaction',
+            'Error Robot Position',
+            'Error Tape Lateral Movement']
+        
 
-    for i, vals in enumerate(errors):
-        # Clean up the data: drop NaNs and convert to a NumPy array
-        clean = vals.dropna().to_numpy()
-    
-        # Find the data range for bin width calculation
-        mn, mx = clean.min(), clean.max()
-    
-        # Determine bin width for this series (None -> default 40 bins)
-        bw = bin_widths[i]
-        bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
-    
-        # Create a new figure for this individual histogram
+        if bin_widths is None:
+            bin_widths = [None] * 4
+
+        for i, vals in enumerate(errors):
+            # Clean up the data: drop NaNs and convert to a NumPy array
+            clean = vals.dropna().to_numpy()
+        
+            # Find the data range for bin width calculation
+            mn, mx = clean.min(), clean.max()
+        
+            # Determine bin width for this series (None -> default 40 bins)
+            bw = bin_widths[i]
+            bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
+        
+            # Create a new figure for this individual histogram
+            fig, ax = plt.subplots(figsize=(6, 4))
+            fig.suptitle(f"{title} — {titles[i]}")
+        
+            # Plot the histogram of the cleaned data
+            ax.hist(clean, bins=bins, alpha=0.6, density=True)
+        
+            # Fit the best probability distribution to the data using best_fit_distribution()
+            best = best_fit_distribution(clean, bins=len(bins) - 1)
+            dist, params = best['dist'], best['params']
+        
+        
+            friendly = distribution_labels.get(dist.name, dist.name)
+        
+            # Prepare x‐values for plotting the fitted PDF
+            x = np.linspace(mn, mx, 200)
+            # Compute the PDF using the fitted parameters
+            pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
+        
+            # Plot the fitted PDF on the histogram
+            ax.plot(x, pdf, 'r-', lw=2, label=friendly)
+            # Annotate with the distribution name in a small textbox
+            ax.text(
+                0.02, 0.95, friendly,
+                transform=ax.transAxes,
+                va='top',
+                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+        
+            # Compute summary statistics for this dataset
+            # Can be changed if some other statistic is interesting showing
+            mean_val = clean.mean()
+            std_val  = clean.std()
+
+
+
+            ax.axvline(mean_val, color='orange', linestyle='-',
+                                label=rf'Mean = {mean_val:.2f}' + '\n' + rf'$\sigma$ = {std_val:.2f}')
+            ax.axvline(0.0, color='black', linestyle='dashed')
+
+
+            # All distributions are shown with this x-axis range
+            ax.set_xlim(-1.2, 1.0)
+            ax.set_title(titles[i])
+            ax.set_xlabel(names[i])
+            ax.set_ylabel('Density')
+            ax.legend()
+
+            plt.tight_layout(rect=[0, 0, 1, 0.95])
+
+
+        plt.show()
+
+
+def plot_LLSA_vs_LLSB(data: pd.DataFrame, title:str, bin_widths: list[float] =None, run = bool):
+
+    if run == True:
+
+        distribution_labels = {
+            'norm':     'Normal Distribution',
+            'logistic': 'Logistic Distribution',
+            'skewnorm': 'Skew-Normal Distribution',
+            'genextreme':'Generalized Extreme Value'}
+        
+        clean_A = data['width error_LLS_A'].dropna().to_numpy()
+        clean_B = data['width error_LLS_B'].dropna().to_numpy()
+
+    # Common binning based on combined data
+        combined = np.concatenate((clean_A, clean_B))
+        mn, mx = combined.min(), combined.max()
+        bw = bin_widths[0] or (mx - mn) / 40
+        bins = np.arange(mn, mx + bw, bw)
+
+    # Plot both histograms in the same figure
         fig, ax = plt.subplots(figsize=(6, 4))
-        fig.suptitle(f"{title} — {titles[i]}")
-    
-        # Plot the histogram of the cleaned data
-        ax.hist(clean, bins=bins, alpha=0.6, density=True)
-    
-        # Fit the best probability distribution to the data using best_fit_distribution()
-        best = best_fit_distribution(clean, bins=len(bins) - 1)
-        dist, params = best['dist'], best['params']
-    
-    
-        friendly = distribution_labels.get(dist.name, dist.name)
-    
-        # Prepare x‐values for plotting the fitted PDF
-        x = np.linspace(mn, mx, 200)
-        # Compute the PDF using the fitted parameters
-        pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
-    
-        # Plot the fitted PDF on the histogram
-        ax.plot(x, pdf, 'r-', lw=2, label=friendly)
-        # Annotate with the distribution name in a small textbox
-        ax.text(
-            0.02, 0.95, friendly,
-            transform=ax.transAxes,
-            va='top',
-            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
-    
-        # Compute summary statistics for this dataset
-        # Can be changed if some other statistic is interesting showing
-        mean_val = clean.mean()
-        std_val  = clean.std()
+        fig.suptitle("LLS_A vs. LLS_B")
 
+    # Plot histograms
+        ax.hist(clean_A, bins=bins, alpha=0.5, density=True, label='LLS_A')
+        ax.hist(clean_B, bins=bins, alpha=0.5, density=True, label='LLS_B')
 
+    # Fit and plot distributions
+        for clean, label in [(clean_A, 'LLS_A'), (clean_B, 'LLS_B')]:
+            best = best_fit_distribution(clean, bins=len(bins) - 1)
+            dist, params = best['dist'], best['params']
+            friendly = distribution_labels.get(dist.name, dist.name)
+            x = np.linspace(mn, mx, 200)
+            pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
+            ax.plot(x, pdf, lw=2, label=f'{label} Fit: {friendly}')
 
-        ax.axvline(mean_val, color='orange', linestyle='-',
-                             label=rf'Mean = {mean_val:.2f}' + '\n' + rf'$\sigma$ = {std_val:.2f}')
+    # Styling
         ax.axvline(0.0, color='black', linestyle='dashed')
-
-
-        # All distributions are shown with this x-axis range
         ax.set_xlim(-1.2, 1.0)
-        ax.set_title(titles[i])
-        ax.set_xlabel(names[i])
-        ax.set_ylabel('Density')
+        ax.set_xlabel("Error (width)")
+        ax.set_ylabel("Density")
         ax.legend()
-
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
-
-
-    plt.show()
-
-
-def plot_LLSA_vs_LLSB(data: pd.DataFrame, title:str, bin_widths: list[float] =None):
-
-    distribution_labels = {
-        'norm':     'Normal Distribution',
-        'logistic': 'Logistic Distribution',
-        'skewnorm': 'Skew-Normal Distribution',
-        'genextreme':'Generalized Extreme Value'}
-    
-    clean_A = data['width error_LLS_A'].dropna().to_numpy()
-    clean_B = data['width error_LLS_B'].dropna().to_numpy()
-
-# Common binning based on combined data
-    combined = np.concatenate((clean_A, clean_B))
-    mn, mx = combined.min(), combined.max()
-    bw = bin_widths[0] or (mx - mn) / 40
-    bins = np.arange(mn, mx + bw, bw)
-
-# Plot both histograms in the same figure
-    fig, ax = plt.subplots(figsize=(6, 4))
-    fig.suptitle("LLS_A vs. LLS_B")
-
-# Plot histograms
-    ax.hist(clean_A, bins=bins, alpha=0.5, density=True, label='LLS_A')
-    ax.hist(clean_B, bins=bins, alpha=0.5, density=True, label='LLS_B')
-
-# Fit and plot distributions
-    for clean, label in [(clean_A, 'LLS_A'), (clean_B, 'LLS_B')]:
-        best = best_fit_distribution(clean, bins=len(bins) - 1)
-        dist, params = best['dist'], best['params']
-        friendly = distribution_labels.get(dist.name, dist.name)
-        x = np.linspace(mn, mx, 200)
-        pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
-        ax.plot(x, pdf, lw=2, label=f'{label} Fit: {friendly}')
-
-# Styling
-    ax.axvline(0.0, color='black', linestyle='dashed')
-    ax.set_xlim(-1.2, 1.0)
-    ax.set_xlabel("Error (width)")
-    ax.set_ylabel("Density")
-    ax.legend()
-    plt.tight_layout()
-    plt.show()
+        plt.tight_layout()
+        plt.show()
 
     
 
@@ -330,21 +335,23 @@ def best_fit_distribution(data, bins=40, distributions=None):
 def main():
     df = pd.concat((get_synced_data(t, spacesynced=True) for t in range(2,32)), ignore_index=True)
 
+    # To make the plots appear, change run=False to run=True
+
     plot_histograms(
         df,
         title="Sensor Error Histograms (ALL TOWS)",
-        bin_widths=[0.005, 0.005, 0.005, 0.03]
-    )
+        bin_widths=[0.005, 0.005, 0.005, 0.03], 
+        run = False)
     plot_histograms_separated(
         df,
         title="Sensor Error Histograms (ALL TOWS)",
-        bin_widths=[0.005, 0.005, 0.005, 0.03]
-    )
+        bin_widths=[0.005, 0.005, 0.005, 0.03],
+        run = True)
 
     plot_LLSA_vs_LLSB(df,
         title="Error LLS A vs. Error LLS B (ALL TOWS)",
-        bin_widths=[0.005, 0.005]
-        )
+        bin_widths=[0.005, 0.005],
+        run = False)
 
 if __name__ == "__main__":
     main()

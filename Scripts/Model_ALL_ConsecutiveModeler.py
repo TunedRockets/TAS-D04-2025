@@ -385,3 +385,9 @@ def tow_visualizer(tows: list[pd.DataFrame], y_intended: list, name: str, ideal:
     plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
     plt.tight_layout()
     plt.show()
+
+def main():
+    print("Hello world")
+
+if __name__ == "__main__":
+    main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
