@@ -35,18 +35,6 @@ tow_positions = [(50, 50), (150, 150)]
 active_input_field = None
 input_text = ""
 
-def generate_multitow_layout_wrapped(num_tows, tow_width, tow_length):
-    # Save and override plt.show
-    original_show = plt.show
-    plt.show = lambda *args, **kwargs: None  # Disable showing
-
-    plt.clf()
-    generate_multitow_layout(num_tows, tow_width, tow_length)
-    fig = plt.gcf()
-
-    plt.show = original_show  # Restore show
-    return fig
-
 def draw_button(text, rect, active=True):
     color = (70, 130, 180) if active else (100, 100, 100)
     pygame.draw.rect(screen, color, rect)
@@ -145,10 +133,22 @@ def wait_for_back():
                 state = MENU
                 return
 
+def generate_multitow_layout_wrapped(num_tows, tow_width, tow_length):
+    # Save and override plt.show to disable automatic display
+    original_show = plt.show
+    plt.show = lambda *args, **kwargs: None  # Disable showing
+
+    plt.clf()  # Clear any previous plots
+    generate_multitow_layout(num_tows, tow_width, tow_length)
+    fig = plt.gcf()  # Get the current figure
+
+    plt.show = original_show  # Restore plt.show to default behavior
+    return fig
+
 def draw_simulation():
     screen.fill((0, 0, 0))  # Clear screen
 
-    # Get the Matplotlib figure
+    # Generate figure when the simulation screen is active
     fig = generate_multitow_layout_wrapped(num_tows, tow_width, tow_length)
 
     # Render the figure to a buffer (Agg backend)
@@ -207,9 +207,9 @@ def main():
                     quit_rect = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 + 100, 200, 50)
 
                     if sim_rect.collidepoint(event.pos):
-                        state = SIMULATION
-                        draw_simulation()
-                        state = MENU
+                        state = SIMULATION  # Enter the simulation state
+                        draw_simulation()  # Generate the figure and render it
+                        state = MENU  # Return to the menu after simulation
                     elif settings_rect.collidepoint(event.pos):
                         state = SETTINGS
                     elif quit_rect.collidepoint(event.pos):
