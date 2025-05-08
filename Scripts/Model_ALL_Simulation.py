@@ -5,8 +5,8 @@ import scipy.stats as stats
 from Handling_ALL_Functions import get_synced_data
 import random
 import pandas as pd
-#there might be an error in calculating
 
+#
 def fit_starting_error_distribution(sensor: str, plot=True):
     column_map = {
         "CAM": "center_CAM",
@@ -56,7 +56,7 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
         "LLS_B", test_ratio=0.5, num_bins=100, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     #get perfect offsets
     offsets = np.linspace(-(num_tows - 1) / 2, (num_tows - 1) / 2, num_tows) * tow_spacing_mm
-    plt.figure(figsize=(30, 8))
+    plt.figure(figsize=(12, 8))
     #for coloring properly (chatgpt did the plotting)
     cmap = plt.get_cmap("tab10")
     x_vals = np.arange(n_steps)
@@ -93,8 +93,8 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
         plt.plot([offset]*n_steps, linestyle="--", color="gray", alpha=0.6,
                  label="Ideal Centerline" if i == 0 else "")
 
-    plt.xlabel("Step")
-    plt.ylabel("Position [mm]")
+    plt.xlabel("Step (must be converted to x position)")
+    plt.ylabel("y position [mm]")
     plt.title(f"Simulated {num_tows}-Tow Layout with Random Start Errors")
     plt.legend(loc="upper right", ncol=2)
     plt.grid(True)
@@ -102,19 +102,19 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     plt.show()
 
     #gaps and overlaps calculation
-    # --- Compute vertical gaps between adjacent tows ---
+    #Compute vertical gaps between adjacent tows
     gap_overlap_data = {}
 
     for i in range(num_tows - 1):
         gap_overlap = bottom_lines[i+1]-top_lines[i]  # vertical space between adjacent tows
         col_name = f"Gap/overlap_Tow{i+1}_Tow{i+2}"
-        gap_overlap_data[col_name] = gap_overlap  # shape: (n_steps,)
+        gap_overlap_data[col_name] = gap_overlap  # shape
 
     gap_overlap_df = pd.DataFrame(gap_overlap_data)
     gap_df = gap_overlap_df.where(gap_overlap_df > 0)
     overlap_df = gap_overlap_df.where(gap_overlap_df < 0)
 
-    # --- Area Calculations (unitless) ---
+    #Area Calculations (unitless)
     topmost_line = top_lines[-1]      # Top edge of highest-numbered tow
     bottommost_line = bottom_lines[0] # Bottom edge of lowest-numbered tow
     total_area = np.trapezoid(topmost_line - bottommost_line)
@@ -137,7 +137,7 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     print(f"Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
 
     return gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent
-gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=31)
+gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=30)
 
 # Plot the gap(s) over steps (not time)
 plt.figure(figsize=(12, 5))
@@ -145,7 +145,7 @@ for column in gap_overlap_df.columns:
     plt.plot(gap_overlap_df.index, gap_overlap_df[column], label=column)
 
 plt.xlabel("Step")
-plt.ylabel("Gap / Overlap")
+plt.ylabel("Distance between tows (mm): positive for gap, negative for overlap")
 plt.title(f"Vertical Gaps Between Adjacent Tows Over Steps\n"
           f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
 plt.axhline(0, color='gray', linestyle='--', linewidth=1)
@@ -153,3 +153,75 @@ plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
+
+
+
+
+
+
+#REAL DATA (!deletes a lot of data!, only use as indicator for percentage of gap overlap)
+#
+#
+def calculate_real_gap_overlap_percentages(num_tows=5, tow_spacing_mm=6.35):
+    offsets = np.linspace(-(num_tows - 1) / 2, (num_tows - 1) / 2, num_tows) * tow_spacing_mm
+    top_lines = []
+    bottom_lines = []
+
+    for tow in range(2, 2 + num_tows):
+        df = get_synced_data(tow, spacesynced=True)
+
+        cam = df["center_CAM"].dropna().values
+        lt = df["error_LT"].dropna().values
+        width = df["width_LLS_B"].dropna().values
+
+        min_len = min(len(cam), len(lt), len(width))
+        cam = cam[:min_len]
+        lt = lt[:min_len]
+        width = width[:min_len]
+
+        centerline = cam + lt
+        top = centerline + 0.5 * width + offsets[tow - 2]
+        bottom = centerline - 0.5 * width + offsets[tow - 2]
+
+        top_lines.append(top)
+        bottom_lines.append(bottom)
+
+    # Compute gaps/overlaps only on valid shared ranges
+    gap_overlap_data = {}
+    total_gap_area = 0.0
+    total_overlap_area = 0.0
+
+    for i in range(num_tows - 1):
+        top_i = top_lines[i]
+        bottom_next = bottom_lines[i + 1]
+        common_len = min(len(top_i), len(bottom_next))
+
+        top_i = top_i[:common_len]
+        bottom_next = bottom_next[:common_len]
+
+        gap_overlap = bottom_next - top_i
+        col_name = f"Gap/overlap_Tow{i+1}_Tow{i+2}"
+        gap_overlap_data[col_name] = gap_overlap
+
+        gaps = np.where(gap_overlap > 0, gap_overlap, 0)
+        overlaps = np.where(gap_overlap < 0, -gap_overlap, 0)
+
+        total_gap_area += np.trapezoid(gaps)
+        total_overlap_area += np.trapezoid(overlaps)
+
+    #Total layout area between outermost top and bottom lines
+    topmost = top_lines[-1]
+    bottommost = bottom_lines[0]
+    common_len_total = min(len(topmost), len(bottommost))
+    total_area = np.trapezoid(topmost[:common_len_total] - bottommost[:common_len_total])
+
+    gap_percent = (total_gap_area / total_area) * 100 if total_area > 0 else 0
+    overlap_percent = (total_overlap_area / total_area) * 100 if total_area > 0 else 0
+
+    print(f"\n[REAL] Total layout area (unitless): {total_area:.2f}")
+    print(f"[REAL] Gap area: {total_gap_area:.2f} ({gap_percent:.2f}%)")
+    print(f"[REAL] Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
+
+    return gap_overlap_data, gap_percent, overlap_percent
+real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
