@@ -29,6 +29,34 @@ from Handling_ALL_Functions import get_processed_data
 from Handling_ALL_Functions import get_synced_data
 import math
 from scipy.stats import truncnorm
+import statsmodels.api as sm
+
+def weighted_linregress(x, y, weights):
+    """
+    Perform weighted linear regression and return
+    slope, intercept, r_value, p_value, stderr
+    matching scipy.stats.linregress signature.
+    """
+    x = np.asarray(x)
+    y = np.asarray(y)
+    w = np.asarray(weights)
+
+    # Design matrix (add constant for intercept)
+    X = sm.add_constant(x)
+
+    # Fit WLS model
+    model = sm.WLS(y, X, weights=w)
+    res   = model.fit()
+
+    intercept, slope = res.params
+    stderr_slope      = res.bse[1]
+    p_value_slope     = res.pvalues[1]
+
+    # r_value is the signed sqrt of R²
+    r_squared = res.rsquared
+    r_value   = np.sign(slope) * np.sqrt(r_squared)
+
+    return slope, intercept, r_value, p_value_slope, stderr_slope
 
 def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bins_show = False,plot_fit=True):
     """
@@ -59,7 +87,8 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
 
 
     # Prepare an empty list to store (x_n, x_{n+1}) pairs for each tow
-    all_pairs = []
+    all_pairs, time_pairs, x_pairs, vel = [], [], [], []
+
 
     # Loop through tow numbers from 1 to 31
     for tow_number in range(2, 32):
@@ -74,6 +103,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
             tow_data = tow_data_bef[["time", "width_LLS_B", "center_LLS_B", "width error_LLS_B"]]
         if sensor == "CAM":
             tow_data = tow_data_bef[["time", "width_CAM", "center_CAM", "error_CAM"]]
+        velocity_data = tow_data_bef[["time", "x"]]
 
         # Ensure that the returned object is a dataframe
         if not tow_data.empty and tow_data.shape[1] > 1:  # Ensure there are at least two columns
@@ -84,19 +114,45 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
             x_values = second_to_last_column[:-1]
             y_values = second_to_last_column[1:]
 
+            # Extract x and time and convert to np
+            velocity_data_x = velocity_data.iloc[:, -1].values
+            velocity_data_time = velocity_data.iloc[:, -2].values
+            time_values_i = velocity_data_time[:-1]
+            time_values_i2 = velocity_data_time[1:]
+            x_values_i = velocity_data_x[:-1]
+            x_values_i2 = velocity_data_x[1:]
+
+
             # Append pairs as a list of tuples
             all_pairs.extend(zip(x_values, y_values))
+            time_pairs.extend(zip(time_values_i, time_values_i2))
+            x_pairs.extend(zip(x_values_i, x_values_i2))
 
     # After processing all tows, convert collected pairs into numpy arrays
     all_pairs = np.array(all_pairs)
     x_values = all_pairs[:, 0]
     y_values = all_pairs[:, 1]
 
+    time_pairs = np.array(time_pairs)
+    time_i = time_pairs[:, 0]
+    time_i2 = time_pairs[:, 1]
+    time_gaps = time_i2 - time_i
+
+    x_pairs = np.array(x_pairs)
+    x_i = x_pairs[:, 0]
+    x_i2 = x_pairs[:, 1]
+    x_gaps = x_i2 - x_i
+
+    vel = x_gaps / time_gaps
+
+
+
+
     # Train-Test Split
 
     # Split into training and testing (test_ratio * 100)% of data is used.
-    x_train, x_test, y_train, y_test = train_test_split(
-        x_values, y_values, test_size=test_ratio, random_state=random_state
+    x_train, x_test, y_train, y_test, vel_train, vel_test = train_test_split(
+        x_values, y_values, vel,  test_size=test_ratio, random_state=random_state
     )
     # NOTE: random_state ensures reproducible splits of the data;
     # change it to another integer for a different split, or set it to None for random behavior.
@@ -105,6 +161,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     sorted_indices = np.argsort(x_train)
     x_sorted = x_train[sorted_indices]
     y_sorted = y_train[sorted_indices]
+    vel_sorted = vel_train[sorted_indices]
 
     # Equal-count bin edges
     bin_edges = np.linspace(0, len(x_sorted), num_bins + 1, dtype=int)
@@ -112,9 +169,11 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
     # Compute bin-wise averages
     x_binned = [np.mean(x_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
     y_binned = [np.mean(y_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+    vel_binned = [np.mean(vel_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
 
     # scatter Plot with Binned Averages and regression model
-    slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
+    #slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
+    slope, intercept, r_value, p_value, std_err = weighted_linregress(x_binned, y_binned, vel_binned)
     #print(r_value)
 
 
@@ -138,7 +197,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
 
     # Compute Deviations per Bin
 
-    deviations_per_bin = []
+    deviations_per_bin, velocities_per_bin = [], []
 
     for i in range(num_bins):
         bin_start, bin_end = bin_edges[i], bin_edges[i + 1]
@@ -146,6 +205,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
         # Get x and y values in this bin
         bin_x_values = x_sorted[bin_start:bin_end]
         bin_y_values = y_sorted[bin_start:bin_end]
+        bin_vel_values = vel_sorted[bin_start:bin_end]
 
         # Predict y-values using regression model
         predicted_y_values = slope * bin_x_values + intercept
@@ -153,6 +213,7 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
         # Compute deviation (residuals) at each point
         deviations = bin_y_values - predicted_y_values
         deviations_per_bin.append(deviations)
+        velocities_per_bin.append(bin_vel_values)
 
     # Paginate histogram grids
     rows, cols = 4, 5
@@ -176,10 +237,13 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
                 ax = axes_flat[idx_plot - start]
                 devs = deviations_per_bin[bin_idx]
                 xs = x_sorted[bin_edges[bin_idx]:bin_edges[bin_idx + 1]]
+                vels = velocities_per_bin[bin_idx]
 
                 # Histogram and normal fit
                 counts, bins_hist, _ = ax.hist(devs, bins=30, edgecolor='black', density=True)
-                mu, std = stats.norm.fit(devs)
+                #mu, std = stats.norm.fit(devs)
+                mu = np.average(devs, weights=vels)
+                std = math.sqrt(np.average((devs-mu)**2, weights=vels))
                 x_fit = np.linspace(devs.min(), devs.max(), 100)
                 p_fit = stats.norm.pdf(x_fit, mu, std)
                 ax.plot(x_fit, p_fit, 'r', linewidth=2)
@@ -210,9 +274,12 @@ def consecutive_error(sensor, test_ratio=0.8, num_bins = 20, random_state=42, bi
 
     for i in range(num_bins):
         bin_devs = deviations_per_bin[i]
+        vels = velocities_per_bin[i]
         x_mean = x_binned[i]
         y_mean = y_binned[i]
-        mu, std = stats.norm.fit(bin_devs)
+        # mu, std = stats.norm.fit(bin_devs)
+        mu = np.average(bin_devs, weights=vels)
+        std = math.sqrt(np.average((bin_devs-mu)**2, weights=vels))
         variance = std ** 2
 
         bin_stats.append({
@@ -583,9 +650,9 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, trunc=True, errorCor_sh
 if __name__ == "__main__":
 
     # Test your function here
-    generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False,
-                               num_bins=20)
-    generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False, num_bins=50)
+    # generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False,
+    #                            num_bins=20)
+    # generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False, num_bins=50)
     generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=False, errorCor_show=False, bins_show=False,
                                num_bins=100)
     # generate_simulated_VS_real(n_real_tow=3, rdm_seed=10, trunc=True, errorCor_show=False, bins_show=False)
