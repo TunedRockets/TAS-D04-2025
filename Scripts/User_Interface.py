@@ -147,26 +147,34 @@ def wait_for_back():
                 return
 
 def draw_simulation():
-    screen.fill((0, 0, 0))
+    screen.fill((0, 0, 0))  # Clear screen
 
+    # Get the Matplotlib figure
     fig = generate_multitow_layout_wrapped(num_tows, tow_width, tow_length)
 
-    # Render figure to buffer
+    # Render the figure to a buffer (Agg backend)
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
-    buf = canvas.buffer_rgba()
-    width, height = canvas.get_width_height()
+    
+    # Convert the buffer into a Pygame-compatible image
+    buf = canvas.buffer_rgba()  # Buffer contains RGBA data
+    width, height = canvas.get_width_height()  # Get figure dimensions
+
+    # Create a Pygame surface from the buffer
     image = pygame.image.frombuffer(buf, (width, height), "RGBA")
-    image = pygame.transform.smoothscale(image, (WIDTH, HEIGHT))
+
+    # Optionally, scale the image to fit the screen (optional)
+    image = pygame.transform.smoothscale(image, (WIDTH, HEIGHT))  # Resize if necessary
 
     # Center the image in the Pygame window
     x = (WIDTH - width) // 2
     y = (HEIGHT - height) // 2
-    screen.blit(image, (x, y))
+    screen.blit(image, (x, y))  # Blit the image to the screen
 
-    # Draw Back button
+    # Draw "Back" button
     draw_button("Back", pygame.Rect(50, HEIGHT - 70, 100, 40))
-    pygame.display.flip()
+
+    pygame.display.flip()  # Update the display
 
     # Wait for user to click "Back"
     wait_for_back()
