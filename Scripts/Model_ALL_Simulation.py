@@ -56,7 +56,7 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
         "LLS_B", test_ratio=0.5, num_bins=100, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     #get perfect offsets
     offsets = np.linspace(-(num_tows - 1) / 2, (num_tows - 1) / 2, num_tows) * tow_spacing_mm
-    plt.figure(figsize=(30, 8))
+    plt.figure(figsize=(12, 8))
     #for coloring properly (chatgpt did the plotting)
     cmap = plt.get_cmap("tab10")
     x_vals = np.arange(n_steps)
@@ -137,7 +137,7 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     print(f"Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
 
     return gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent
-gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=30)
+gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=10)
 
 # Plot the gap(s) over steps (not time)
 plt.figure(figsize=(12, 5))
