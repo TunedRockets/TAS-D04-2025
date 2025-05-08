@@ -137,19 +137,23 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     print(f"Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
 
     return gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent
-gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=31)
+gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=1)
 
-# Plot the gap(s) over steps (not time)
-plt.figure(figsize=(12, 5))
-for column in gap_overlap_df.columns:
-    plt.plot(gap_overlap_df.index, gap_overlap_df[column], label=column)
+def main():
+    # Plot the gap(s) over steps (not time)
+    plt.figure(figsize=(12, 5))
+    for column in gap_overlap_df.columns:
+        plt.plot(gap_overlap_df.index, gap_overlap_df[column], label=column)
 
-plt.xlabel("Step")
-plt.ylabel("Gap / Overlap")
-plt.title(f"Vertical Gaps Between Adjacent Tows Over Steps\n"
-          f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
-plt.axhline(0, color='gray', linestyle='--', linewidth=1)
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
+    plt.xlabel("Step")
+    plt.ylabel("Gap / Overlap")
+    plt.title(f"Vertical Gaps Between Adjacent Tows Over Steps\n"
+            f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
+    plt.axhline(0, color='gray', linestyle='--', linewidth=1)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    main() # makes sure this only runs if you run *this* file, not if this file is imported somewhere else
