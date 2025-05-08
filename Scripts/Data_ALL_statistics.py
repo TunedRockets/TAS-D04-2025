@@ -216,6 +216,7 @@ def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[f
         std_val  = clean.std()
 
 
+
         ax.axvline(mean_val, color='orange', linestyle='-',
                              label=rf'Mean = {mean_val:.2f}' + '\n' + rf'$\sigma$ = {std_val:.2f}')
         ax.axvline(0.0, color='black', linestyle='dashed')
@@ -232,6 +233,52 @@ def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[f
 
 
     plt.show()
+
+
+def plot_LLSA_vs_LLSB(data: pd.DataFrame, title:str, bin_widths: list[float] =None):
+
+    distribution_labels = {
+        'norm':     'Normal Distribution',
+        'logistic': 'Logistic Distribution',
+        'skewnorm': 'Skew-Normal Distribution',
+        'genextreme':'Generalized Extreme Value'}
+    
+    clean_A = data['width error_LLS_A'].dropna().to_numpy()
+    clean_B = data['width error_LLS_B'].dropna().to_numpy()
+
+# Common binning based on combined data
+    combined = np.concatenate((clean_A, clean_B))
+    mn, mx = combined.min(), combined.max()
+    bw = bin_widths[0] or (mx - mn) / 40
+    bins = np.arange(mn, mx + bw, bw)
+
+# Plot both histograms in the same figure
+    fig, ax = plt.subplots(figsize=(6, 4))
+    fig.suptitle("LLS_A vs. LLS_B")
+
+# Plot histograms
+    ax.hist(clean_A, bins=bins, alpha=0.5, density=True, label='LLS_A')
+    ax.hist(clean_B, bins=bins, alpha=0.5, density=True, label='LLS_B')
+
+# Fit and plot distributions
+    for clean, label in [(clean_A, 'LLS_A'), (clean_B, 'LLS_B')]:
+        best = best_fit_distribution(clean, bins=len(bins) - 1)
+        dist, params = best['dist'], best['params']
+        friendly = distribution_labels.get(dist.name, dist.name)
+        x = np.linspace(mn, mx, 200)
+        pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
+        ax.plot(x, pdf, lw=2, label=f'{label} Fit: {friendly}')
+
+# Styling
+    ax.axvline(0.0, color='black', linestyle='dashed')
+    ax.set_xlim(-1.2, 1.0)
+    ax.set_xlabel("Error (width)")
+    ax.set_ylabel("Density")
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+    
 
 
 '''This function fits the best distribution to the four error types automatically'''
@@ -293,6 +340,11 @@ def main():
         title="Sensor Error Histograms (ALL TOWS)",
         bin_widths=[0.005, 0.005, 0.005, 0.03]
     )
+
+    plot_LLSA_vs_LLSB(df,
+        title="Error LLS A vs. Error LLS B (ALL TOWS)",
+        bin_widths=[0.005, 0.005]
+        )
 
 if __name__ == "__main__":
     main()
