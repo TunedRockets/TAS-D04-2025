@@ -5,7 +5,7 @@ import scipy.stats as stats
 from Handling_ALL_Functions import get_synced_data
 import random
 import pandas as pd
-
+#there might be an error in calculating
 
 def fit_starting_error_distribution(sensor: str, plot=True):
     column_map = {
@@ -24,7 +24,7 @@ def fit_starting_error_distribution(sensor: str, plot=True):
         if col_name in df.columns and not df[col_name].isna().all():
             value = df[col_name].dropna().values[0]  # get first non-NaN value
             first_values.append(value)
-
+ 
 
     mu, sigma = stats.norm.fit(first_values)
 
@@ -103,27 +103,52 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
 
     #gaps and overlaps calculation
     # --- Compute vertical gaps between adjacent tows ---
-    gap_data = {}
+    gap_overlap_data = {}
 
     for i in range(num_tows - 1):
-        gap = bottom_lines[i+1]-top_lines[i]  # vertical space between adjacent tows
+        gap_overlap = bottom_lines[i+1]-top_lines[i]  # vertical space between adjacent tows
         col_name = f"Gap/overlap_Tow{i+1}_Tow{i+2}"
-        gap_data[col_name] = gap  # shape: (n_steps,)
+        gap_overlap_data[col_name] = gap_overlap  # shape: (n_steps,)
 
-    gap_df = pd.DataFrame(gap_data)
+    gap_overlap_df = pd.DataFrame(gap_overlap_data)
+    gap_df = gap_overlap_df.where(gap_overlap_df > 0)
+    overlap_df = gap_overlap_df.where(gap_overlap_df < 0)
 
-    return gap_df
-a = generate_multitow_layout(num_tows=2)
-print(a)
-# Plot the gap(s) over time
+    # --- Area Calculations (unitless) ---
+    topmost_line = top_lines[-1]      # Top edge of highest-numbered tow
+    bottommost_line = bottom_lines[0] # Bottom edge of lowest-numbered tow
+    total_area = np.trapezoid(topmost_line - bottommost_line)
+
+    total_gap_area = 0.0
+    total_overlap_area = 0.0
+
+    for col in gap_overlap_df.columns:
+        gap_vals = gap_overlap_df[col].values
+        gaps = np.where(gap_vals > 0, gap_vals, 0)
+        overlaps = np.where(gap_vals < 0, -gap_vals, 0)  # flip sign for integration
+        total_gap_area += np.trapezoid(gaps)
+        total_overlap_area += np.trapezoid(overlaps)
+
+    gap_percent = (total_gap_area / total_area) * 100 
+    overlap_percent = (total_overlap_area / total_area) * 100 
+
+    print(f"\nTotal layout area (unitless): {total_area:.2f}")
+    print(f"Gap area: {total_gap_area:.2f} ({gap_percent:.2f}%)")
+    print(f"Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
+
+    return gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent
+gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=31)
+
+# Plot the gap(s) over steps (not time)
 plt.figure(figsize=(12, 5))
-for column in a.columns:
-    plt.plot(a.index, a[column], label=column)
+for column in gap_overlap_df.columns:
+    plt.plot(gap_overlap_df.index, gap_overlap_df[column], label=column)
 
-plt.xlabel("Timestep")
-plt.ylabel("Gap [mm]")
-plt.title("Vertical Gaps Between Adjacent Tows Over Time")
-plt.axhline(0, color='gray', linestyle='--', linewidth=1)  # Show zero-gap line
+plt.xlabel("Step")
+plt.ylabel("Gap / Overlap")
+plt.title(f"Vertical Gaps Between Adjacent Tows Over Steps\n"
+          f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
+plt.axhline(0, color='gray', linestyle='--', linewidth=1)
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
