@@ -2,19 +2,24 @@ import pygame
 import sys
 import matplotlib.pyplot as plt
 from Model_ALL_Simulation import generate_multitow_layout
+import tkinter as tk
+import io
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+# Get screen resolution with Tkinter
+root = tk.Tk()
+root.withdraw()
+WIDTH = root.winfo_screenwidth()
+HEIGHT = root.winfo_screenheight()
+root.destroy()
 
 # Initialize Pygame
 pygame.init()
-
-# Get screen resolution
-info = pygame.display.Info()
-WIDTH, HEIGHT = info.current_w, info.current_h
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("Tow Simulation Interface")
 
 font = pygame.font.SysFont(None, 36)
 clock = pygame.time.Clock()
-
 
 # UI States
 MENU = "menu"
@@ -24,9 +29,24 @@ state = MENU
 
 # Default settings
 num_tows = 2
-tow_width = 50
+tow_width = 6
 tow_length = 100
 tow_positions = [(50, 50), (150, 150)]
+active_input_field = None
+input_text = ""
+
+def generate_multitow_layout_wrapped(num_tows, tow_width, tow_length):
+    # Save and override plt.show
+    original_show = plt.show
+    plt.show = lambda *args, **kwargs: None  # Disable showing
+
+    plt.clf()
+    generate_multitow_layout(num_tows, tow_width, tow_length)
+    fig = plt.gcf()
+
+    plt.show = original_show  # Restore show
+    return fig
+
 
 def draw_button(text, rect, active=True):
     color = (70, 130, 180) if active else (100, 100, 100)
@@ -42,37 +62,114 @@ def draw_menu():
 
 def draw_settings():
     screen.fill((40, 40, 40))
-    instructions = [
-        f"Number of Tows: {num_tows}",
-        f"Tow Width: {tow_width}",
-        f"Tow Length: {tow_length}",
-        f"Tow Positions: {tow_positions}",
-        "Click to cycle values. Press S to save."
+    settings = [
+        ("Number of Tows", num_tows),
+        ("Tow Width", tow_width),
+        ("Tow Length", tow_length),
     ]
-    for i, text in enumerate(instructions):
-        label = font.render(text, True, (255, 255, 255))
-        screen.blit(label, (50, 50 + i * 40))
+
+    global field_rects
+    field_rects = []  # Store clickable input boxes
+
+    for i, (label_text, value) in enumerate(settings):
+        y = 50 + i * 60
+        label = font.render(f"{label_text}:", True, (255, 255, 255))
+        screen.blit(label, (50, y))
+
+        rect = pygame.Rect(300, y, 200, 40)
+        pygame.draw.rect(screen, (255, 255, 255), rect, 2)
+
+        value_str = input_text if active_input_field == i else str(value)
+        value_surface = font.render(value_str, True, (255, 255, 255))
+        screen.blit(value_surface, (rect.x + 5, rect.y + 5))
+
+        field_rects.append(rect)
+
+    # Tow positions info
+    label = font.render(f"Tow Positions: {tow_positions}", True, (255, 255, 255))
+    screen.blit(label, (50, y + 70))
+
     draw_button("Back", pygame.Rect(50, HEIGHT - 70, 100, 40))
 
 def handle_settings_events(event):
-    global num_tows, tow_width, tow_length, tow_positions, state
+    global num_tows, tow_width, tow_length, tow_positions
+    global active_input_field, input_text, state
+
     if event.type == pygame.MOUSEBUTTONDOWN:
-        # Simple cycling logic
-        num_tows = (num_tows % 5) + 1
-        tow_width += 10
-        tow_length += 10
-        tow_positions = [(i * 60, 100) for i in range(num_tows)]
-    elif event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_s:
-            print("Settings saved")
-    elif event.type == pygame.MOUSEBUTTONDOWN:
+        # Check Back button
         back_button_rect = pygame.Rect(50, HEIGHT - 70, 100, 40)
         if back_button_rect.collidepoint(event.pos):
+            active_input_field = None
+            input_text = ""
             state = MENU
+            return
 
+        # Check if user clicked any input field
+        for i, rect in enumerate(field_rects):
+            if rect.collidepoint(event.pos):
+                active_input_field = i
+                input_text = ""
+                return
+
+    elif event.type == pygame.KEYDOWN and active_input_field is not None:
+        if event.key == pygame.K_RETURN:
+            try:
+                value = int(input_text)
+                if active_input_field == 0:
+                    num_tows = value
+                elif active_input_field == 1:
+                    tow_width = value
+                elif active_input_field == 2:
+                    tow_length = value
+                tow_positions = [(i * 60, 100) for i in range(num_tows)]
+            except ValueError:
+                print("Invalid input")
+            active_input_field = None
+            input_text = ""
+        elif event.key == pygame.K_BACKSPACE:
+            input_text = input_text[:-1]
+        else:
+            char = event.unicode
+            if char.isdigit():
+                input_text += char
+
+def wait_for_back():
+    global state
+    back_rect = pygame.Rect(50, HEIGHT - 70, 100, 40)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and back_rect.collidepoint(event.pos):
+                state = MENU
+                return
 
 def draw_simulation():
-    generate_multitow_layout(num_tows, tow_width, tow_length)
+    screen.fill((0, 0, 0))
+
+    fig = generate_multitow_layout_wrapped(num_tows, tow_width, tow_length)
+
+    # Render figure to buffer
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    buf = canvas.buffer_rgba()
+    width, height = canvas.get_width_height()
+    image = pygame.image.frombuffer(buf, (width, height), "RGBA")
+    image = pygame.transform.smoothscale(image, (WIDTH, HEIGHT))
+
+    # Center the image in the Pygame window
+    x = (WIDTH - width) // 2
+    y = (HEIGHT - height) // 2
+    screen.blit(image, (x, y))
+
+    # Draw Back button
+    draw_button("Back", pygame.Rect(50, HEIGHT - 70, 100, 40))
+    pygame.display.flip()
+
+    # Wait for user to click "Back"
+    wait_for_back()
 
 def main():
     global state
@@ -109,6 +206,5 @@ def main():
 
         pygame.display.flip()
         clock.tick(30)
-
 
 main()
