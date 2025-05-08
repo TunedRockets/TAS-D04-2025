@@ -1,47 +1,10 @@
-from Model_ALL_ConsecutiveErrorTheo import *
+
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.stats as stats
-from Handling_ALL_Functions import get_synced_data
 import random
+from Model_ALL_ConsecutiveErrorTheo import consecutive_error, generate_error_path
+from Handling_ALL_Functions import get_synced_data
 import pandas as pd
-
-#starting error distribution can be found here, but is assumed to be uniform based on these graphs ranges of values
-def fit_starting_error_distribution(sensor: str, plot=True):
-    column_map = {
-        "CAM": "center_CAM",
-        "LT": "error_LT",
-        "LLS_A": "width error_LLS_A",
-        "LLS_B": "width error_LLS_B"
-    }
-
-    col_name = column_map[sensor]
-    first_values = []
-
-    for tow in range(2, 32):
-        df = get_synced_data(tow, spacesynced=True)
-
-        if col_name in df.columns and not df[col_name].isna().all():
-            value = df[col_name].dropna().values[0]  # get first non-NaN value
-            first_values.append(value)
- 
-
-    mu, sigma = stats.norm.fit(first_values)
-
-    if plot:
-        plt.figure(figsize=(8, 5))
-        count, bins, _ = plt.hist(first_values, bins=len(first_values), density=True, edgecolor="black", alpha=0.7, label="Start Values")
-        x = np.linspace(min(bins), max(bins), 100)
-        plt.plot(x, stats.norm.pdf(x, mu, sigma), 'r--', label=f"Fit: μ={mu:.2f}, σ={sigma:.2f}")
-        plt.title(f"Start Error Distribution - {sensor}")
-        plt.xlabel("Start Error [mm]")
-        plt.ylabel("Density")
-        plt.grid(True)
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
-
-    return mu, sigma, first_values
 
 
 
