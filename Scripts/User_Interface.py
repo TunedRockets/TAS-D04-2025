@@ -127,7 +127,7 @@ def handle_settings_events(event):
                 elif active_input_field == 1:
                     tow_width = value
                 elif active_input_field == 2:
-                    tow_length = value
+                    tow_length = int(value)
                 tow_positions = [(i * 60, 100) for i in range(num_tows)]
             except ValueError:
                 print("Invalid input")
