@@ -766,8 +766,8 @@ def GlobalValidation(nb_bins=101, nb_sim=20):
 if __name__ == "__main__":
 
     start_time = time.perf_counter()
-    GlobalValidation(20, 5)
-    # print(peakMeanRealTows())
+    # GlobalValidation(20, 5)
+    print(peakMeanRealTows())
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
     print(f"Elapsed time: {round(elapsed_time,2)} seconds")
