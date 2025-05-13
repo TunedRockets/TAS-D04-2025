@@ -6,8 +6,7 @@ from Handling_ALL_Functions import get_synced_data
 import random
 import pandas as pd
 
-steps_per_mm = 43
-
+steps_per_mm = 3 / 10
 #starting error distribution can be found here, but is assumed to be uniform based on these graphs ranges of values
 def fit_starting_error_distribution(sensor: str, plot=True):
     column_map = {
@@ -155,7 +154,7 @@ plt.axhline(0, color='gray', linestyle='--', linewidth=1)
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.show()
+# plt.show()
 
 #REAL DATA (!deletes a lot of data!, only use as indicator for percentage of gap overlap)
 

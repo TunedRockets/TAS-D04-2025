@@ -72,7 +72,7 @@ save_duration = 200  # Duration in milliseconds for the green color
 # Default settings
 num_tows = 2                                    # Unitless
 tow_width = 6.35                                # mm
-steps_per_mm = 43                               # step/mm
+steps_per_mm = 3 / 10                           # step/mm
 tow_length = 100 * steps_per_mm                 # step
 tow_length_mm = int(tow_length / steps_per_mm)  # mm
 tow_spacing = 6.35                              # mm
