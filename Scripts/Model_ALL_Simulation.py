@@ -6,7 +6,8 @@ from Handling_ALL_Functions import get_synced_data
 import random
 import pandas as pd
 
-steps_per_mm = 3 / 10
+steps_per_mm = 300 / 1000       # Keep consistent with User_Interface
+
 #starting error distribution can be found here, but is assumed to be uniform based on these graphs ranges of values
 def fit_starting_error_distribution(sensor: str, plot=True):
     column_map = {
@@ -97,7 +98,8 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
         plt.legend(loc="upper right", ncol=2)
         plt.grid(True)
         plt.tight_layout()
-        plt.show()
+        # The next line is commented for User_Interface. If you need to show the graph for a bit, make sure to revert it back after.
+        # plt.show()
 
     #gaps and overlaps calculation
     #Compute vertical gaps between adjacent tows
@@ -136,24 +138,8 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
 
     return gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent
 
-gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=28,plot=True)
-
-# Plot the gap(s) over steps (not time)
-x_vals_mm = gap_overlap_df.index / steps_per_mm  # convert index (steps) to mm
-
-plt.figure(figsize=(12, 5))
-for column in gap_overlap_df.columns:
-    plt.plot(x_vals_mm, gap_overlap_df[column], label=column)
-
-plt.xlabel("X Position [mm]")
-plt.ylabel("Distance between tows (mm): positive for gap, negative for overlap")
-plt.title(f"Vertical Gaps Between Adjacent Tows Over Distance\n"
-          f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
-plt.axhline(0, color='gray', linestyle='--', linewidth=1)
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-# plt.show()
+# DONT REMOVE THE NEXT LINE. It is required for generate_multitow_layout_wrapped in User_Interface!
+gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=15)
 
 #REAL DATA (!deletes a lot of data!, only use as indicator for percentage of gap overlap)
 
@@ -219,13 +205,7 @@ def calculate_real_gap_overlap_percentages(num_tows=5, tow_spacing_mm=6.35):
 
     return gap_overlap_data, gap_percent, overlap_percent
 
-real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
-
-
-#VERIFICATION:
-# Run the simulation x times
-def simulation_verification():
-    num_simulations = 100
+def simulation_verificatoin(num_simulations):
     gap_percent_list = []
     overlap_percent_list = []
     for i in range(num_simulations):
@@ -241,71 +221,30 @@ def simulation_verification():
     print(f"Average Gap Percentage: {avg_gap:.2f}%")
     print(f"Average Overlap Percentage: {avg_overlap:.2f}%")
 
+def main():
+    gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=15)
 
-def simulation_gap_overlap_vs_bins(bin_range, simulations_per_bin=20):
-    results = []
+    # Plot the gap(s) over steps (not time)
+    x_vals_mm = gap_overlap_df.index / steps_per_mm  # convert index (steps) to mm
 
-    # Calculate real percentages only once
-    real_gap_data, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
-    print(f"\n[REAL] Average Gap %: {real_gap_pct:.2f} | Average Overlap %: {real_overlap_pct:.2f}\n")
+    plt.figure(figsize=(12, 5))
+    for column in gap_overlap_df.columns:
+        plt.plot(x_vals_mm, gap_overlap_df[column], label=column)
 
-    for num_bins in bin_range:
-        gap_percent_list = []
-        overlap_percent_list = []
+    plt.xlabel("X Position [mm]")
+    plt.ylabel("Distance between tows (mm): positive for gap, negative for overlap")
+    plt.title(f"Vertical Gaps Between Adjacent Tows Over Distance\n"
+            f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
+    plt.axhline(0, color='gray', linestyle='--', linewidth=1)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
-        print(f"Running {simulations_per_bin} simulations for {num_bins} bins...")
-        for i in range(simulations_per_bin):
-            print(f"  Simulation {i+1}/{simulations_per_bin} (bins={num_bins})", end="\r")
-            # Modify the consecutive_error calls inside this function to take num_bins as argument
-            _, _, _, gap_pct, overlap_pct = generate_multitow_layout(
-                num_tows=28, 
-                plot=False, 
-                n_steps=311, 
-                cam_start_range=(-0.4, 0.6), 
-                lt_start_range=(-1, -0.8), 
-                llsb_start_range=(-0.15, -0.02)
-            )
-            gap_percent_list.append(gap_pct)
-            overlap_percent_list.append(overlap_pct)
+    real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
 
-        avg_gap = np.mean(gap_percent_list)
-        avg_overlap = np.mean(overlap_percent_list)
-
-        results.append({
-            "bins": num_bins,
-            "avg_gap": avg_gap,
-            "avg_overlap": avg_overlap
-        })
-
-        print(f"\n  → Avg Gap: {avg_gap:.2f}% | Avg Overlap: {avg_overlap:.2f}% (bins={num_bins})\n")
-
-    return results, real_gap_pct, real_overlap_pct
-
-
-# Run the test
-#bin_range = list(range(30, 151, 5))  # From 30 to 150 in steps of 5
-#results, real_gap_pct, real_overlap_pct = simulation_gap_overlap_vs_bins(bin_range)
-# Extract data from results
-#bins = [r["bins"] for r in results]
-#avg_gap_sim = [r["avg_gap"] for r in results]
-#avg_overlap_sim = [r["avg_overlap"] for r in results]
-
-# Create the plot
-#plt.figure(figsize=(10, 6))
-
-# Plot simulated averages
-#plt.plot(bins, avg_gap_sim, marker='o', label="Simulated Avg Gap %", color="blue")
-#plt.plot(bins, avg_overlap_sim, marker='s', label="Simulated Avg Overlap %", color="orange")
-
-# Plot real values as horizontal lines
-#plt.axhline(y=real_gap_pct, color="blue", linestyle="--", linewidth=1.5, label=f"Real Gap % ({real_gap_pct:.2f}%)")
-#plt.axhline(y=real_overlap_pct, color="orange", linestyle="--", linewidth=1.5, label=f"Real Overlap % ({real_overlap_pct:.2f}%)")
-
-# Labels and formatting
-#plt.xlabel("Number of Bins")
-#plt.ylabel("Percentage")
-#plt.title("Average Gap and Overlap vs. Number of Bins")
-#plt.grid(True)
-#plt.legend()
-#plt.tight_layout()
-#plt.show()
+    # Run the simulation 250 times 
+    simulation_verificatoin(num_simulations = 250)
+    
+if __name__ == "__main__":
+    main()
