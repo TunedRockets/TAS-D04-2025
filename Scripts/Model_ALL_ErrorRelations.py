@@ -1,13 +1,7 @@
-
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from Handling_ALL_Functions import get_synced_data
-
-
-
-
-
 
 def plot_variable_relationships(test_ratio=0.5, show=True, save=False, save_path="variable_relationships.png"):
     # Load and concatenate data from all tows
@@ -52,7 +46,7 @@ def plot_variable_relationships(test_ratio=0.5, show=True, save=False, save_path
                 ax.scatter(df_train[variables[j]], df_train[variables[i]], alpha=0.6, edgecolors='k', s=10)
                 ax.set_title(f"{variables[i]} vs\n{variables[j]}", fontsize=9)
             if i == n - 1:
-                ax.set_xlabel(variables[j], fontsize=9, rotation=45)
+                ax.set_xlabel(variables[j], fontsize=9)
             else:
                 ax.set_xticks([])
             if j == 0:
@@ -60,8 +54,8 @@ def plot_variable_relationships(test_ratio=0.5, show=True, save=False, save_path
             else:
                 ax.set_yticks([])
 
-    plt.suptitle(f"Sensor Variable Relationships ", fontsize=20)
-    plt.tight_layout(rect=[0, 0.02, 1, 0.95],h_pad=5)  # Adjust bottom margin
+    plt.suptitle(f"Sensor Variable Relationships ", fontsize=16)
+    plt.tight_layout(rect=[0, 0.02, 1, 0.95],h_pad=6)  # Adjust bottom margin
 
     # Save or show
     if save:
