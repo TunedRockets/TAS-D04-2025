@@ -44,14 +44,14 @@ def fit_starting_error_distribution(sensor: str, plot=True):
 
     return mu, sigma, first_values
 
-def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35, n_steps=300, cam_start_range=(-0.4, 0.6), lt_start_range=(-1, -0.8), llsb_start_range=(-0.15, -0.02),plot=True):
+def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35, n_steps=311, cam_start_range=(-0.4, 0.6), lt_start_range=(-1, -0.8), llsb_start_range=(-0.15, -0.02),plot=True):
     # Get binned models
     bin_stats_cam, slope_cam, intercept_cam, _, _, _, x_sorted_cam, bin_edges_cam, devs_cam = consecutive_error(
-        "CAM", test_ratio=0.5, num_bins=100, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "CAM", test_ratio=0.5, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     bin_stats_lt, slope_lt, intercept_lt, _, _, _, x_sorted_lt, bin_edges_lt, devs_lt = consecutive_error(
-        "LT", test_ratio=0.5, num_bins=100, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "LT", test_ratio=0.5, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     bin_stats_llsb, slope_llsb, intercept_llsb, _, _, _, x_sorted_llsb, bin_edges_llsb, devs_llsb = consecutive_error(
-        "LLS_B", test_ratio=0.5, num_bins=100, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "LLS_B", test_ratio=0.5, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     #get perfect offsets
     offsets = np.linspace(-(num_tows - 1) / 2, (num_tows - 1) / 2, num_tows) * tow_spacing_mm
     plt.figure(figsize=(12, 8))
@@ -85,12 +85,11 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
         bottom_lines.append(bottom_line)
 
         # --- Plot ---
-        if plot == True:
-            plt.plot(x_vals, centerline[:n_steps], color=color, label=f"Tow {i+1} Centerline", linewidth=2)
-            plt.plot(x_vals, top_line[:n_steps], linestyle=":", color=color, linewidth=1)
-            plt.plot(x_vals, bottom_line[:n_steps], linestyle=":", color=color, linewidth=1)
-            plt.plot(x_vals, [offset]*n_steps, linestyle="--", color="gray", alpha=0.6,
-                    label="Ideal Centerline" if i == 0 else "")
+        plt.plot(x_vals, centerline[:n_steps], color=color, label=f"Tow {i+1} Centerline", linewidth=2)
+        plt.plot(x_vals, top_line[:n_steps], linestyle=":", color=color, linewidth=1)
+        plt.plot(x_vals, bottom_line[:n_steps], linestyle=":", color=color, linewidth=1)
+        plt.plot(x_vals, [offset]*n_steps, linestyle="--", color="gray", alpha=0.6,
+                label="Ideal Centerline" if i == 0 else "")
     if plot == True:
         plt.xlabel("x position [mm]")
         plt.ylabel("y position [mm]")
@@ -137,7 +136,7 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
 
     return gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent
 
-gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=15)
+gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=28,plot=True)
 
 # Plot the gap(s) over steps (not time)
 x_vals_mm = gap_overlap_df.index / steps_per_mm  # convert index (steps) to mm
@@ -223,21 +222,90 @@ def calculate_real_gap_overlap_percentages(num_tows=5, tow_spacing_mm=6.35):
 real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
 
 
-
-# Run the simulation 1000 times 
-def simulation_verificatoin():
-    num_simulations = 250
+#VERIFICATION:
+# Run the simulation x times
+def simulation_verification():
+    num_simulations = 100
     gap_percent_list = []
     overlap_percent_list = []
     for i in range(num_simulations):
         print(f"Running simulation {i+1}/{num_simulations}", end="\r")
-        _, _, _, gap_pct, overlap_pct = generate_multitow_layout(num_tows=15,plot=False)
+        _, _, _, gap_pct, overlap_pct = generate_multitow_layout(num_tows=28,plot=False)
         gap_percent_list.append(gap_pct)
         overlap_percent_list.append(overlap_pct)
 
     avg_gap = np.mean(gap_percent_list)
     avg_overlap = np.mean(overlap_percent_list)
 
-    print(f"\n\nAfter {num_simulations} simulations of 15-tow layout:")
+    print(f"\n\nAfter {num_simulations} simulations of x-tow layout:")
     print(f"Average Gap Percentage: {avg_gap:.2f}%")
     print(f"Average Overlap Percentage: {avg_overlap:.2f}%")
+
+
+def simulation_gap_overlap_vs_bins(bin_range, simulations_per_bin=20):
+    results = []
+
+    # Calculate real percentages only once
+    real_gap_data, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
+    print(f"\n[REAL] Average Gap %: {real_gap_pct:.2f} | Average Overlap %: {real_overlap_pct:.2f}\n")
+
+    for num_bins in bin_range:
+        gap_percent_list = []
+        overlap_percent_list = []
+
+        print(f"Running {simulations_per_bin} simulations for {num_bins} bins...")
+        for i in range(simulations_per_bin):
+            print(f"  Simulation {i+1}/{simulations_per_bin} (bins={num_bins})", end="\r")
+            # Modify the consecutive_error calls inside this function to take num_bins as argument
+            _, _, _, gap_pct, overlap_pct = generate_multitow_layout(
+                num_tows=28, 
+                plot=False, 
+                n_steps=311, 
+                cam_start_range=(-0.4, 0.6), 
+                lt_start_range=(-1, -0.8), 
+                llsb_start_range=(-0.15, -0.02)
+            )
+            gap_percent_list.append(gap_pct)
+            overlap_percent_list.append(overlap_pct)
+
+        avg_gap = np.mean(gap_percent_list)
+        avg_overlap = np.mean(overlap_percent_list)
+
+        results.append({
+            "bins": num_bins,
+            "avg_gap": avg_gap,
+            "avg_overlap": avg_overlap
+        })
+
+        print(f"\n  → Avg Gap: {avg_gap:.2f}% | Avg Overlap: {avg_overlap:.2f}% (bins={num_bins})\n")
+
+    return results, real_gap_pct, real_overlap_pct
+
+
+# Run the test
+#bin_range = list(range(30, 151, 5))  # From 30 to 150 in steps of 5
+#results, real_gap_pct, real_overlap_pct = simulation_gap_overlap_vs_bins(bin_range)
+# Extract data from results
+#bins = [r["bins"] for r in results]
+#avg_gap_sim = [r["avg_gap"] for r in results]
+#avg_overlap_sim = [r["avg_overlap"] for r in results]
+
+# Create the plot
+#plt.figure(figsize=(10, 6))
+
+# Plot simulated averages
+#plt.plot(bins, avg_gap_sim, marker='o', label="Simulated Avg Gap %", color="blue")
+#plt.plot(bins, avg_overlap_sim, marker='s', label="Simulated Avg Overlap %", color="orange")
+
+# Plot real values as horizontal lines
+#plt.axhline(y=real_gap_pct, color="blue", linestyle="--", linewidth=1.5, label=f"Real Gap % ({real_gap_pct:.2f}%)")
+#plt.axhline(y=real_overlap_pct, color="orange", linestyle="--", linewidth=1.5, label=f"Real Overlap % ({real_overlap_pct:.2f}%)")
+
+# Labels and formatting
+#plt.xlabel("Number of Bins")
+#plt.ylabel("Percentage")
+#plt.title("Average Gap and Overlap vs. Number of Bins")
+#plt.grid(True)
+#plt.legend()
+#plt.tight_layout()
+#plt.show()
