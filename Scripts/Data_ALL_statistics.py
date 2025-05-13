@@ -5,7 +5,7 @@ import warnings
 from Handling_ALL_Functions import get_synced_data
 
 
-# TODO: Change range(1,9) -> range(1,30). and change from time-sync to space-sync, this is boolean, check sync function
+'''Written by: Manuel Cruz & Diogo Ying'''
 
 # This import below is very long so that we can get the best fitting distributution for each error dataset
 from scipy.stats import (norm, logistic, gamma, beta, expon, lognorm, skewnorm,
