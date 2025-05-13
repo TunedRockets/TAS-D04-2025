@@ -6,6 +6,8 @@ from Handling_ALL_Functions import get_synced_data
 import random
 import pandas as pd
 
+steps_per_mm = 43
+
 #starting error distribution can be found here, but is assumed to be uniform based on these graphs ranges of values
 def fit_starting_error_distribution(sensor: str, plot=True):
     column_map = {
@@ -43,10 +45,7 @@ def fit_starting_error_distribution(sensor: str, plot=True):
 
     return mu, sigma, first_values
 
-
-
-
-def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_start_range=(-0.4, 0.6),lt_start_range=(-1, -0.8),llsb_start_range=(-0.15, -0.02)):
+def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35, n_steps=300, cam_start_range=(-0.4, 0.6), lt_start_range=(-1, -0.8), llsb_start_range=(-0.15, -0.02)):
     # Get binned models
     bin_stats_cam, slope_cam, intercept_cam, _, _, _, x_sorted_cam, bin_edges_cam, devs_cam = consecutive_error(
         "CAM", test_ratio=0.5, num_bins=100, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
@@ -59,7 +58,7 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     plt.figure(figsize=(12, 8))
     #for coloring properly (chatgpt did the plotting)
     cmap = plt.get_cmap("tab10")
-    x_vals = np.arange(n_steps)
+    x_vals = np.arange(n_steps) / steps_per_mm  # convert step indices to mm
 
     top_lines = []
     bottom_lines = []
@@ -78,7 +77,7 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
 
         width_error = generate_error_path(start_llsb, n_steps, slope_llsb, intercept_llsb,
                                           x_sorted_llsb, bin_edges_llsb, devs_llsb, random_seed=random.randint(0, 10000))
-        width = width_error + 6.35
+        width = width_error + tow_width_mm
 
         top_line = centerline + 0.5 * width
         bottom_line = centerline - 0.5 * width
@@ -87,13 +86,13 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
         bottom_lines.append(bottom_line)
 
         # --- Plot ---
-        plt.plot(centerline, color=color, label=f"Tow {i+1} Centerline", linewidth=2)
-        plt.plot(top_line, linestyle=":", color=color, linewidth=1)
-        plt.plot(bottom_line, linestyle=":", color=color, linewidth=1)
-        plt.plot([offset]*n_steps, linestyle="--", color="gray", alpha=0.6,
+        plt.plot(x_vals, centerline[:n_steps], color=color, label=f"Tow {i+1} Centerline", linewidth=2)
+        plt.plot(x_vals, top_line[:n_steps], linestyle=":", color=color, linewidth=1)
+        plt.plot(x_vals, bottom_line[:n_steps], linestyle=":", color=color, linewidth=1)
+        plt.plot(x_vals, [offset]*n_steps, linestyle="--", color="gray", alpha=0.6,
                  label="Ideal Centerline" if i == 0 else "")
 
-    plt.xlabel("Step (must be converted to x position)")
+    plt.xlabel("x position [mm]")
     plt.ylabel("y position [mm]")
     plt.title(f"Simulated {num_tows}-Tow Layout with Random Start Errors")
     plt.legend(loc="upper right", ncol=2)
@@ -137,16 +136,19 @@ def generate_multitow_layout(num_tows=5,tow_spacing_mm=6.35,n_steps=300,cam_star
     print(f"Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
 
     return gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent
-gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=15)
+
+gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=2)
 
 # Plot the gap(s) over steps (not time)
+x_vals_mm = gap_overlap_df.index / steps_per_mm  # convert index (steps) to mm
+
 plt.figure(figsize=(12, 5))
 for column in gap_overlap_df.columns:
-    plt.plot(gap_overlap_df.index, gap_overlap_df[column], label=column)
+    plt.plot(x_vals_mm, gap_overlap_df[column], label=column)
 
-plt.xlabel("Step")
+plt.xlabel("X Position [mm]")
 plt.ylabel("Distance between tows (mm): positive for gap, negative for overlap")
-plt.title(f"Vertical Gaps Between Adjacent Tows Over Steps\n"
+plt.title(f"Vertical Gaps Between Adjacent Tows Over Distance\n"
           f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
 plt.axhline(0, color='gray', linestyle='--', linewidth=1)
 plt.legend()
@@ -154,16 +156,9 @@ plt.grid(True)
 plt.tight_layout()
 plt.show()
 
-
-
-
-
-
-
 #REAL DATA (!deletes a lot of data!, only use as indicator for percentage of gap overlap)
-#
-#
-def calculate_real_gap_overlap_percentages(num_tows=15, tow_spacing_mm=6.35):
+
+def calculate_real_gap_overlap_percentages(num_tows=5, tow_spacing_mm=6.35):
     offsets = np.linspace(-(num_tows - 1) / 2, (num_tows - 1) / 2, num_tows) * tow_spacing_mm
     top_lines = []
     bottom_lines = []
@@ -224,4 +219,5 @@ def calculate_real_gap_overlap_percentages(num_tows=15, tow_spacing_mm=6.35):
     print(f"[REAL] Overlap area: {total_overlap_area:.2f} ({overlap_percent:.2f}%)")
 
     return gap_overlap_data, gap_percent, overlap_percent
+
 real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=30)
