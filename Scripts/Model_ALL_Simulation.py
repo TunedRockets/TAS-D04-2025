@@ -226,18 +226,19 @@ real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percent
 
 
 # Run the simulation 1000 times 
-num_simulations = 1000
-gap_percent_list = []
-overlap_percent_list = []
-for i in range(num_simulations):
-    print(f"Running simulation {i+1}/{num_simulations}", end="\r")
-    _, _, _, gap_pct, overlap_pct = generate_multitow_layout(num_tows=15,plot=False)
-    gap_percent_list.append(gap_pct)
-    overlap_percent_list.append(overlap_pct)
+def simulation_verificatoin():
+    num_simulations = 250
+    gap_percent_list = []
+    overlap_percent_list = []
+    for i in range(num_simulations):
+        print(f"Running simulation {i+1}/{num_simulations}", end="\r")
+        _, _, _, gap_pct, overlap_pct = generate_multitow_layout(num_tows=15,plot=False)
+        gap_percent_list.append(gap_pct)
+        overlap_percent_list.append(overlap_pct)
 
-avg_gap = np.mean(gap_percent_list)
-avg_overlap = np.mean(overlap_percent_list)
+    avg_gap = np.mean(gap_percent_list)
+    avg_overlap = np.mean(overlap_percent_list)
 
-print(f"\n\nAfter {num_simulations} simulations of 15-tow layout:")
-print(f"Average Gap Percentage: {avg_gap:.2f}%")
-print(f"Average Overlap Percentage: {avg_overlap:.2f}%")
+    print(f"\n\nAfter {num_simulations} simulations of 15-tow layout:")
+    print(f"Average Gap Percentage: {avg_gap:.2f}%")
+    print(f"Average Overlap Percentage: {avg_overlap:.2f}%")
