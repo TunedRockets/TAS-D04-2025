@@ -72,8 +72,8 @@ save_duration = 200  # Duration in milliseconds for the green color
 # Default settings
 num_tows = 2                                    # Unitless
 tow_width = 6.35                                # mm
-steps_per_mm = 3 / 10                           # step/mm
-tow_length = 100 * steps_per_mm                 # step
+steps_per_mm = 300 / 1000                       # step/mm, keep consistent with Model_ALL_Simulation
+tow_length = 1000 * steps_per_mm                # step
 tow_length_mm = int(tow_length / steps_per_mm)  # mm
 tow_spacing = 6.35                              # mm
 
@@ -169,17 +169,32 @@ def handle_settings_events(event):
         if event.key == pygame.K_RETURN:
             try:
                 value = float(input_text)
-                if active_input_field == 0:
+
+                if active_input_field == 0:  # Number of Tows
+                    if value <= 0 or not value.is_integer():
+                        raise ValueError("Number of tows must be a positive integer.")
                     num_tows = int(value)
-                elif active_input_field == 1:
+
+                elif active_input_field == 1:  # Tow Width
+                    if value <= 0:
+                        raise ValueError("Tow width must be a positive number.")
                     tow_width = value
-                elif active_input_field == 2:
+
+                elif active_input_field == 2:  # Tow Length
+                    if value <= 0 or not value.is_integer():
+                        raise ValueError("Tow length must be a positive integer.")
                     tow_length_mm = int(value)
-                elif active_input_field == 3:
-                    tow_spacing = float(value)
+
+                elif active_input_field == 3:  # Tow Spacing
+                    if value <= 0:
+                        raise ValueError("Tow spacing must be a positive number.")
+                    tow_spacing = value
+
                 tow_positions = [(i * tow_spacing, 100) for i in range(num_tows)]
-            except ValueError:
-                print("Invalid input")
+
+            except ValueError as e:
+                print(f"Input Error: {e}")  # You can also draw this to the screen if needed
+
             active_input_field = None
             input_text = ""
         elif event.key == pygame.K_BACKSPACE:
