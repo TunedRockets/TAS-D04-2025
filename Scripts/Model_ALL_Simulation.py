@@ -86,16 +86,18 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
         bottom_lines.append(bottom_line)
 
         # --- Plot ---
+        plt.plot(x_vals, [offset]*n_steps, linestyle="--", color="gray", alpha=0.6,
+                label="Ideal Centerline" if i == 0 else "")
         plt.plot(x_vals, centerline[:n_steps], color=color, label=f"Tow {i+1} Centerline", linewidth=2)
         plt.plot(x_vals, top_line[:n_steps], linestyle=":", color=color, linewidth=1)
         plt.plot(x_vals, bottom_line[:n_steps], linestyle=":", color=color, linewidth=1)
-        plt.plot(x_vals, [offset]*n_steps, linestyle="--", color="gray", alpha=0.6,
-                label="Ideal Centerline" if i == 0 else "")
+        
     if plot == True:
         plt.xlabel("x position [mm]")
         plt.ylabel("y position [mm]")
         plt.title(f"Simulated {num_tows}-Tow Layout with Random Start Errors")
-        plt.legend(loc="upper right", ncol=2)
+        if num_tows <= 50:
+            plt.legend(loc="upper right", ncol=2)
         plt.grid(True)
         plt.tight_layout()
         # The next line is commented for User_Interface. If you need to show the graph for a bit, make sure to revert it back after.
