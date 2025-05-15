@@ -49,8 +49,8 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
         'skewnorm': 'Skew-Normal Distribution',
         'genextreme': 'Generalized Extreme Value'}
 
-    fig, ax = plt.subplots(2, 2, figsize=(10, 8))
-    fig.suptitle(title)
+    #fig, ax = plt.subplots(figsize=(10, 8))
+    #fig.suptitle(title)
     errors = [
         real_data['width error_LLS_A'],
         real_data['width error_LLS_B'],
@@ -69,6 +69,7 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
         bin_widths = [None] * 4
 
     for i, vals in enumerate(errors):
+        fig, ax = plt.subplots(figsize=(10, 3))
         # print(f'TESTTEST: i={i}, vals={vals} #######################')
         row, col = divmod(i, 2)
         clean = vals.dropna().to_numpy()
@@ -76,8 +77,8 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
         bw = bin_widths[i]
         bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
 
-        ax[row, col].hist(clean, bins=bins, alpha=0.6, density=True, label='real')
-        ax[row, col].hist(sim_data[i], bins=bins, alpha=0.6, density=True, label='simulated')
+        ax.hist(clean, bins=bins, alpha=0.5, density=True, label='real')
+        ax.hist(sim_data[i], bins=bins, alpha=0.5, density=True, label='simulated')
         best = best_fit_distribution(clean, bins=len(bins) - 1)
         dist, params = best['dist'], best['params']
         friendly = distribution_labels.get(dist.name, dist.name)
@@ -87,12 +88,12 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
 
         # print(f"{names[i]} best fit: {friendly}")
 
-        x = np.linspace(mn, mx, 200)
-        pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
+        #x = np.linspace(mn, mx, 200)
+        #pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
 
-        ax[row, col].plot(x, pdf, '-', lw=2, label=friendly)
-        ax[row, col].text(0.02, 0.95, friendly, transform=ax[row, col].transAxes,
-                          va='top', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+        #ax[row, col].plot(x, pdf, '-', lw=2, label=friendly)
+        #ax[row, col].text(0.02, 0.95, friendly, transform=ax[row, col].transAxes,
+        #                  va='top', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
 
 
         ################
@@ -114,35 +115,36 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
         ################
 
         # Fix limits for individual plots for better visualization
-        if i == 1:
-            ax[row, col].set_xlim(-0.4, 0.2)
-        elif i == 2:
-            ax[row, col].set_xlim(-1.2, -0.75)
-        elif i == 3:
-            ax[row, col].set_xlim(-0.5, 1)
+        #if i == 1:
+        #    ax.set_xlim(-0.4, 0.2)  #0.4
+        #elif i == 2:
+        #    ax.set_xlim(-1.2, -0.75)
+        #elif i == 3:
+        #    ax.set_xlim(-0.5, 1)
+        ax.set_xlim(-1.2, 1.2)
 
         mean_val = clean.mean()
         std_val = clean.std()
         sim_mean = np.array(sim_data[i]).mean()
         sim_std = np.array(sim_data[i]).std()
 
-        ax[row, col].axvline(mean_val, color='purple', linestyle='-',
-                             label=rf'Mean = {mean_val:.2f}' + '\n' + rf'$\sigma$ = {std_val:.2f}')
-        ax[row, col].axvline(sim_mean, color='red', linestyle='-',
-                             label=rf'Mean = {sim_mean:.2f}' + '\n' + rf'$\sigma$ = {sim_std:.2f}')
+        ax.axvline(mean_val, color='purple', linestyle='-',
+                             label=rf'Real Mean = {mean_val:.2f}')          #  + '\n' + rf'$\sigma$ = {std_val:.2f}'
+        ax.axvline(sim_mean, color='red', linestyle='-',
+                             label=rf'Simulated Mean = {sim_mean:.2f}')     # + '\n' + rf'$\sigma$ = {sim_std:.2f}'
 
-        ax[row, col].set_title(titles[i])
-        ax[row, col].set_xlabel(names[i])
-        ax[row, col].set_ylabel('Density')
-        ax[row, col].legend()
+        #ax[row, col].set_title(titles[i])
+        ax.set_xlabel(titles[i])
+        ax.set_ylabel('Density')
+        ax.legend()
 
-    plt.tight_layout(rect=[0, 0, 1, 1])
-    plt.show()
+        plt.tight_layout(rect=[0, 0, 1, 1])
+        plt.show()
 
 
 
 def run_model(save_data: bool=False, use_saved: bool=False):
-    real_data = pd.concat((get_synced_data(t, spacesynced=False) for t in range(1, 32)), ignore_index=True)
+    real_data = pd.concat((get_synced_data(t, spacesynced=True) for t in range(3, 32, 2)), ignore_index=True)
 
     cam_start_range = (-0.4, 0.6)
     lt_start_range = (-1, -0.8)
@@ -168,7 +170,7 @@ def run_model(save_data: bool=False, use_saved: bool=False):
     LLSA_generated_bins_mean_var = []
     LLSB_generated_bins_mean_var = []
     generated_bins_mean_var = [LT_generated_bins_mean_var, CAM_generated_bins_mean_var, LLSA_generated_bins_mean_var, LLSB_generated_bins_mean_var]
-    for num_bins in range(90, 96, 5):
+    for num_bins in range(90, 91, 5):
         #num_bins = 30
         rs = 42
         LT_dist = consecutive_error('LT', random_state=rs, num_bins=num_bins, test_ratio=0.00001, plot_fit=False)
@@ -185,13 +187,13 @@ def run_model(save_data: bool=False, use_saved: bool=False):
             start_lt = random.uniform(*lt_start_range)
             start_llsb = random.uniform(*llsb_start_range)
             LT_error_list = generate_error_path(start_lt, n_steps, LT_dist[1], LT_dist[2], LT_dist[-3], LT_dist[-2],
-                                                LT_dist[-1], random_seed=run)
+                                                LT_dist[-1])
             CAM_error_list = generate_error_path(start_cam, n_steps, CAM_dist[1], CAM_dist[2], CAM_dist[-3], CAM_dist[-2],
-                                                 CAM_dist[-1], random_seed=run)
+                                                 CAM_dist[-1])
             LLSA_error_list = generate_error_path(-0.25, n_steps, LLSA_dist[1], LLSA_dist[2], LLSA_dist[-3],
-                                                  LLSA_dist[-2], LLSA_dist[-1], random_seed=run)
+                                                  LLSA_dist[-2], LLSA_dist[-1])
             LLSB_error_list = generate_error_path(start_llsb, n_steps, LLSB_dist[1], LLSB_dist[2], LLSB_dist[-3],
-                                                  LLSB_dist[-2], LLSB_dist[-1], random_seed=run)
+                                                  LLSB_dist[-2], LLSB_dist[-1])
 
 
             total_error[0] = (total_error[0] + list(LT_error_list))

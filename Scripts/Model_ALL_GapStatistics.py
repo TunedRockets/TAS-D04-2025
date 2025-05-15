@@ -52,11 +52,11 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
                              plot=True):
     # Get binned models
     bin_stats_cam, slope_cam, intercept_cam, _, _, _, x_sorted_cam, bin_edges_cam, devs_cam = consecutive_error(
-        "CAM", test_ratio=0.001, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "CAM", test_ratio=0.00001, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     bin_stats_lt, slope_lt, intercept_lt, _, _, _, x_sorted_lt, bin_edges_lt, devs_lt = consecutive_error(
-        "LT", test_ratio=0.001, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "LT", test_ratio=0.00001, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     bin_stats_llsb, slope_llsb, intercept_llsb, _, _, _, x_sorted_llsb, bin_edges_llsb, devs_llsb = consecutive_error(
-        "LLS_B", test_ratio=0.001, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "LLS_B", test_ratio=0.00001, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     # get perfect offsets
     offsets = np.linspace(-(num_tows - 1) / 2, (num_tows - 1) / 2, num_tows) * tow_spacing_mm
     plt.figure(figsize=(12, 8))
@@ -126,8 +126,9 @@ def calculate_real_gap_overlap_percentages(num_tows=5, tow_spacing_mm=6.35):
     top_lines = []
     bottom_lines = []
 
-    for tow in range(2, 2 + num_tows):
-        df = get_synced_data(tow, spacesynced=True)
+    for tow in range(2, 2 + num_tows):   #for tow in range(3, 32, 2):
+        tow_temp = tow*2-1
+        df = get_synced_data(tow_temp, spacesynced=True)
 
         cam = df["center_CAM"].dropna().values
         lt = df["error_LT"].dropna().values
@@ -164,23 +165,25 @@ def calculate_real_gap_overlap_percentages(num_tows=5, tow_spacing_mm=6.35):
     return gap_overlap_data
 
 # data
-real_gap_data = calculate_real_gap_overlap_percentages(num_tows=30)
-gap_overlap_df = generate_multitow_layout(num_tows=10)
+real_gap_data = calculate_real_gap_overlap_percentages(num_tows=15)
+gap_overlap_df = generate_multitow_layout(num_tows=15)
 #print(f'uuhhhuhhh {real_gap_data}')
 #print('wtf')
 
 #plots
-plt.hist(real_gap_data, label='real', bins=80, alpha=0.5, density=True)
-plt.hist(gap_overlap_df, label='simulated', bins=80, alpha=0.5, density=True)
 
-plt.xlabel("Gap [mm]")
-plt.title(f"Gaps")
-plt.axhline(0, color='gray', linestyle='--', linewidth=1)
-plt.legend()
+fig, ax = plt.subplots(figsize=(10, 8))
+ax.hist(real_gap_data, label='real', bins=80, alpha=0.5, density=True)
+ax.hist(gap_overlap_df, label='simulated', bins=80, alpha=0.5, density=True)
+ax.set_xlabel("Gap [mm]")
+ax.set_ylabel("Density")
+# plt.title(f"Gaps")
+ax.set_xlim(-1.2, 1.2)
+ax.axhline(0, color='gray', linestyle='--', linewidth=1)
+ax.legend()
+
 plt.grid(True)
-plt.tight_layout()
-
-
+plt.tight_layout(rect=[0, 0, 1, 0.6])
 plt.show()
 
 # Run the simulation 1000 times
