@@ -84,13 +84,13 @@ def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = No
             data['error_LT'],
             data['center_CAM']]
         
-        names = ['error_LLS_A', 'error_LLS_B', 'error_LT', 'error_CAM']
+        names = ['Error LLS A', 'Error LLS B', 'Error Laser Tracker', 'Error Camera']
 
         titles = [
-            'Error Tape width before compaction',
-            'Error Tape width after compaction',
-            'Error robot position',
-            'Error tape lateral movement']
+            'Tape width before compaction deviation',
+            'Tape width after compaction deviation',
+            'Robot position deviation',
+            'Tape lateral movement deviation']
         
 
         if bin_widths is None:
@@ -114,25 +114,26 @@ def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = No
             pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
             
             ax[row, col].plot(x, pdf, '-', lw=2, label=friendly)
-            ax[row, col].text(0.02, 0.95, friendly, transform=ax[row, col].transAxes,
+            ax[row, col].text(0.02, 0.95, friendly,transform=ax[row, col].transAxes,
                             va='top', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
             
-            # Fix limits for individual plots for better visualization
+            '''# Fix limits for individual plots for better visualization
             if i == 1:
                 ax[row, col].set_xlim(-0.4, 0.2)
             elif i == 2:
                 ax[row, col].set_xlim(-1.2, -0.75)
             elif i == 3:
-                ax[row, col].set_xlim(-0.5, 1)
+                ax[row, col].set_xlim(-0.5, 1)'''
 
 
             mean_val = clean.mean()
             std_val  = clean.std()
 
-            ax[row, col].axvline(mean_val, color='black', linestyle='-',
+            ax[row, col].axvline(mean_val, color='magenta', linestyle='-',
                                 label=rf'Mean = {mean_val:.2f}' + '\n' + rf'$\sigma$ = {std_val:.2f}')
+            ax[row, col].axvline(0.0, color='black', linestyle='dashed')
 
-
+            ax[row, col].set_xlim(-1.2, 1.2)
             ax[row, col].set_title(titles[i])
             ax[row, col].set_xlabel(names[i])
             ax[row, col].set_ylabel('Density')
@@ -337,16 +338,18 @@ def main():
 
     # To make the plots appear, change run=False to run=True
 
+    # All tows are shown
     plot_histograms(
         df,
-        title="Sensor Error Histograms (ALL TOWS)",
-        bin_widths=[0.005, 0.005, 0.005, 0.03], 
+        title="Sensor Error Histograms ",
+        bin_widths=[0.008, 0.008, 0.008, 0.008], 
         run = True)
+    
     plot_histograms_separated(
         df,
         title="Sensor Error Histograms (ALL TOWS)",
         bin_widths=[0.005, 0.005, 0.005, 0.03],
-        run = True)
+        run = False)
 
     plot_LLSA_vs_LLSB(df,
         title="Error LLS A vs. Error LLS B (ALL TOWS)",
