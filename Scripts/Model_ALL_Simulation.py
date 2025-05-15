@@ -45,14 +45,14 @@ def fit_starting_error_distribution(sensor: str, plot=True):
 
     return mu, sigma, first_values
 
-def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35, n_steps=311, cam_start_range=(-0.4, 0.6), lt_start_range=(-1, -0.8), llsb_start_range=(-0.15, -0.02),plot=True):
+def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35, n_steps=245, cam_start_range=(-0.6, 0.4), lt_start_range=(-1, -0.8), llsb_start_range=(-0.15, -0.02),plot=True):
     # Get binned models
     bin_stats_cam, slope_cam, intercept_cam, _, _, _, x_sorted_cam, bin_edges_cam, devs_cam = consecutive_error(
-        "CAM", test_ratio=0.5, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "CAM", test_ratio=0.5, num_bins=145, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     bin_stats_lt, slope_lt, intercept_lt, _, _, _, x_sorted_lt, bin_edges_lt, devs_lt = consecutive_error(
-        "LT", test_ratio=0.5, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "LT", test_ratio=0.5, num_bins=145, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     bin_stats_llsb, slope_llsb, intercept_llsb, _, _, _, x_sorted_llsb, bin_edges_llsb, devs_llsb = consecutive_error(
-        "LLS_B", test_ratio=0.5, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "LLS_B", test_ratio=0.5, num_bins=145, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     #get perfect offsets
     offsets = np.linspace(-(num_tows - 1) / 2, (num_tows - 1) / 2, num_tows) * tow_spacing_mm
     plt.figure(figsize=(12, 8))
