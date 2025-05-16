@@ -38,7 +38,10 @@
 
 
 import pygame
+import threading
 import sys
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import tkinter as tk
 import os
@@ -49,7 +52,6 @@ import time
 script_path = os.path.join(os.path.dirname(__file__), 'Scripts')
 sys.path.append(script_path)
 from Scripts.Model_ALL_Simulation import generate_multitow_layout
-
 
 # Get screen resolution with Tkinter
 root = tk.Tk()
@@ -71,6 +73,10 @@ MENU = "menu"
 SETTINGS = "settings"
 SIMULATION = "simulation"
 state = MENU
+simulation_thread = None
+simulation_result = None  # will hold (fig, gap_percent, overlap_percent)
+loading_start_time = None
+loading_estimated_time = None
 tow_positions = [(50, 50), (150, 150)]
 active_input_field = None
 input_text = ""
@@ -320,8 +326,84 @@ def draw_loading_screen():
     screen.blit(loading_text, loading_rect)
     pygame.display.flip()
 
+def run_simulation():
+    global simulation_result
+    # Run the heavy simulation function and store result
+    simulation_result = generate_multitow_layout_wrapped(num_tows, tow_width, tow_length_mm, tow_spacing)
+
+def draw_loading_bar():
+    global loading_start_time, loading_estimated_time, simulation_thread, simulation_result
+
+    elapsed = time.time() - loading_start_time
+    progress = min(elapsed / loading_estimated_time, 0.95) if simulation_thread.is_alive() else 1.0
+    remaining = max(0, loading_estimated_time - elapsed)
+
+    screen.fill((20, 20, 20))
+    bar_width = WIDTH // 2
+    bar_height = 30
+    bar_x = (WIDTH - bar_width) // 2
+    bar_y = HEIGHT // 2
+
+    pygame.draw.rect(screen, (70, 70, 70), (bar_x, bar_y, bar_width, bar_height))
+    pygame.draw.rect(screen, (100, 200, 100), (bar_x, bar_y, int(bar_width * progress), bar_height))
+
+    loading_text = font.render("Generating simulation...", True, (255, 255, 255))
+    loading_rect = loading_text.get_rect(center=(WIDTH // 2, bar_y - 40))
+    screen.blit(loading_text, loading_rect)
+
+    time_text = font.render(f"Estimated time remaining: {remaining:.1f} seconds", True, (200, 200, 200))
+    time_rect = time_text.get_rect(center=(WIDTH // 2, bar_y + bar_height + 30))
+    screen.blit(time_text, time_rect)
+
+    pygame.display.flip()
+
+    if not simulation_thread.is_alive():
+        time.sleep(0.5)  # small pause for smooth transition
+        return True  # finished
+    return False
+
+def draw_simulation_from_result():
+    global simulation_result
+    screen.fill((0, 0, 0))
+
+    fig, gap_percent, overlap_percent = simulation_result
+
+    # Render matplotlib figure to Pygame surface
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    buf = canvas.buffer_rgba()
+    width, height = canvas.get_width_height()
+    image = pygame.image.frombuffer(buf, (width, height), "RGBA")
+
+    aspect_ratio = width / height
+    if width > WIDTH or height > HEIGHT:
+        if aspect_ratio > 1:
+            new_width = min(width, WIDTH)
+            new_height = int(new_width / aspect_ratio)
+        else:
+            new_height = min(height, HEIGHT)
+            new_width = int(new_height * aspect_ratio)
+        image = pygame.transform.smoothscale(image, (new_width, new_height))
+    else:
+        new_width, new_height = width, height
+
+    x = (WIDTH - new_width) // 2
+    y = (HEIGHT - new_height) // 2
+    screen.blit(image, (x, y))
+
+    info_text = f"Gap %: {gap_percent:.2f}    Overlap %: {overlap_percent:.2f}"
+    info_surface = font.render(info_text, True, (255, 255, 255))
+    info_rect = info_surface.get_rect(center=(WIDTH // 2, y + new_height + 30))
+    screen.blit(info_surface, info_rect)
+
+    draw_button("Back", pygame.Rect(50, HEIGHT - 70, 100, 40))
+    draw_button("Save", pygame.Rect(WIDTH - 150, HEIGHT - 70, 100, 40))
+
+    pygame.display.flip()
+
 def main():
-    global state
+    global state, simulation_thread, loading_start_time, loading_estimated_time, simulation_result
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -333,7 +415,7 @@ def main():
                     button_width, button_height = 200, 50
                     button_spacing = 20
                     start_y = HEIGHT // 2 - (3 * button_height + 2 * button_spacing) // 2
-                    button_labels = ["Simulations", "Settings", "Quit"]
+                    button_labels = ["Simulation", "Settings", "Quit"]
 
                     for i, label in enumerate(button_labels):
                         rect = pygame.Rect(
@@ -343,33 +425,68 @@ def main():
                             button_height
                         )
                         if rect.collidepoint(event.pos):
-                            if label == "Simulations":
-                                # Step 2: Draw loading screen
-                                screen.fill((0, 0, 0))
-                                loading_text = font.render("Loading simulation...", True, (255, 255, 255))
-                                loading_rect = loading_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-                                screen.blit(loading_text, loading_rect)
-                                pygame.display.flip()  # Force update to show loading screen
+                            if label == "Simulation":
+                                # Start simulation thread and loading
+                                simulation_result = None
+                                loading_start_time = time.time()
+                                # Estimate time based on inputs
+                                loading_estimated_time = 1 + 53 * (num_tows * tow_length_mm) / (1000 * 1000)
+                                loading_estimated_time = max(5, loading_estimated_time)  # minimum 5 seconds to show progress
 
-                                # Continue to simulation
-                                state = SIMULATION
-                                draw_simulation()
-                                state = MENU
+                                simulation_thread = threading.Thread(target=run_simulation)
+                                simulation_thread.start()
+
+                                state = "loading"
+
                             elif label == "Settings":
                                 state = SETTINGS
                             elif label == "Quit":
                                 pygame.quit()
                                 sys.exit()
 
-
             elif state == SETTINGS:
                 handle_settings_events(event)
 
-        # Drawing
+            elif state == "loading":
+                # In loading state, allow escape to cancel back to menu if you want
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    # Optional: stop simulation thread? Not trivial, so just go back to menu
+                    state = MENU
+
+            elif state == SIMULATION:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    back_button_rect = pygame.Rect(50, HEIGHT - 70, 100, 40)
+                    save_button_rect = pygame.Rect(WIDTH - 150, HEIGHT - 70, 100, 40)
+                    if back_button_rect.collidepoint(event.pos):
+                        state = MENU
+                    elif save_button_rect.collidepoint(event.pos):
+                        save_dir = "Figures"
+                        os.makedirs(save_dir, exist_ok=True)
+                        fig, _, _ = simulation_result
+                        filename = os.path.join(save_dir, f"figure_{figure_counter}.png")
+                        fig.savefig(filename)
+                        print(f"Saved figure as {filename}")
+
+        # Drawing states
         if state == MENU:
             draw_menu()
+
         elif state == SETTINGS:
             draw_settings()
+
+        elif state == "loading":
+            finished = draw_loading_bar()
+            if finished:
+                state = SIMULATION
+
+        elif state == SIMULATION:
+            if simulation_result is not None:
+                draw_simulation_from_result()
+            else:
+                screen.fill((0, 0, 0))
+                loading_text = font.render("Waiting for simulation result...", True, (255, 255, 255))
+                screen.blit(loading_text, (50, HEIGHT // 2))
+                pygame.display.flip()
 
         pygame.display.flip()
         clock.tick(30)
