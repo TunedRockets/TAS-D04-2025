@@ -247,8 +247,6 @@ def CAM_plotter(CAM_center: list, CAM_time: list, data_state: str = "p"):
     plt.show()
     return
 
-import matplotlib.pyplot as plt
-
 def plot_all_graphs_with_sync(LT_x, LT_time, LLS_A_width, LLS_A_time, LLS_B_width, LLS_B_time, CAM_center, CAM_time):
     # Process LT as array
     LT_x = np.array(LT_x)
@@ -396,7 +394,7 @@ def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
         beta = 2                    # Factor for determining when the x velocity goes below a certain value
         delta_x_values = []         # List to hold the x velocity values in the sample
         x_values = []               # List to hold the x values in the sample
-        y = int(len(LT_x)*0.3)     # End range for the sample region / Beginning range for the test region
+        y = int(len(LT_x)*0.5)      # End range for the sample region / Beginning range for the test region
 
         for i in range(int(len(LT_x)*0.2), y):                  # Loop over sample to determine the smallest x velocity value
             delta_x_values.append((LT_x[i+1] - LT_x[i])/0.010)  # Append x velocity values in the sample
@@ -409,15 +407,17 @@ def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
         delta_xi_list = []                                      # List to hold the x velocity values in the test region
 
         for j in range(y, int(len(LT_x))):                              # Loop over test region to determine the x at 930mm
-            if (LT_x[j+1] - LT_x[j]) < (delta_x_min/beta):        # If the x velocity suddenly drops below this factor then we know the machine slowed down to cut the tape at 930mm
+            if (LT_x[j+1] - LT_x[j]) < (delta_x_min/beta):              # If the x velocity suddenly drops below this factor then we know the machine slowed down to cut the tape at 930mm
                 xi_list.append(LT_x[j])                                 # Append x values in the test region
                 ti_list.append(LT_time[j])                              # Append time values in the test region
                 delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)    # Append x velocity values in the test region
                 if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta): # If the x velocity suddenly increases above this factor then we know the machine is speeding back up (leaving the 930mm point)
                     break
-                                                     
+
+        print(xi_list)                            
         index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))               # The smallest x velocity value is where x = 930mm
         xi = xi_list[index_delta_xi_min]                                                    # Locate x = 930 mm using the index above (as the lists have the same size)
+        print(xi)
         ti = ti_list[index_delta_xi_min]                                                    # Locate the time at x = 930 mm using the index above (as the lists have the same size)
         if len(ti_list) < 2:                                                                # This is an error check as sometimes the output finds x = 930mm without finding a time region it falls in
             print("⚠️  Warning: Not enough cut points detected — using default t_width")
