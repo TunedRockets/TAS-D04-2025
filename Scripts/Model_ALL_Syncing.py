@@ -374,9 +374,9 @@ def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
         beta = 2                    # Factor for determining when the x velocity goes below a certain value
         delta_x_values = []         # List to hold the x velocity values in the sample
         x_values = []               # List to hold the x values in the sample
-        y = int(len(LT_x)*0.25)     # End range for the sample region / Beginning range for the test region
+        y = int(len(LT_x)*0.3)     # End range for the sample region / Beginning range for the test region
 
-        for i in range(int(len(LT_x)*0.1), y):                  # Loop over sample to determine the smallest x velocity value
+        for i in range(int(len(LT_x)*0.2), y):                  # Loop over sample to determine the smallest x velocity value
             delta_x_values.append((LT_x[i+1] - LT_x[i])/0.010)  # Append x velocity values in the sample
             x_values.append(LT_x[i])                            # Append x values in the sample
 
@@ -769,7 +769,7 @@ def main():
     # LLS_plotter(LLS_A_width, LLS_A_time, "s")
     # LLS_plotter(LLS_B_width, LLS_B_time, "s")
     # CAM_plotter(CAM_center, CAM_time, "s")
-    plot_all_graphs_with_sync(LT_x,LT_time,LLS_A_width,LLS_A_time,LLS_B_width,LLS_B_time,CAM_center,CAM_time)
+    # plot_all_graphs_with_sync(LT_x,LT_time,LLS_A_width,LLS_A_time,LLS_B_width,LLS_B_time,CAM_center,CAM_time)
     print("Hello world") # hi
     
 if __name__ == "__main__":
