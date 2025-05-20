@@ -607,6 +607,7 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
 
 
     # USE THE DATA HERE
+    # (or not)
 
     # join data in time
     data = join_data(frame_LT, frame_LLS_A, (blue_dot_LLS_A - time_930))
