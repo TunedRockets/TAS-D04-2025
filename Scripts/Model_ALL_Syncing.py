@@ -189,7 +189,7 @@ def LT_x_plotter(LT_x: list, LT_time: list, data_state: str = "p"):
     plt.show()
     return
 
-def LLS_plotter(LLS_A_OR_B_width: list, LLS_A_OR_B_time: list, data_state: str = "s"):
+def LLS_plotter(LLS_A_OR_B_width: list, LLS_A_OR_B_time: list, data_state: str = "p"):
     "This function visually shows the LLS_velocity data. It is not usefull for anything elsewhere"
 
     # Example usage: LLS_plotter(Handling_ALL_Functions.get_processed_data(tow number,"LLS_A")["width"],Handling_ALL_Functions.get_processed_data(tow number,"LLS_A")["time"])
@@ -203,7 +203,12 @@ def LLS_plotter(LLS_A_OR_B_width: list, LLS_A_OR_B_time: list, data_state: str =
         width_velocities.append(width_velocities[-1])                                       # dirty trick to match lengths (doesnt effect final outcome)
 
     if data_state == "s":
-        raise NotImplementedError
+
+        width_velocities = [] # Set up list of velocities
+
+        for i in range(len(LLS_A_OR_B_width)-1):                                            # Loop for calculating all the width velocities
+            width_velocities.append((LLS_A_OR_B_width[i+1] - LLS_A_OR_B_width[i]) / 0.004)  # Append the width velocity values
+        width_velocities.append(width_velocities[-1])                                       # dirty trick to match lengths (doesnt effect final outcome)
 
     plt.plot(LLS_A_OR_B_time, width_velocities, zorder=1)
     plt.title("Width velocity")
@@ -227,7 +232,12 @@ def CAM_plotter(CAM_center: list, CAM_time: list, data_state: str = "p"):
         center_velocities.append(center_velocities[-1])                                 # dirty trick to match lengths (doesnt effect final outcome)
 
     if data_state == "s":
-        raise NotImplementedError
+
+        center_velocities = [] # Set up list of velocities
+
+        for i in range(len(CAM_center)-1):                                              # Loop for calculating all the center velocities
+            center_velocities.append((CAM_center[i+1] - CAM_center[i]) / 0.001)         # Append the center velocity values
+        center_velocities.append(center_velocities[-1])                                 # dirty trick to match lengths (doesnt effect final outcome)
 
     plt.plot(CAM_time, center_velocities, zorder=1)
     plt.title("Center velocity")
@@ -242,9 +252,9 @@ def plot_all_graphs_with_sync(LT_x, LT_time, LLS_A_width, LLS_A_time, LLS_B_widt
     xi, ti, t_width = find_x930(LT_x, LT_time,"s")
 
     # Get sync times for LLS A, LLS B, and CAM using provided functions
-    sync_A_time = LLS_sync(LLS_A_width, LLS_A_time, "LLS_A", t_width)
-    sync_B_time = LLS_sync(LLS_B_width, LLS_B_time, "LLS_B", t_width)
-    sync_CAM_time = camera_sync(CAM_center, CAM_time, t_width)
+    sync_A_time = LLS_sync(LLS_A_width, LLS_A_time, "LLS_A", t_width, "s")
+    sync_B_time = LLS_sync(LLS_B_width, LLS_B_time, "LLS_B", t_width, "s")
+    sync_CAM_time = camera_sync(CAM_center, CAM_time, t_width, "s")
 
     # Utility to compute velocity from a signal and sample time
     def compute_velocity(values, dt):
@@ -756,9 +766,9 @@ def main():
     CAM_center = Handling_ALL_Functions.get_synced_data(tow)["center_CAM"]
     CAM_time = Handling_ALL_Functions.get_synced_data(tow)["time"]
     LT_x_plotter(LT_x, LT_time, "s")
-    # LLS_plotter(LLS_A_width, LLS_A_time, "p")
-    # LLS_plotter(LLS_B_width, LLS_B_time, "p")
-    # CAM_plotter(CAM_center, CAM_time, "p")
+    # LLS_plotter(LLS_A_width, LLS_A_time, "s")
+    # LLS_plotter(LLS_B_width, LLS_B_time, "s")
+    # CAM_plotter(CAM_center, CAM_time, "s")
     plot_all_graphs_with_sync(LT_x,LT_time,LLS_A_width,LLS_A_time,LLS_B_width,LLS_B_time,CAM_center,CAM_time)
     print("Hello world") # hi
     
