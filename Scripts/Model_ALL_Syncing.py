@@ -603,8 +603,10 @@ def _get_synced_data(tow:int, spacesynced:bool = False, overwrite:bool = False)-
 
             frame_LLS_B["time"][i] += dt
         frame_LLS_B.dropna()
-    
 
+
+
+    # USE THE DATA HERE
 
     # join data in time
     data = join_data(frame_LT, frame_LLS_A, (blue_dot_LLS_A - time_930))
