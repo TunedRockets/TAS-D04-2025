@@ -284,6 +284,14 @@ def plot_all_graphs_with_sync(LT_x, LT_time, LLS_A_width, LLS_A_time, LLS_B_widt
     LLS_B_velocity = compute_velocity(LLS_B_width, 0.004)
     CAM_velocity = compute_velocity(CAM_center, 0.001)
 
+    # normalize the data:
+    norm = lambda x: (x - np.average(x))/(np.var(x))
+    LT_velocity = 0.4*(LT_velocity- min(LT_velocity))/(max(LT_velocity) - min(LT_velocity)) # done crudely since that looks better
+    CAM_velocity = norm(CAM_velocity)
+    LLS_A_velocity = norm(LLS_A_velocity)
+    LLS_B_velocity = norm(LLS_B_velocity)
+
+
     # Helper to get y-value at time
     def get_y_at_time(times, values, target_time):
         index = min(range(len(times)), key=lambda i: abs(times[i] - target_time))
@@ -306,9 +314,6 @@ def plot_all_graphs_with_sync(LT_x, LT_time, LLS_A_width, LLS_A_time, LLS_B_widt
     # Plot
     plt.figure(figsize=(12, 8))
 
-    plt.plot(LT_time, LT_velocity, label="LT Velocity", color="blue")
-    plt.scatter(ti, sync_LT_velocity, color="blue", edgecolors="black", zorder=5, label="LT Sync")
-
     plt.plot(LLS_A_time, LLS_A_velocity, label="LLS_A Velocity", color="green")
     plt.scatter(sync_A_time, sync_A_velocity, color="green", edgecolors="black", zorder=5, label="LLS_A Sync")
 
@@ -317,6 +322,9 @@ def plot_all_graphs_with_sync(LT_x, LT_time, LLS_A_width, LLS_A_time, LLS_B_widt
 
     plt.plot(CAM_time, CAM_velocity, label="CAM Velocity", color="red")
     plt.scatter(sync_CAM_time, sync_CAM_velocity, color="red", edgecolors="black", zorder=5, label="CAM Sync")
+
+    plt.plot(LT_time, LT_velocity, label="LT Velocity", color="blue")
+    plt.scatter(ti, sync_LT_velocity, color="blue", edgecolors="black", zorder=5, label="LT Sync")
 
     plt.xlabel("Time [s]")
     plt.ylabel("Velocity")
