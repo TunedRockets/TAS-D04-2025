@@ -188,7 +188,7 @@ def LT_x_plotter(LT_x: list, LT_time: list, data_state: str = "p"):
     plt.show()
     return
 
-def LLS_plotter(LLS_A_OR_B_width: list, LLS_A_OR_B_time: list, data_state: str = "s"):
+def LLS_plotter(LLS_A_OR_B_width: list, LLS_A_OR_B_time: list, data_state: str = "p"):
     "This function visually shows the LLS_velocity data. It is not usefull for anything elsewhere"
 
     # Example usage: LLS_plotter(Handling_ALL_Functions.get_processed_data(tow number,"LLS_A")["width"],Handling_ALL_Functions.get_processed_data(tow number,"LLS_A")["time"])
@@ -202,7 +202,12 @@ def LLS_plotter(LLS_A_OR_B_width: list, LLS_A_OR_B_time: list, data_state: str =
         width_velocities.append(width_velocities[-1])                                       # dirty trick to match lengths (doesnt effect final outcome)
 
     if data_state == "s":
-        raise NotImplementedError
+
+        width_velocities = [] # Set up list of velocities
+
+        for i in range(len(LLS_A_OR_B_width)-1):                                            # Loop for calculating all the width velocities
+            width_velocities.append((LLS_A_OR_B_width[i+1] - LLS_A_OR_B_width[i]) / 0.004)  # Append the width velocity values
+        width_velocities.append(width_velocities[-1])                                       # dirty trick to match lengths (doesnt effect final outcome)
 
     plt.plot(LLS_A_OR_B_time, width_velocities, zorder=1)
     plt.title("Width velocity")
@@ -226,7 +231,12 @@ def CAM_plotter(CAM_center: list, CAM_time: list, data_state: str = "p"):
         center_velocities.append(center_velocities[-1])                                 # dirty trick to match lengths (doesnt effect final outcome)
 
     if data_state == "s":
-        raise NotImplementedError
+
+        center_velocities = [] # Set up list of velocities
+
+        for i in range(len(CAM_center)-1):                                              # Loop for calculating all the center velocities
+            center_velocities.append((CAM_center[i+1] - CAM_center[i]) / 0.001)         # Append the center velocity values
+        center_velocities.append(center_velocities[-1])                                 # dirty trick to match lengths (doesnt effect final outcome)
 
     plt.plot(CAM_time, center_velocities, zorder=1)
     plt.title("Center velocity")
