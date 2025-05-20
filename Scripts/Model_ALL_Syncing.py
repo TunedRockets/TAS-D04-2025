@@ -251,9 +251,9 @@ def plot_all_graphs_with_sync(LT_x, LT_time, LLS_A_width, LLS_A_time, LLS_B_widt
     xi, ti, t_width = find_x930(LT_x, LT_time,"s")
 
     # Get sync times for LLS A, LLS B, and CAM using provided functions
-    sync_A_time = LLS_sync(LLS_A_width, LLS_A_time, "LLS_A", t_width)
-    sync_B_time = LLS_sync(LLS_B_width, LLS_B_time, "LLS_B", t_width)
-    sync_CAM_time = camera_sync(CAM_center, CAM_time, t_width)
+    sync_A_time = LLS_sync(LLS_A_width, LLS_A_time, "LLS_A", t_width, "s")
+    sync_B_time = LLS_sync(LLS_B_width, LLS_B_time, "LLS_B", t_width, "s")
+    sync_CAM_time = camera_sync(CAM_center, CAM_time, t_width, "s")
 
     # Utility to compute velocity from a signal and sample time
     def compute_velocity(values, dt):
@@ -764,9 +764,9 @@ def main():
     CAM_center = Handling_ALL_Functions.get_synced_data(tow)["center_CAM"]
     CAM_time = Handling_ALL_Functions.get_synced_data(tow)["time"]
     LT_x_plotter(LT_x, LT_time, "s")
-    # LLS_plotter(LLS_A_width, LLS_A_time, "p")
-    # LLS_plotter(LLS_B_width, LLS_B_time, "p")
-    # CAM_plotter(CAM_center, CAM_time, "p")
+    # LLS_plotter(LLS_A_width, LLS_A_time, "s")
+    # LLS_plotter(LLS_B_width, LLS_B_time, "s")
+    # CAM_plotter(CAM_center, CAM_time, "s")
     plot_all_graphs_with_sync(LT_x,LT_time,LLS_A_width,LLS_A_time,LLS_B_width,LLS_B_time,CAM_center,CAM_time)
     print("Hello world") # hi
     
