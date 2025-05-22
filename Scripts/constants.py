@@ -26,5 +26,5 @@ y_increment_programmed = 12.5 #mm
 
 font_extra_small = 6
 font_small = 10
-font_medium = 14
-font_large = 18
+font_medium = 12
+font_large = 14
