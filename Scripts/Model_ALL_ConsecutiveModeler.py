@@ -69,7 +69,7 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
         bin_widths = [None] * 4
 
     for i, vals in enumerate(errors):
-        fig, ax = plt.subplots(figsize=(10, 3))
+        fig, ax = plt.subplots(figsize=(8, 3))
         # print(f'TESTTEST: i={i}, vals={vals} #######################')
         row, col = divmod(i, 2)
         clean = vals.dropna().to_numpy()
@@ -128,16 +128,17 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
         sim_mean = np.array(sim_data[i]).mean()
         sim_std = np.array(sim_data[i]).std()
 
-        ax.axvline(mean_val, color='purple', linestyle='-',
-                             label=rf'Real Mean = {mean_val:.2f}')          #  + '\n' + rf'$\sigma$ = {std_val:.2f}'
-        ax.axvline(sim_mean, color='red', linestyle='-',
-                             label=rf'Simulated Mean = {sim_mean:.2f}')     # + '\n' + rf'$\sigma$ = {sim_std:.2f}'
+        ax.axvline(mean_val, color='purple', linestyle='-', label='Real Mean', linewidth=1)
+        ax.axvline(sim_mean, color='red', linestyle='-', label='Simulated Mean', linewidth=1)     # + '\n' + rf'$\sigma$ = {sim_std:.2f}'
+        ax.axvline(0, color='black', linestyle='dashed')
 
         #ax[row, col].set_title(titles[i])
-        ax.set_xlabel(titles[i])
-        ax.set_ylabel('Density')
-        ax.legend()
+        ax.set_xlabel(titles[i], fontsize=12)
+        ax.set_ylabel('Density', fontsize=12)
+        ax.legend(fontsize=10)
+        ax.yaxis.set_major_formatter('{x:0<3.1f}')
 
+        plt.xticks(np.linspace(-1.2, 1.2, 9))
         plt.tight_layout(rect=[0, 0, 1, 1])
         plt.show()
 
@@ -170,7 +171,7 @@ def run_model(save_data: bool=False, use_saved: bool=False):
     LLSA_generated_bins_mean_var = []
     LLSB_generated_bins_mean_var = []
     generated_bins_mean_var = [LT_generated_bins_mean_var, CAM_generated_bins_mean_var, LLSA_generated_bins_mean_var, LLSB_generated_bins_mean_var]
-    for num_bins in range(90, 91, 5):
+    for num_bins in range(130, 131, 5):
         #num_bins = 30
         rs = 42
         LT_dist = consecutive_error('LT', random_state=rs, num_bins=num_bins, test_ratio=0.00001, plot_fit=False)
