@@ -301,10 +301,10 @@ def plot_all_graphs_with_sync(tow):
     ax.scatter(sync_CAM_time, 0, color="red", edgecolors="black", zorder=5, label="CAM Sync")
 
     ax.plot(LLS_A_time, LLS_A_velocity, label="LLS A Velocity", color="green")
-    ax.scatter(sync_A_time, 0, color="green", edgecolors="black", zorder=5, label="LLS_A Sync")
+    ax.scatter(sync_A_time, 0, color="green", edgecolors="black", zorder=5, label="LLS A Sync")
 
     ax.plot(LLS_B_time, LLS_B_velocity, label="LLS B Velocity", color="orange")
-    ax.scatter(sync_B_time, 0, color="orange", edgecolors="black", zorder=5, label="LLS_B Sync")
+    ax.scatter(sync_B_time, 0, color="orange", edgecolors="black", zorder=5, label="LLS B Sync")
 
     ax.plot(LT_time, LT_velocity, label="LT Velocity", color="blue")
     ax.scatter(ti, 0, color="blue", edgecolors="black", zorder=5, label="LT Sync")
