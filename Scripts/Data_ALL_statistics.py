@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import warnings
 from Handling_ALL_Functions import get_synced_data
+import constants
 
 
 '''Written by: Manuel Cruz & Diogo Ying'''
@@ -138,8 +139,9 @@ def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = No
             ax[row, col].set_xlabel(names[i])
             ax[row, col].set_ylabel('Density')
             ax[row, col].legend()
+            ax[row, col].xticks(np.linspace(-1.2, 1.2, 9))
 
-        plt.tight_layout(rect=[0, 0, 1, 1])
+        plt.tight_layout()
         plt.show()
 
 '''Plots all histograms in different Figures. 
@@ -166,10 +168,10 @@ def plot_histograms_separated(data: pd.DataFrame, bin_widths: list[float] = None
             'error_CAM']
 
         titles = [
-            'Tape Width Before Compaction.',
-            'Tape Width After Compaction.',
-            'Robot Position.',
-            'Tape Lateral Movement.']
+            'Tape Width Before Compaction',
+            'Tape Width After Compaction',
+            'Robot Position',
+            'Tape Lateral Movement']
         
 
         if bin_widths is None:
@@ -221,14 +223,15 @@ def plot_histograms_separated(data: pd.DataFrame, bin_widths: list[float] = None
 
             # All distributions are shown with this x-axis range
             ax.set_xlim(-1.2, 1.2)
-            ax.set_title(titles[i])
-            ax.set_xlabel('Error (mm)')
-            ax.set_ylabel('Density')
-            ax.legend()
+            ax.set_title(titles[i], fontsize= constants.font_large)
+            ax.set_xlabel('Error (mm)',fontsize=constants.font_medium)
+            ax.set_ylabel('Density',fontsize=constants.font_medium)
+            
+            ticks = np.linspace(-1.2, 1.2, 9)
+            ax.set_xticks(ticks)
+            ax.set_xticklabels([f"{t:.1f}" for t in ticks])
 
-            plt.tight_layout(rect=[0, 0, 1, 1])
-
-
+        plt.tight_layout()
         plt.show()
 
 
