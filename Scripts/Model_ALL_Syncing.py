@@ -249,8 +249,7 @@ def CAM_plotter(CAM_center: list, CAM_time: list, data_state: str = "p"):
 
 def plot_all_graphs_with_sync(tow):
 
-    # Example usage: tow = 6, plot_all_graphs_with_sync(tow)
-    
+    # Load data
     LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
     LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT")["time"]
     LLS_A_width = Handling_ALL_Functions.get_synced_data(tow)["width_LLS_A"]
@@ -259,22 +258,21 @@ def plot_all_graphs_with_sync(tow):
     LLS_B_time = Handling_ALL_Functions.get_synced_data(tow)["time"]
     CAM_center = Handling_ALL_Functions.get_synced_data(tow)["center_CAM"]
     CAM_time = Handling_ALL_Functions.get_synced_data(tow)["time"]
-    
+
     # Process LT as array
     LT_x = np.array(LT_x)
     LT_time = np.array(LT_time)
-    
+
     index_0 = 0
     while LT_x[index_0] < 0:
         index_0 += 1
-
     index_1000 = index_0
     while LT_x[index_1000] <= 1000:
         index_1000 += 1
 
-    LT_x = LT_x.T[index_0:index_1000]
-    LT_time = LT_time.T[index_0:index_1000]
-    
+    LT_x = LT_x[index_0:index_1000]
+    LT_time = LT_time[index_0:index_1000]
+
     # Find sync points
     xi, ti, t_width = find_x930(LT_x, LT_time, "s")
     sync_A_time = LLS_sync(LLS_A_width, LLS_A_time, "LLS_A", t_width, "s")
@@ -289,15 +287,6 @@ def plot_all_graphs_with_sync(tow):
     LLS_B_velocity = compute_velocity(LLS_B_width, 0.004)
     CAM_velocity = compute_velocity(CAM_center, 0.001)
 
-    def get_y_at_time(times, values, target_time):
-        index = min(range(len(times)), key=lambda i: abs(times[i] - target_time))
-        return values[index]
-
-    sync_LT_velocity = 0
-    sync_A_velocity = 0
-    sync_B_velocity = 0
-    sync_CAM_velocity = 0
-
     def get_time_for_position(target_x):
         index = min(range(len(LT_x)), key=lambda i: abs(LT_x[i] - target_x))
         return LT_time[index]
@@ -305,50 +294,34 @@ def plot_all_graphs_with_sync(tow):
     time_start = get_time_for_position(0)
     time_end = get_time_for_position(1000)
 
-    # Convert LT velocity for secondary axis
-    LT_velocity_scaled = np.array(LT_velocity) / 2
-
     # Start plotting
-    fig, ax1 = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(4, 3))
 
-    # Plot on primary axis
-    ax1.plot(CAM_time, CAM_velocity, label="CAM Velocity", color="red")
-    ax1.scatter(sync_CAM_time, sync_CAM_velocity, color="red", edgecolors="black", zorder=5, label="CAM Sync")
+    ax.plot(CAM_time, CAM_velocity, label="CAM Velocity", color="red")
+    ax.scatter(sync_CAM_time, 0, color="red", edgecolors="black", zorder=5, label="CAM Sync")
 
-    ax1.plot(LLS_A_time, LLS_A_velocity, label="LLS_A Velocity", color="green")
-    ax1.scatter(sync_A_time, sync_A_velocity, color="green", edgecolors="black", zorder=5, label="LLS_A Sync")
+    ax.plot(LLS_A_time, LLS_A_velocity, label="LLS A Velocity", color="green")
+    ax.scatter(sync_A_time, 0, color="green", edgecolors="black", zorder=5, label="LLS_A Sync")
 
-    ax1.plot(LLS_B_time, LLS_B_velocity, label="LLS_B Velocity", color="orange")
-    ax1.scatter(sync_B_time, sync_B_velocity, color="orange", edgecolors="black", zorder=5, label="LLS_B Sync")
+    ax.plot(LLS_B_time, LLS_B_velocity, label="LLS B Velocity", color="orange")
+    ax.scatter(sync_B_time, 0, color="orange", edgecolors="black", zorder=5, label="LLS_B Sync")
 
-    ax1.set_xlabel("Time [s]")
-    ax1.set_ylabel("Velocity")
-    ax1.set_xlim(time_start, time_end)
-    ax1.grid(True)
+    ax.plot(LT_time, LT_velocity, label="LT Velocity", color="blue")
+    ax.scatter(ti, 0, color="blue", edgecolors="black", zorder=5, label="LT Sync")
 
-    # Determine y-limits that ensure zero alignment between axes
-    # Get all primary and secondary velocity values
-    all_primary_velocities = np.array(LLS_A_velocity + LLS_B_velocity + CAM_velocity)
-    min1, max1 = np.min(all_primary_velocities), np.max(all_primary_velocities)
-    min2, max2 = np.min(LT_velocity_scaled), np.max(LT_velocity_scaled)
+    ax.set_xlabel("Time (s)", fontsize = constants.font_small)
+    ax.set_ylabel("Velocity (measurement/s)", fontsize = constants.font_small)
+    ax.set_xlim(time_start, time_end)
+    ax.grid(True)
 
-    # Make both ranges symmetric around zero and aligned
-    max_combined = max(abs(min1), abs(max1), abs(min2), abs(max2))
-    ax1.set_ylim(-max_combined, max_combined)
-    
-    # Secondary y-axis for LT (scaled)
-    ax2 = ax1.twinx()
-    ax2.plot(LT_time, LT_velocity_scaled, label="LT Velocity (1/2)", color="blue")
-    ax2.scatter(ti, sync_LT_velocity, color="blue", edgecolors="black", zorder=5, label="LT Sync (1/2)")
-    ax2.set_ylabel("LT Velocity (scaled)")
-    ax2.set_ylim(-max_combined, max_combined)  # Match primary y-axis range for aligned 0
+    # Set symmetric y-limits around zero
+    all_velocities = np.array(
+        CAM_velocity + LLS_A_velocity + LLS_B_velocity + LT_velocity
+    )
+    max_vel = np.max(np.abs(all_velocities))
+    ax.set_ylim(-max_vel, max_vel)
 
-    # Combine legends
-    lines_1, labels_1 = ax1.get_legend_handles_labels()
-    lines_2, labels_2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc="upper right")
-
-    plt.title("Velocities with Sync Points Detected at Tape Cut (x = 930 mm)")
+    ax.legend(loc="lower left", fontsize = constants.font_extra_small, ncol = 2)
     plt.tight_layout()
     plt.show()
 
@@ -439,7 +412,6 @@ def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
                 ti_list.append(LT_time[j])                              # Append time values in the test region
                 delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)    # Append x velocity values in the test region
                 if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta): # If the x velocity suddenly increases above this factor then we know the machine is speeding back up (leaving the 930mm point)
-                    print((LT_x[j+2] - LT_x[j+1])/0.010)
                     break
                           
         index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))               # The smallest x velocity value is where x = 930mm
@@ -819,6 +791,7 @@ def _sync_time_data():
 ##################################################################################################################################################################
 
 def main():
+    plot_all_graphs_with_sync(6)
     print("Hello world") # hi
     
 if __name__ == "__main__":
