@@ -189,7 +189,7 @@ def plot_histograms_separated(data: pd.DataFrame, bin_widths: list[float] = None
             bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
         
             # Create a new figure for this individual histogram
-            fig, ax = plt.subplots(figsize=(6, 4))
+            fig, ax = plt.subplots(figsize=(8, 2))
             #fig.suptitle(f"{titles[i]}")
         
             # Plot the histogram of the cleaned data
@@ -226,7 +226,7 @@ def plot_histograms_separated(data: pd.DataFrame, bin_widths: list[float] = None
             ax.set_title(titles[i], fontsize= constants.font_large)
             ax.set_xlabel('Error (mm)',fontsize=constants.font_medium)
             ax.set_ylabel('Density',fontsize=constants.font_medium)
-            
+
             ticks = np.linspace(-1.2, 1.2, 9)
             ax.set_xticks(ticks)
             ax.set_xticklabels([f"{t:.1f}" for t in ticks])
