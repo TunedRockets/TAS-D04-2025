@@ -5,6 +5,7 @@ import scipy.stats as stats
 from Handling_ALL_Functions import get_synced_data
 import random
 import pandas as pd
+import constants
 
 steps_per_mm = 360 / 1000       # Keep consistent with User_Interface
 
@@ -225,7 +226,7 @@ def simulation_verificatoin(num_simulations):
     print(f"Average Overlap Percentage: {avg_overlap:.2f}%")
 
 def main():
-    gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=15)
+    gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=2)
 
     # Plot the gap(s) over steps (not time)
     x_vals_mm = gap_overlap_df.index / steps_per_mm  # convert index (steps) to mm
@@ -234,12 +235,15 @@ def main():
     for column in gap_overlap_df.columns:
         plt.plot(x_vals_mm, gap_overlap_df[column], label=column)
 
-    plt.xlabel("X Position [mm]")
-    plt.ylabel("Distance between tows (mm): positive for gap, negative for overlap")
-    plt.title(f"Vertical Gaps Between Adjacent Tows Over Distance\n"
-            f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%")
+    plt.xlabel("Position (mm)", fontsize=constants.font_large)
+    plt.ylabel("Distance between tows (mm)", 
+               fontsize=constants.font_large)
+    
+    '''plt.title(f"Vertical Gaps Between Adjacent Tows Over Distance\n"
+            f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%",
+            fontsize=constants.font_large)'''
+    
     plt.axhline(0, color='gray', linestyle='--', linewidth=1)
-    plt.legend()
     plt.grid(True)
     plt.tight_layout()
     plt.show()
