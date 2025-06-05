@@ -321,7 +321,7 @@ def plot_all_graphs_with_sync(tow):
     max_vel = np.max(np.abs(all_velocities))
     ax.set_ylim(-max_vel, max_vel)
 
-    ax.legend(loc="lower left", fontsize = constants.font_extra_small, ncol = 2)
+    ax.legend(loc="lower left", fontsize = constants.font_small, ncol = 2)
     plt.tight_layout()
     plt.show()
 
