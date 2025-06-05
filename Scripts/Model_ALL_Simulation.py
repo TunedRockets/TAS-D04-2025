@@ -235,9 +235,9 @@ def main():
     for column in gap_overlap_df.columns:
         plt.plot(x_vals_mm, gap_overlap_df[column], label=column)
 
-    plt.xlabel("Position (mm)", fontsize=constants.font_large)
+    plt.xlabel("Position (mm)", fontsize=20)
     plt.ylabel("Distance between tows (mm)", 
-               fontsize=constants.font_large)
+               fontsize=20)
     
     '''plt.title(f"Vertical Gaps Between Adjacent Tows Over Distance\n"
             f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%",
