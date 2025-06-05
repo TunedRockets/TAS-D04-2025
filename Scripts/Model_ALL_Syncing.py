@@ -17,6 +17,7 @@ import inspect
 import matplotlib.pyplot as plt
 import itertools
 import constants
+import Handling_ALL_Functions
 
 ##################################################################################################################################################################
 """Functions for joining data"""
@@ -165,7 +166,16 @@ def LT_x_plotter(LT_x: list, LT_time: list, data_state: str = "p"):
             x_values.append(x)
 
     if data_state == "s":
-        raise NotImplementedError
+        
+        beta = 2
+        delta_x_values = []
+        x_values = []
+
+        for i in range(5, int(len(LT_x))):
+            delta_x = (LT_x[i-1] - LT_x[i-5])/0.050 # Divided by the rate at which the LT scans
+            x = LT_x[i]
+            delta_x_values.append(delta_x)
+            x_values.append(x)
 
     # Plot the data
     plt.figure(figsize=(8, 5))
@@ -193,7 +203,12 @@ def LLS_plotter(LLS_A_OR_B_width: list, LLS_A_OR_B_time: list, data_state: str =
         width_velocities.append(width_velocities[-1])                                       # dirty trick to match lengths (doesnt effect final outcome)
 
     if data_state == "s":
-        raise NotImplementedError
+
+        width_velocities = [] # Set up list of velocities
+
+        for i in range(len(LLS_A_OR_B_width)-1):                                            # Loop for calculating all the width velocities
+            width_velocities.append((LLS_A_OR_B_width[i+1] - LLS_A_OR_B_width[i]) / 0.004)  # Append the width velocity values
+        width_velocities.append(width_velocities[-1])                                       # dirty trick to match lengths (doesnt effect final outcome)
 
     plt.plot(LLS_A_OR_B_time, width_velocities, zorder=1)
     plt.title("Width velocity")
@@ -217,7 +232,12 @@ def CAM_plotter(CAM_center: list, CAM_time: list, data_state: str = "p"):
         center_velocities.append(center_velocities[-1])                                 # dirty trick to match lengths (doesnt effect final outcome)
 
     if data_state == "s":
-        raise NotImplementedError
+
+        center_velocities = [] # Set up list of velocities
+
+        for i in range(len(CAM_center)-1):                                              # Loop for calculating all the center velocities
+            center_velocities.append((CAM_center[i+1] - CAM_center[i]) / 0.001)         # Append the center velocity values
+        center_velocities.append(center_velocities[-1])                                 # dirty trick to match lengths (doesnt effect final outcome)
 
     plt.plot(CAM_time, center_velocities, zorder=1)
     plt.title("Center velocity")
@@ -226,6 +246,84 @@ def CAM_plotter(CAM_center: list, CAM_time: list, data_state: str = "p"):
     plt.grid()
     plt.show()
     return
+
+def plot_all_graphs_with_sync(tow):
+
+    # Load data
+    LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
+    LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT")["time"]
+    LLS_A_width = Handling_ALL_Functions.get_synced_data(tow)["width_LLS_A"]
+    LLS_A_time = Handling_ALL_Functions.get_synced_data(tow)["time"]
+    LLS_B_width = Handling_ALL_Functions.get_synced_data(tow)["width_LLS_B"]
+    LLS_B_time = Handling_ALL_Functions.get_synced_data(tow)["time"]
+    CAM_center = Handling_ALL_Functions.get_synced_data(tow)["center_CAM"]
+    CAM_time = Handling_ALL_Functions.get_synced_data(tow)["time"]
+
+    # Process LT as array
+    LT_x = np.array(LT_x)
+    LT_time = np.array(LT_time)
+
+    index_0 = 0
+    while LT_x[index_0] < 0:
+        index_0 += 1
+    index_1000 = index_0
+    while LT_x[index_1000] <= 1000:
+        index_1000 += 1
+
+    LT_x = LT_x[index_0:index_1000]
+    LT_time = LT_time[index_0:index_1000]
+
+    # Find sync points
+    xi, ti, t_width = find_x930(LT_x, LT_time, "s")
+    sync_A_time = LLS_sync(LLS_A_width, LLS_A_time, "LLS_A", t_width, "s")
+    sync_B_time = LLS_sync(LLS_B_width, LLS_B_time, "LLS_B", t_width, "s")
+    sync_CAM_time = camera_sync(CAM_center, CAM_time, t_width, "s")
+
+    def compute_velocity(values, dt):
+        return [(values[i+1] - values[i]) / dt for i in range(len(values)-1)] + [0]
+
+    LT_velocity = compute_velocity(LT_x, 0.010)
+    LLS_A_velocity = compute_velocity(LLS_A_width, 0.004)
+    LLS_B_velocity = compute_velocity(LLS_B_width, 0.004)
+    CAM_velocity = compute_velocity(CAM_center, 0.001)
+
+    def get_time_for_position(target_x):
+        index = min(range(len(LT_x)), key=lambda i: abs(LT_x[i] - target_x))
+        return LT_time[index]
+
+    time_start = get_time_for_position(0)
+    time_end = get_time_for_position(1000)
+
+    # Start plotting
+    fig, ax = plt.subplots(figsize=(4, 3))
+
+    ax.plot(CAM_time, CAM_velocity, label="CAM Velocity", color="red")
+    ax.scatter(sync_CAM_time, 0, color="red", edgecolors="black", zorder=5, label="CAM Sync")
+
+    ax.plot(LLS_A_time, LLS_A_velocity, label="LLS A Velocity", color="green")
+    ax.scatter(sync_A_time, 0, color="green", edgecolors="black", zorder=5, label="LLS A Sync")
+
+    ax.plot(LLS_B_time, LLS_B_velocity, label="LLS B Velocity", color="orange")
+    ax.scatter(sync_B_time, 0, color="orange", edgecolors="black", zorder=5, label="LLS B Sync")
+
+    ax.plot(LT_time, LT_velocity, label="LT Velocity", color="blue")
+    ax.scatter(ti, 0, color="blue", edgecolors="black", zorder=5, label="LT Sync")
+
+    ax.set_xlabel("Time (s)", fontsize = constants.font_small)
+    ax.set_ylabel("Velocity (measurement/s)", fontsize = constants.font_small)
+    ax.set_xlim(time_start, time_end)
+    ax.grid(True)
+
+    # Set symmetric y-limits around zero
+    all_velocities = np.array(
+        CAM_velocity + LLS_A_velocity + LLS_B_velocity + LT_velocity
+    )
+    max_vel = np.max(np.abs(all_velocities))
+    ax.set_ylim(-max_vel, max_vel)
+
+    ax.legend(loc="lower left", fontsize = constants.font_extra_small, ncol = 2)
+    plt.tight_layout()
+    plt.show()
 
 ##################################################################################################################################################################
 """Functions for finding the sync needed for joining data"""
@@ -292,7 +390,41 @@ def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
             t_width = (ti_list[len(ti_list) - 1] - ti_list[0])                              # If there are no errors in determining the time region t_width then it should be the final value minus the first value
 
     if data_state == "s":
-        raise NotImplementedError
+
+        beta = 2                    # Factor for determining when the x velocity goes below a certain value
+        delta_x_values = []         # List to hold the x velocity values in the sample
+        x_values = []               # List to hold the x values in the sample
+        y = int(len(LT_x)*0.5)      # End range for the sample region / Beginning range for the test region
+
+        for i in range(int(len(LT_x)*0.2), y):                  # Loop over sample to determine the smallest x velocity value
+            delta_x_values.append((LT_x[i+1] - LT_x[i])/0.010)  # Append x velocity values in the sample
+            x_values.append(LT_x[i])                            # Append x values in the sample
+
+        sorted_values = sorted(set(delta_x_values))             # Remove duplicates and sort the x velocity values in the sample
+        delta_x_min = sorted_values[0]                          # Find the smallest x velocity value to use with the factor beta
+        xi_list = []                                            # List to hold the x values in the test region
+        ti_list = []                                            # List to hold the time values in the test region
+        delta_xi_list = []                                      # List to hold the x velocity values in the test region
+
+        for j in range(y, int(len(LT_x))):                              # Loop over test region to determine the x at 930mm
+            if ((LT_x[j+1] - LT_x[j])/0.010) < (delta_x_min/beta):      # If the x velocity suddenly drops below this factor then we know the machine slowed down to cut the tape at 930mm
+                xi_list.append(LT_x[j])                                 # Append x values in the test region
+                ti_list.append(LT_time[j])                              # Append time values in the test region
+                delta_xi_list.append(abs(LT_x[j+1] - LT_x[j])/0.010)    # Append x velocity values in the test region
+                if (LT_x[j+2] - LT_x[j+1])/0.010 >= (delta_x_min/beta): # If the x velocity suddenly increases above this factor then we know the machine is speeding back up (leaving the 930mm point)
+                    break
+                          
+        index_delta_xi_min = delta_xi_list.index(min(delta_xi_list, key=abs))               # The smallest x velocity value is where x = 930mm
+        xi = xi_list[index_delta_xi_min]                                                    # Locate x = 930 mm using the index above (as the lists have the same size)
+        ti = ti_list[index_delta_xi_min]                                                    # Locate the time at x = 930 mm using the index above (as the lists have the same size)
+        if len(ti_list) < 2:                                                                # This is an error check as sometimes the output finds x = 930mm without finding a time region it falls in
+            print("⚠️  Warning: Not enough cut points detected — using default t_width")
+            t_width = 0.9  # fallback value, adjust as needed                               # As it still finds x = 930mm it is succesfull, but other functions require the lenght of the time region it falls in. Most of the tows show this region to be between 0.8 and 1.0 (but this does depend on beta) so a default of 0.9 was chosen to still make the future calculation work
+        elif (ti_list[len(ti_list) - 1] - ti_list[0]) < 0.1:                                # This is an error check as sometimes the function finds where the x velocity drops below the factor but not when it exits and this causes an issue where the time region is very small
+            print("⚠️  Warning: Too small t_width detected — using default t_width")
+            t_width = 0.9  # fallback value, adjust as needed                               # As it still finds x = 930mm it is succesfull, but other functions require the lenght of the time region it falls in. Most of the tows show this region to be between 0.8 and 1.0 (but this does depend on beta) so a default of 0.9 was chosen to still make the future calculation work
+        else:
+            t_width = (ti_list[len(ti_list) - 1] - ti_list[0])                              # If there are no errors in determining the time region t_width then it should be the final value minus the first value
 
     #################################################################################################
 
@@ -313,27 +445,48 @@ def find_x930(LT_x: list, LT_time: list, data_state: str = "p"):
 
     return xi, ti, t_width
 
-def LLS_sync(widths, times, sensor_type, t_width:float):
+def LLS_sync(widths, times, sensor_type, t_width:float, data_state: str = "p"):
     "This function finds the LLS sync for A and B. As identified in the width velocity vs width graph,"
     "a region can be seen where the width velocity slows down, which corresponds to when the machine"
     "slows down to make the cut at x = 930mm"
 
-    width_velocities = [] # Set up list of velocities
+    if data_state == "p":
 
-    for i in range(len(widths)-1):                                  # Loop for calculating all the width velocities
-        width_velocities.append((widths[i+1] - widths[i]) / 0.004)  # Append the width velocity values
-    width_velocities.append(width_velocities[-1])                   # dirty trick to match lengths (doesnt effect final outcome)
+        width_velocities = [] # Set up list of velocities
 
-    if sensor_type == "LLS_B":      # As LLS_A and LLS_B show slightly different velocity graphs they need to be analyzed seperately
-        t_width = 0.65*t_width      # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function for LLS_B
-        start_time = 4              # Observed time at which all of the velocity graphs for LLS_B show that the cut off point happens after this. This is usefull for how the scan_for_min function works
-        end_time = 5.5              # Observed time at which all of the velocity graphs for LLS_B show that the cut off point happens before this. This is usefull for how the scan_for_min function works
-    if sensor_type == "LLS_A":      # As LLS_A and LLS_B show slightly different velocity graphs they need to be analyzed seperately
-        t_width = 0.3*t_width       # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function for LLS_A
-        start_time = 4              # Observed time at which all of the velocity graphs for LLS_A show that the cut off point happens after this. This is usefull for how the scan_for_min function works
-        end_time = 5.2              # Observed time at which all of the velocity graphs for LLS_A show that the cut off point happens before this. This is usefull for how the scan_for_min function works
-    
-    index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time) # Using the scan_for_min function the point in time is found where x = 930mm for the LLS scanners   
+        for i in range(len(widths)-1):                                  # Loop for calculating all the width velocities
+            width_velocities.append((widths[i+1] - widths[i]) / 0.004)  # Append the width velocity values
+        width_velocities.append(width_velocities[-1])                   # dirty trick to match lengths (doesnt effect final outcome)
+
+        if sensor_type == "LLS_B":      # As LLS_A and LLS_B show slightly different velocity graphs they need to be analyzed seperately
+            t_width = 0.65*t_width      # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function for LLS_B
+            start_time = 4              # Observed time at which all of the velocity graphs for LLS_B show that the cut off point happens after this. This is usefull for how the scan_for_min function works
+            end_time = 5.5              # Observed time at which all of the velocity graphs for LLS_B show that the cut off point happens before this. This is usefull for how the scan_for_min function works
+        if sensor_type == "LLS_A":      # As LLS_A and LLS_B show slightly different velocity graphs they need to be analyzed seperately
+            t_width = 0.3*t_width       # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function for LLS_A
+            start_time = 4              # Observed time at which all of the velocity graphs for LLS_A show that the cut off point happens after this. This is usefull for how the scan_for_min function works
+            end_time = 5.2              # Observed time at which all of the velocity graphs for LLS_A show that the cut off point happens before this. This is usefull for how the scan_for_min function works
+        
+        index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time) # Using the scan_for_min function the point in time is found where x = 930mm for the LLS scanners   
+
+    if data_state == "s":
+
+        width_velocities = [] # Set up list of velocities
+
+        for i in range(len(widths)-1):                                  # Loop for calculating all the width velocities
+            width_velocities.append((widths[i+1] - widths[i]) / 0.004)  # Append the width velocity values
+        width_velocities.append(width_velocities[-1])                   # dirty trick to match lengths (doesnt effect final outcome)
+
+        if sensor_type == "LLS_B":      # As LLS_A and LLS_B show slightly different velocity graphs they need to be analyzed seperately
+            t_width = 0.65*t_width      # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function for LLS_B
+            start_time = 12             # Observed time at which all of the velocity graphs for LLS_B show that the cut off point happens after this. This is usefull for how the scan_for_min function works
+            end_time = 13.5             # Observed time at which all of the velocity graphs for LLS_B show that the cut off point happens before this. This is usefull for how the scan_for_min function works
+        if sensor_type == "LLS_A":      # As LLS_A and LLS_B show slightly different velocity graphs they need to be analyzed seperately
+            t_width = 0.3*t_width       # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function for LLS_A
+            start_time = 12             # Observed time at which all of the velocity graphs for LLS_A show that the cut off point happens after this. This is usefull for how the scan_for_min function works
+            end_time = 13.2             # Observed time at which all of the velocity graphs for LLS_A show that the cut off point happens before this. This is usefull for how the scan_for_min function works
+        
+        index_stop, time_stop = scan_for_min(t_width, times, width_velocities, start_time, end_time) # Using the scan_for_min function the point in time is found where x = 930mm for the LLS scanners   
 
     ##########################################################################################################
 
@@ -390,22 +543,38 @@ def scan_for_min(t_len: float, times: list, values: list, start_time: float, end
 
     return min_index, times[min_index]
 
-def camera_sync(centers, times, t_width):
+def camera_sync(centers, times, t_width, data_state: str = "p"):
     "This function finds the camera sync. As identified in the center velocity vs center graph,"
     "a region can be seen where the center velocity slows down, which corresponds to when the machine"
     "slows down to make the cut at x = 930mm"
 
-    center_velocities = [] # Set up list of center velocities
+    if data_state == "p":
 
-    for i in range(len(centers)-1):                             # Loop for calculating all the center velocities                     
-        center_velocities.append(centers[i+1] - centers[i])     # Append the center velocity values
-    center_velocities.append(center_velocities[-1])             # dirty trick to match lengths
+        center_velocities = [] # Set up list of center velocities
 
-    t_width = 0.5*t_width   # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function
-    start_time = 4.5        # Observed time at which all of the velocity graphs for the camera show that the cut off point happens after this. This is usefull for how the scan_for_min function works
-    end_time = 5.75         # Observed time at which all of the velocity graphs for the camera show that the cut off point happens before this. This is usefull for how the scan_for_min function works
+        for i in range(len(centers)-1):                             # Loop for calculating all the center velocities                     
+            center_velocities.append(centers[i+1] - centers[i])     # Append the center velocity values
+        center_velocities.append(center_velocities[-1])             # dirty trick to match lengths
 
-    index_stop, time_stop = scan_for_min(t_width, times, center_velocities, start_time, end_time)    # Using the scan_for_min function the point in time is found where x = 930mm for the camera  
+        t_width = 0.5*t_width   # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function
+        start_time = 4.5        # Observed time at which all of the velocity graphs for the camera show that the cut off point happens after this. This is usefull for how the scan_for_min function works
+        end_time = 5.75         # Observed time at which all of the velocity graphs for the camera show that the cut off point happens before this. This is usefull for how the scan_for_min function works
+
+        index_stop, time_stop = scan_for_min(t_width, times, center_velocities, start_time, end_time)    # Using the scan_for_min function the point in time is found where x = 930mm for the camera  
+
+    if data_state == "s":
+
+        center_velocities = [] # Set up list of center velocities
+
+        for i in range(len(centers)-1):                             # Loop for calculating all the center velocities                     
+            center_velocities.append(centers[i+1] - centers[i])     # Append the center velocity values
+        center_velocities.append(center_velocities[-1])             # dirty trick to match lengths
+
+        t_width = 0.5*t_width   # The t_width found from the find_x930 function has a correction factor applied to it so it can find the cut point properly using the scan_for_min function
+        start_time = 12        # Observed time at which all of the velocity graphs for the camera show that the cut off point happens after this. This is usefull for how the scan_for_min function works
+        end_time = 13.5         # Observed time at which all of the velocity graphs for the camera show that the cut off point happens before this. This is usefull for how the scan_for_min function works
+
+        index_stop, time_stop = scan_for_min(t_width, times, center_velocities, start_time, end_time)    # Using the scan_for_min function the point in time is found where x = 930mm for the camera  
 
     ##########################################################################################################
 
@@ -622,6 +791,7 @@ def _sync_time_data():
 ##################################################################################################################################################################
 
 def main():
+    plot_all_graphs_with_sync(6)
     print("Hello world") # hi
     
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ import scipy.stats as stats
 from Handling_ALL_Functions import get_synced_data
 import random
 import pandas as pd
+from Data_ALL_importer import GAP_exceltoarray
 
 steps_per_mm = 3 / 10
 
@@ -164,27 +165,52 @@ def calculate_real_gap_overlap_percentages(num_tows=5, tow_spacing_mm=6.35):
 
     return gap_overlap_data
 
-# data
-real_gap_data = calculate_real_gap_overlap_percentages(num_tows=15)
-gap_overlap_df = generate_multitow_layout(num_tows=15)
-#print(f'uuhhhuhhh {real_gap_data}')
-#print('wtf')
+def get_traverse_data():
+    real_gap_data = []
+    for tow in range(1, 31):
+        gap_data = np.array(GAP_exceltoarray()[tow-1])
+        real_gap_data.extend(gap_data[:, -2])
+        print(tow)
 
-#plots
+    real_gap_data_cleaned = [x for x in real_gap_data if ~np.isnan(x)]
+    return real_gap_data_cleaned
 
-fig, ax = plt.subplots(figsize=(10, 8))
-ax.hist(real_gap_data, label='real', bins=80, alpha=0.5, density=True)
-ax.hist(gap_overlap_df, label='simulated', bins=80, alpha=0.5, density=True)
-ax.set_xlabel("Gap [mm]")
-ax.set_ylabel("Density")
-# plt.title(f"Gaps")
-ax.set_xlim(-1.2, 1.2)
-ax.axhline(0, color='gray', linestyle='--', linewidth=1)
-ax.legend()
+def main():
+    # data
+    #real_gap_data = calculate_real_gap_overlap_percentages(num_tows=15, tow_spacing_mm=12.5)
+    real_gap_data = get_traverse_data()
+    mean_real = np.mean(real_gap_data)
+    print(f'the REAL MEAN = {mean_real}')
+    # real_gap_data = filter(lambda x: 4 >= x >= 8, real_gap_data)
+    print(real_gap_data)
 
-plt.grid(True)
-plt.tight_layout(rect=[0, 0, 1, 0.6])
-plt.show()
+    gap_overlap_df = generate_multitow_layout(num_tows=100, tow_spacing_mm=12.5)
+    mean_sim = np.mean(gap_overlap_df)
+    #print(f'uuhhhuhhh {real_gap_data}')
+    #print('wtf')
+
+    #plots
+    gap_center = 12.5-6.35
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.hist(real_gap_data, label='real', bins=[0]+list(np.linspace(gap_center-1.2, gap_center+1.2, 100+1))+[10], alpha=0.5, density=True)     # bins=[0]+list(np.linspace(6.15-1.2, 6.15+1.2, 80+1))+[10]
+    ax.hist(gap_overlap_df, label='simulated', bins=[0]+list(np.linspace(gap_center-1.2, gap_center+1.2, 100+1))+[10], alpha=0.5, density=True)
+    ax.axvline(mean_real, color='purple', linestyle='-', label='Real Mean')
+    ax.axvline(mean_sim, color='red', linestyle='-', label='Simulated Mean')
+    ax.set_xlabel("Gap (mm)", fontsize=12)
+    ax.set_ylabel("Density", fontsize=12)
+    ax.axvline(gap_center, color='black', linestyle='dashed')
+    # plt.title(f"Gaps")
+    ax.set_xlim(gap_center-1.2, gap_center+1.2)
+    ax.axhline(0, color='gray', linestyle='--', linewidth=1)
+    ax.legend(fontsize=10)
+
+    plt.xticks(np.linspace(gap_center-1.2, gap_center+1.2, 9))
+    #plt.grid(True)
+    plt.tight_layout(rect=[0, 0, 1, 1])
+    plt.show()
+
+
+data = main()
 
 # Run the simulation 1000 times
 def simulation_verificatoin():

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import warnings
 from Handling_ALL_Functions import get_synced_data
+import constants
 
 
 '''Written by: Manuel Cruz & Diogo Ying'''
@@ -87,10 +88,10 @@ def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = No
         names = ['Error LLS A', 'Error LLS B', 'Error Laser Tracker', 'Error Camera']
 
         titles = [
-            'Tape width before compaction deviation',
-            'Tape width after compaction deviation',
-            'Robot position deviation',
-            'Tape lateral movement deviation']
+            'Tape width before compaction.',
+            'Tape width after compaction.',
+            'Robot position.',
+            'Tape lateral movement.']
         
 
         if bin_widths is None:
@@ -138,13 +139,14 @@ def plot_histograms(data: pd.DataFrame, title: str, bin_widths: list[float] = No
             ax[row, col].set_xlabel(names[i])
             ax[row, col].set_ylabel('Density')
             ax[row, col].legend()
+            ax[row, col].xticks(np.linspace(-1.2, 1.2, 9))
 
-        plt.tight_layout(rect=[0, 0, 1, 1])
+        plt.tight_layout()
         plt.show()
 
 '''Plots all histograms in different Figures. 
 The x-axis has the same range for all figures.'''
-def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[float] = None, run = bool):
+def plot_histograms_separated(data: pd.DataFrame, bin_widths: list[float] = None, run = bool):
 
     if run == True:
         distribution_labels = {
@@ -166,10 +168,10 @@ def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[f
             'error_CAM']
 
         titles = [
-            'Error Tape Width Before Compaction',
-            'Error Tape Width After Compaction',
-            'Error Robot Position',
-            'Error Tape Lateral Movement']
+            'Tape Width Before Compaction',
+            'Tape Width After Compaction',
+            'Robot Position',
+            'Tape Lateral Movement']
         
 
         if bin_widths is None:
@@ -187,8 +189,8 @@ def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[f
             bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
         
             # Create a new figure for this individual histogram
-            fig, ax = plt.subplots(figsize=(6, 4))
-            fig.suptitle(f"{title} — {titles[i]}")
+            fig, ax = plt.subplots(figsize=(8, 2))
+            #fig.suptitle(f"{titles[i]}")
         
             # Plot the histogram of the cleaned data
             ax.hist(clean, bins=bins, alpha=0.6, density=True)
@@ -206,13 +208,7 @@ def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[f
             pdf = dist.pdf(x, *params[:-2], loc=params[-2], scale=params[-1])
         
             # Plot the fitted PDF on the histogram
-            ax.plot(x, pdf, 'r-', lw=2, label=friendly)
-            # Annotate with the distribution name in a small textbox
-            ax.text(
-                0.02, 0.95, friendly,
-                transform=ax.transAxes,
-                va='top',
-                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+            ax.plot(x, pdf, 'r-', lw=2)
         
             # Compute summary statistics for this dataset
             # Can be changed if some other statistic is interesting showing
@@ -221,21 +217,21 @@ def plot_histograms_separated(data: pd.DataFrame, title: str, bin_widths: list[f
 
 
 
-            ax.axvline(mean_val, color='orange', linestyle='-',
-                                label=rf'Mean = {mean_val:.2f}' + '\n' + rf'$\sigma$ = {std_val:.2f}')
+            ax.axvline(mean_val, color='magenta', linestyle='-')
             ax.axvline(0.0, color='black', linestyle='dashed')
 
 
             # All distributions are shown with this x-axis range
-            ax.set_xlim(-1.2, 1.0)
-            ax.set_title(titles[i])
-            ax.set_xlabel(names[i])
-            ax.set_ylabel('Density')
-            ax.legend()
+            ax.set_xlim(-1.2, 1.2)
+            ax.set_title(titles[i], fontsize= constants.font_large)
+            ax.set_xlabel('Error (mm)',fontsize=constants.font_medium)
+            ax.set_ylabel('Density',fontsize=constants.font_medium)
 
-            plt.tight_layout(rect=[0, 0, 1, 0.95])
+            ticks = np.linspace(-1.2, 1.2, 9)
+            ax.set_xticks(ticks)
+            ax.set_xticklabels([f"{t:.1f}" for t in ticks])
 
-
+        plt.tight_layout()
         plt.show()
 
 
@@ -277,8 +273,8 @@ def plot_LLSA_vs_LLSB(data: pd.DataFrame, title:str, bin_widths: list[float] =No
 
     # Styling
         ax.axvline(0.0, color='black', linestyle='dashed')
-        ax.set_xlim(-1.2, 1.0)
-        ax.set_xlabel("Error (width)")
+        ax.set_xlim(-1.2, 1.2)
+        ax.set_xlabel("Error (mm)")
         ax.set_ylabel("Density")
         ax.legend()
         plt.tight_layout()
@@ -343,13 +339,12 @@ def main():
         df,
         title="Sensor Error Histograms ",
         bin_widths=[0.008, 0.008, 0.008, 0.008], 
-        run = True)
+        run = False)
     
     plot_histograms_separated(
         df,
-        title="Sensor Error Histograms (ALL TOWS)",
-        bin_widths=[0.005, 0.005, 0.005, 0.03],
-        run = False)
+        bin_widths=[0.005, 0.005, 0.005, 0.008],
+        run = True)
 
     plot_LLSA_vs_LLSB(df,
         title="Error LLS A vs. Error LLS B (ALL TOWS)",
