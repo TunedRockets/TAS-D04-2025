@@ -32,6 +32,7 @@ import math
 from scipy.stats import truncnorm
 import time
 import statsmodels.api as sm
+import constants
 
 def weighted_linregress(x, y, weights):
     """
@@ -60,7 +61,7 @@ def weighted_linregress(x, y, weights):
 
     return slope, intercept, r_value, p_value_slope, stderr_slope
 
-def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, bins_show = False, plot_fit=True):
+def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, bins_show = False, plot_fit=True, fourPlots = False, axs = None, noTitle = False):
     """
         Analyze consecutive error pairs and their distributions from processed sensor data.
 
@@ -179,14 +180,19 @@ def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, 
 
     # Plot scatter + binned fit
     if plot_fit:
-        plt.figure(figsize=(8, 6))
-        plt.scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
-        plt.scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
+        plt.figure(figsize=(6.5, 5))
+        plt.scatter(x_train, y_train, alpha=0.2, marker='o', edgecolors='k', label="Training Set")
+        plt.scatter(x_binned, y_binned, alpha=1, color='red', marker='s', s=40, label="Binned Averages")
         plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
-        plt.xlabel("$ε_{i}$ [mm]")
-        plt.ylabel("$ε_{i+1}$ [mm]")
-        plt.title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
-        plt.legend()
+
+        plt.xlabel("$ε_{i}$ (mm)", fontsize=constants.font_medium)
+        plt.ylabel("$ε_{i+1}$ (mm)", fontsize=constants.font_medium)
+
+        if not noTitle:
+            plt.title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)",
+                      fontsize=constants.font_small)
+
+        plt.legend(fontsize=constants.font_small)
         plt.grid(True)
         plt.show()
 
@@ -583,7 +589,6 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, test_ratio=0.2, errorCo
                 sw_LLS_B_real = -1
                 peak_LLS_B_real_idxs.append(i)
                 peak_LLS_B_real_list.append(synced_data_LLS_B_tow_width[i])
-    #print("peaks_LLS_B_real", peaks_LLS_B_real)
 
     sw_LLS_B_sim = -1  # sw=-1 means going down and sw=1 means going up
     peaks_LLS_B_sim = 0
@@ -634,20 +639,30 @@ def generate_simulated_VS_real(n_real_tow=1, rdm_seed=0, test_ratio=0.2, errorCo
 
     #print('total number of data points LLS_B', len(synced_data_LLS_B_tow_width))
 
+
+
     if sim_plot:
+        # Convert steps to length (mm)
+        x_sign = np.linspace(0, get_delta_x(n_real_tow), len(simulated_total_offset_centerline))
+
+        print(get_delta_x(n_real_tow))
         # --- Overlay Plot with Upper/Lower Boundaries ---
-        plt.figure(figsize=(12, 5))
-        plt.plot(simulated_total_offset_centerline, label="total offset simulated", c="b")
-        plt.plot(simulated_upper_boundary, label="upper boundary simulated", c="b")
-        plt.plot(simulated_lower_boundary, label="lower boundary simulated", c="b")
-        plt.plot(total_offset_real, label="real total offset", c="r")
-        plt.plot(real_upper_boundary, label="real upper boundary", c="r")
-        plt.plot(real_lower_boundary, label="real lower boundary", c="r")
-        plt.xlabel("Step")
-        plt.ylabel("Error")
-        plt.title("Simulated Machine Error Path Over Time")
+        plt.figure(figsize=(8, 5))
+        plt.plot(x_sign, simulated_total_offset_centerline, label="model's total offset simulated", c="orange", linestyle='--')
+        plt.plot(x_sign, simulated_upper_boundary, label="model's lower/upper edges", c="orange")
+        plt.plot(x_sign, simulated_lower_boundary, c="orange")
+        plt.plot(x_sign, total_offset_real, label="experimental total offset", c="b", linestyle='--')
+        plt.plot(x_sign, real_upper_boundary, label="experimental lower/upper edges", c="b")
+        plt.plot(x_sign, real_lower_boundary, c="b")
+        plt.xlabel("X position (mm)", fontsize=constants.font_small)
+        plt.ylabel("Displacement (mm)", fontsize=constants.font_small)
+        # plt.title("Simulated Machine Error Path Over Time")
         plt.grid(True)
-        plt.legend()
+        plt.legend(
+            fontsize=constants.font_extra_small,
+            loc='upper right',  # anchor point of the legend box
+            bbox_to_anchor=(1, 0.85)  # x, y coordinates outside or inside the axes (1 is right edge)
+        )
         plt.show()
 
     return peaks_cam_sim, peaks_LT_sim, peaks_offset_sim, peaks_LLS_B_sim, peaks_cam_real, peaks_LT_real, peaks_offset_real, peaks_LLS_B_real, synced_data_cam_tow_1, synced_data_LT_tow_1, total_offset_real, synced_data_LLS_B_tow_width
@@ -673,6 +688,7 @@ def peakMeanRealTows():
     final_real_means.append(float(np.mean(LLS_B_lst)))
 
     return final_real_means
+
 
 
 def peaksVSbins(bins, nb_sim):
@@ -763,11 +779,497 @@ def GlobalValidation(nb_bins=101, nb_sim=20):
     plt.tight_layout(rect=[0.04, 0.03, 1, 0.95])
     plt.show()
 
+def fourPlots():  # NOT WORKING RIGHT NOW
+    fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+
+    test_ratio = 0.2
+    random_state = None
+    num_bins = 90
+
+
+    sensor = 'CAM'
+    # Takes care of which column to use
+    if sensor == "CAM" or sensor == "LT":
+        column = -2
+    else:
+        column = -1
+
+    # Prepare an empty list to store (x_n, x_{n+1}) pairs for each tow as well as other lists
+    all_pairs, time_pairs, x_pairs, vel = [], [], [], []
+
+    # Loop through tow numbers from 1 to 31
+    for tow_number in range(2, 32):
+        # Get processed data for the current tow and sensor type
+        tow_data_bef = get_synced_data(tow_number, spacesynced=True)
+
+        if sensor == "LT":
+            tow_data = tow_data_bef[["time", "x", "y", "z", "error_LT", "z error"]]
+        if sensor == "LLS_A":
+            tow_data = tow_data_bef[["time", "width_LLS_A", "center_LLS_A", "width error_LLS_A"]]
+        if sensor == "LLS_B":
+            tow_data = tow_data_bef[["time", "width_LLS_B", "center_LLS_B", "width error_LLS_B"]]
+        if sensor == "CAM":
+            tow_data = tow_data_bef[["time", "width_CAM", "center_CAM", "error_CAM"]]
+        velocity_data = tow_data_bef[["time", "x"]]
+
+        # Ensure that the returned object is a dataframe
+        if not tow_data.empty and tow_data.shape[1] > 1:  # Ensure there are at least two columns
+            # Extract the last or second-to-last column (based on sensor type)
+            second_to_last_column = tow_data.iloc[:, column].values  # Convert to numpy array
+
+            # Create (x_n, x_{n+1}) pairs for the current tow
+            x_values = second_to_last_column[:-1]
+            y_values = second_to_last_column[1:]
+
+            # Extract x and time and convert to np
+            velocity_data_x = velocity_data.iloc[:, -1].values
+            velocity_data_time = velocity_data.iloc[:, -2].values
+            time_values_i = velocity_data_time[:-1]
+            time_values_i2 = velocity_data_time[1:]
+            x_values_i = velocity_data_x[:-1]
+            x_values_i2 = velocity_data_x[1:]
+
+            # Append pairs as a list of tuples
+            all_pairs.extend(zip(x_values, y_values))
+            time_pairs.extend(zip(time_values_i, time_values_i2))
+            x_pairs.extend(zip(x_values_i, x_values_i2))
+
+        # After processing all tows, convert collected pairs into numpy arrays
+    all_pairs = np.array(all_pairs)
+    x_values = all_pairs[:, 0]
+    y_values = all_pairs[:, 1]
+
+    time_pairs = np.array(time_pairs)
+    time_i = time_pairs[:, 0]
+    time_i2 = time_pairs[:, 1]
+    time_gaps = time_i2 - time_i
+
+    x_pairs = np.array(x_pairs)
+    x_i = x_pairs[:, 0]
+    x_i2 = x_pairs[:, 1]
+    x_gaps = x_i2 - x_i
+
+    vel = x_gaps / time_gaps
+
+    # Train-Test Split
+
+    # Split into training and testing (test_ratio * 100)% of data is used.
+    x_train, x_test, y_train, y_test, vel_train, vel_test = train_test_split(
+        x_values, y_values, vel, test_size=test_ratio, random_state=random_state
+    )
+    # NOTE: random_state ensures reproducible splits of the data;
+    # change it to another integer for a different split, or set it to None for random behavior.
+
+    # Sort training x-values and reorder y-values accordingly
+    sorted_indices = np.argsort(x_train)
+    x_sorted = x_train[sorted_indices]
+    y_sorted = y_train[sorted_indices]
+    vel_sorted = vel_train[sorted_indices]
+
+    # Equal-count bin edges
+    bin_edges = np.linspace(0, len(x_sorted), num_bins + 1, dtype=int)
+
+    # Compute bin-wise averages
+    x_binned = [np.mean(x_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+    y_binned = [np.mean(y_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+    vel_binned = [np.mean(vel_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+
+    # scatter Plot with Binned Averages and regression model
+    # slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
+    slope, intercept, r_value, p_value, std_err = weighted_linregress(x_binned, y_binned, vel_binned)
+    # print(r_value)
+
+    # Define error label
+    error_labels = {"LT": "y error", "CAM": "position error", "LLS_A": "width error", "LLS_B": "width error"}
+    error_label = error_labels[sensor]
+
+    # Plot scatter + binned fit
+    if sensor == "CAM":
+        i, j = 0, 0
+    elif sensor == "LT":
+        i, j = 0, 1
+    elif sensor == "LLS_A":
+        i, j = 1, 0
+    else:
+        i, j = 1, 1
+
+    axs[i, j].scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
+    axs[i, j].scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
+    axs[i, j].plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
+    axs[i, j].set_xlabel("$ε_{i}$ [mm]")
+    axs[i, j].set_ylabel("$ε_{i+1}$ [mm]")
+    axs[i, j].set_title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
+    axs[i, j].legend()
+    axs[i, j].grid(True)
+
+
+    ####################
+
+    sensor = 'LT'
+    # Takes care of which column to use
+    if sensor == "CAM" or sensor == "LT":
+        column = -2
+    else:
+        column = -1
+
+    # Prepare an empty list to store (x_n, x_{n+1}) pairs for each tow as well as other lists
+    all_pairs, time_pairs, x_pairs, vel = [], [], [], []
+
+    # Loop through tow numbers from 1 to 31
+    for tow_number in range(2, 32):
+        # Get processed data for the current tow and sensor type
+        tow_data_bef = get_synced_data(tow_number, spacesynced=True)
+
+        if sensor == "LT":
+            tow_data = tow_data_bef[["time", "x", "y", "z", "error_LT", "z error"]]
+        if sensor == "LLS_A":
+            tow_data = tow_data_bef[["time", "width_LLS_A", "center_LLS_A", "width error_LLS_A"]]
+        if sensor == "LLS_B":
+            tow_data = tow_data_bef[["time", "width_LLS_B", "center_LLS_B", "width error_LLS_B"]]
+        if sensor == "CAM":
+            tow_data = tow_data_bef[["time", "width_CAM", "center_CAM", "error_CAM"]]
+        velocity_data = tow_data_bef[["time", "x"]]
+
+        # Ensure that the returned object is a dataframe
+        if not tow_data.empty and tow_data.shape[1] > 1:  # Ensure there are at least two columns
+            # Extract the last or second-to-last column (based on sensor type)
+            second_to_last_column = tow_data.iloc[:, column].values  # Convert to numpy array
+
+            # Create (x_n, x_{n+1}) pairs for the current tow
+            x_values = second_to_last_column[:-1]
+            y_values = second_to_last_column[1:]
+
+            # Extract x and time and convert to np
+            velocity_data_x = velocity_data.iloc[:, -1].values
+            velocity_data_time = velocity_data.iloc[:, -2].values
+            time_values_i = velocity_data_time[:-1]
+            time_values_i2 = velocity_data_time[1:]
+            x_values_i = velocity_data_x[:-1]
+            x_values_i2 = velocity_data_x[1:]
+
+            # Append pairs as a list of tuples
+            all_pairs.extend(zip(x_values, y_values))
+            time_pairs.extend(zip(time_values_i, time_values_i2))
+            x_pairs.extend(zip(x_values_i, x_values_i2))
+
+        # After processing all tows, convert collected pairs into numpy arrays
+    all_pairs = np.array(all_pairs)
+    x_values = all_pairs[:, 0]
+    y_values = all_pairs[:, 1]
+
+    time_pairs = np.array(time_pairs)
+    time_i = time_pairs[:, 0]
+    time_i2 = time_pairs[:, 1]
+    time_gaps = time_i2 - time_i
+
+    x_pairs = np.array(x_pairs)
+    x_i = x_pairs[:, 0]
+    x_i2 = x_pairs[:, 1]
+    x_gaps = x_i2 - x_i
+
+    vel = x_gaps / time_gaps
+
+    # Train-Test Split
+
+    # Split into training and testing (test_ratio * 100)% of data is used.
+    x_train, x_test, y_train, y_test, vel_train, vel_test = train_test_split(
+        x_values, y_values, vel, test_size=test_ratio, random_state=random_state
+    )
+    # NOTE: random_state ensures reproducible splits of the data;
+    # change it to another integer for a different split, or set it to None for random behavior.
+
+    # Sort training x-values and reorder y-values accordingly
+    sorted_indices = np.argsort(x_train)
+    x_sorted = x_train[sorted_indices]
+    y_sorted = y_train[sorted_indices]
+    vel_sorted = vel_train[sorted_indices]
+
+    # Equal-count bin edges
+    bin_edges = np.linspace(0, len(x_sorted), num_bins + 1, dtype=int)
+
+    # Compute bin-wise averages
+    x_binned = [np.mean(x_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+    y_binned = [np.mean(y_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+    vel_binned = [np.mean(vel_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+
+    # scatter Plot with Binned Averages and regression model
+    # slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
+    slope, intercept, r_value, p_value, std_err = weighted_linregress(x_binned, y_binned, vel_binned)
+    # print(r_value)
+
+    # Define error label
+    error_labels = {"LT": "y error", "CAM": "position error", "LLS_A": "width error", "LLS_B": "width error"}
+    error_label = error_labels[sensor]
+
+    # Plot scatter + binned fit
+    if sensor == "CAM":
+        i, j = 0, 0
+    elif sensor == "LT":
+        i, j = 0, 1
+    elif sensor == "LLS_A":
+        i, j = 1, 0
+    else:
+        i, j = 1, 1
+
+    axs[i, j].scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
+    axs[i, j].scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
+    axs[i, j].plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
+    axs[i, j].set_xlabel("$ε_{i}$ [mm]")
+    axs[i, j].set_ylabel("$ε_{i+1}$ [mm]")
+    axs[i, j].set_title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
+    axs[i, j].legend()
+    axs[i, j].grid(True)
+
+
+    #######################
+
+    sensor = 'LSS_A'
+    # Takes care of which column to use
+    if sensor == "CAM" or sensor == "LT":
+        column = -2
+    else:
+        column = -1
+
+    # Prepare an empty list to store (x_n, x_{n+1}) pairs for each tow as well as other lists
+    all_pairs, time_pairs, x_pairs, vel = [], [], [], []
+
+    # Loop through tow numbers from 1 to 31
+    for tow_number in range(2, 32):
+        # Get processed data for the current tow and sensor type
+        tow_data_bef = get_synced_data(tow_number, spacesynced=True)
+
+        if sensor == "LT":
+            tow_data = tow_data_bef[["time", "x", "y", "z", "error_LT", "z error"]]
+        if sensor == "LLS_A":
+            tow_data = tow_data_bef[["time", "width_LLS_A", "center_LLS_A", "width error_LLS_A"]]
+        if sensor == "LLS_B":
+            tow_data = tow_data_bef[["time", "width_LLS_B", "center_LLS_B", "width error_LLS_B"]]
+        if sensor == "CAM":
+            tow_data = tow_data_bef[["time", "width_CAM", "center_CAM", "error_CAM"]]
+        velocity_data = tow_data_bef[["time", "x"]]
+
+        # Ensure that the returned object is a dataframe
+        if not tow_data.empty and tow_data.shape[1] > 1:  # Ensure there are at least two columns
+            # Extract the last or second-to-last column (based on sensor type)
+            second_to_last_column = tow_data.iloc[:, column].values  # Convert to numpy array
+
+            # Create (x_n, x_{n+1}) pairs for the current tow
+            x_values = second_to_last_column[:-1]
+            y_values = second_to_last_column[1:]
+
+            # Extract x and time and convert to np
+            velocity_data_x = velocity_data.iloc[:, -1].values
+            velocity_data_time = velocity_data.iloc[:, -2].values
+            time_values_i = velocity_data_time[:-1]
+            time_values_i2 = velocity_data_time[1:]
+            x_values_i = velocity_data_x[:-1]
+            x_values_i2 = velocity_data_x[1:]
+
+            # Append pairs as a list of tuples
+            all_pairs.extend(zip(x_values, y_values))
+            time_pairs.extend(zip(time_values_i, time_values_i2))
+            x_pairs.extend(zip(x_values_i, x_values_i2))
+
+        # After processing all tows, convert collected pairs into numpy arrays
+    all_pairs = np.array(all_pairs)
+    x_values = all_pairs[:, 0]
+    y_values = all_pairs[:, 1]
+
+    time_pairs = np.array(time_pairs)
+    time_i = time_pairs[:, 0]
+    time_i2 = time_pairs[:, 1]
+    time_gaps = time_i2 - time_i
+
+    x_pairs = np.array(x_pairs)
+    x_i = x_pairs[:, 0]
+    x_i2 = x_pairs[:, 1]
+    x_gaps = x_i2 - x_i
+
+    vel = x_gaps / time_gaps
+
+    # Train-Test Split
+
+    # Split into training and testing (test_ratio * 100)% of data is used.
+    x_train, x_test, y_train, y_test, vel_train, vel_test = train_test_split(
+        x_values, y_values, vel, test_size=test_ratio, random_state=random_state
+    )
+    # NOTE: random_state ensures reproducible splits of the data;
+    # change it to another integer for a different split, or set it to None for random behavior.
+
+    # Sort training x-values and reorder y-values accordingly
+    sorted_indices = np.argsort(x_train)
+    x_sorted = x_train[sorted_indices]
+    y_sorted = y_train[sorted_indices]
+    vel_sorted = vel_train[sorted_indices]
+
+    # Equal-count bin edges
+    bin_edges = np.linspace(0, len(x_sorted), num_bins + 1, dtype=int)
+
+    # Compute bin-wise averages
+    x_binned = [np.mean(x_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+    y_binned = [np.mean(y_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+    vel_binned = [np.mean(vel_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+
+    # scatter Plot with Binned Averages and regression model
+    # slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
+    slope, intercept, r_value, p_value, std_err = weighted_linregress(x_binned, y_binned, vel_binned)
+    # print(r_value)
+
+    # Define error label
+    error_labels = {"LT": "y error", "CAM": "position error", "LLS_A": "width error", "LLS_B": "width error"}
+    error_label = error_labels[sensor]
+
+    # Plot scatter + binned fit
+    if sensor == "CAM":
+        i, j = 0, 0
+    elif sensor == "LT":
+        i, j = 0, 1
+    elif sensor == "LLS_A":
+        i, j = 1, 0
+    else:
+        i, j = 1, 1
+
+    axs[i, j].scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
+    axs[i, j].scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
+    axs[i, j].plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
+    axs[i, j].set_xlabel("$ε_{i}$ [mm]")
+    axs[i, j].set_ylabel("$ε_{i+1}$ [mm]")
+    axs[i, j].set_title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
+    axs[i, j].legend()
+    axs[i, j].grid(True)
+
+
+    ###############################
+
+    sensor = 'LLS_B'
+    # Takes care of which column to use
+    if sensor == "CAM" or sensor == "LT":
+        column = -2
+    else:
+        column = -1
+
+    # Prepare an empty list to store (x_n, x_{n+1}) pairs for each tow as well as other lists
+    all_pairs, time_pairs, x_pairs, vel = [], [], [], []
+
+    # Loop through tow numbers from 1 to 31
+    for tow_number in range(2, 32):
+        # Get processed data for the current tow and sensor type
+        tow_data_bef = get_synced_data(tow_number, spacesynced=True)
+
+        if sensor == "LT":
+            tow_data = tow_data_bef[["time", "x", "y", "z", "error_LT", "z error"]]
+        if sensor == "LLS_A":
+            tow_data = tow_data_bef[["time", "width_LLS_A", "center_LLS_A", "width error_LLS_A"]]
+        if sensor == "LLS_B":
+            tow_data = tow_data_bef[["time", "width_LLS_B", "center_LLS_B", "width error_LLS_B"]]
+        if sensor == "CAM":
+            tow_data = tow_data_bef[["time", "width_CAM", "center_CAM", "error_CAM"]]
+        velocity_data = tow_data_bef[["time", "x"]]
+
+        # Ensure that the returned object is a dataframe
+        if not tow_data.empty and tow_data.shape[1] > 1:  # Ensure there are at least two columns
+            # Extract the last or second-to-last column (based on sensor type)
+            second_to_last_column = tow_data.iloc[:, column].values  # Convert to numpy array
+
+            # Create (x_n, x_{n+1}) pairs for the current tow
+            x_values = second_to_last_column[:-1]
+            y_values = second_to_last_column[1:]
+
+            # Extract x and time and convert to np
+            velocity_data_x = velocity_data.iloc[:, -1].values
+            velocity_data_time = velocity_data.iloc[:, -2].values
+            time_values_i = velocity_data_time[:-1]
+            time_values_i2 = velocity_data_time[1:]
+            x_values_i = velocity_data_x[:-1]
+            x_values_i2 = velocity_data_x[1:]
+
+            # Append pairs as a list of tuples
+            all_pairs.extend(zip(x_values, y_values))
+            time_pairs.extend(zip(time_values_i, time_values_i2))
+            x_pairs.extend(zip(x_values_i, x_values_i2))
+
+        # After processing all tows, convert collected pairs into numpy arrays
+    all_pairs = np.array(all_pairs)
+    x_values = all_pairs[:, 0]
+    y_values = all_pairs[:, 1]
+
+    time_pairs = np.array(time_pairs)
+    time_i = time_pairs[:, 0]
+    time_i2 = time_pairs[:, 1]
+    time_gaps = time_i2 - time_i
+
+    x_pairs = np.array(x_pairs)
+    x_i = x_pairs[:, 0]
+    x_i2 = x_pairs[:, 1]
+    x_gaps = x_i2 - x_i
+
+    vel = x_gaps / time_gaps
+
+    # Train-Test Split
+
+    # Split into training and testing (test_ratio * 100)% of data is used.
+    x_train, x_test, y_train, y_test, vel_train, vel_test = train_test_split(
+        x_values, y_values, vel, test_size=test_ratio, random_state=random_state
+    )
+    # NOTE: random_state ensures reproducible splits of the data;
+    # change it to another integer for a different split, or set it to None for random behavior.
+
+    # Sort training x-values and reorder y-values accordingly
+    sorted_indices = np.argsort(x_train)
+    x_sorted = x_train[sorted_indices]
+    y_sorted = y_train[sorted_indices]
+    vel_sorted = vel_train[sorted_indices]
+
+    # Equal-count bin edges
+    bin_edges = np.linspace(0, len(x_sorted), num_bins + 1, dtype=int)
+
+    # Compute bin-wise averages
+    x_binned = [np.mean(x_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+    y_binned = [np.mean(y_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+    vel_binned = [np.mean(vel_sorted[bin_edges[i]:bin_edges[i + 1]]) for i in range(num_bins)]
+
+    # scatter Plot with Binned Averages and regression model
+    # slope, intercept, r_value, p_value, std_err = linregress(x_binned, y_binned)
+    slope, intercept, r_value, p_value, std_err = weighted_linregress(x_binned, y_binned, vel_binned)
+    # print(r_value)
+
+    # Define error label
+    error_labels = {"LT": "y error", "CAM": "position error", "LLS_A": "width error", "LLS_B": "width error"}
+    error_label = error_labels[sensor]
+
+    # Plot scatter + binned fit
+    if sensor == "CAM":
+        i, j = 0, 0
+    elif sensor == "LT":
+        i, j = 0, 1
+    elif sensor == "LLS_A":
+        i, j = 1, 0
+    else:
+        i, j = 1, 1
+
+    axs[i, j].scatter(x_train, y_train, alpha=0.5, marker='o', edgecolors='k', label="Training Set")
+    axs[i, j].scatter(x_binned, y_binned, color='red', marker='s', label="Binned Averages")
+    axs[i, j].plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
+    axs[i, j].set_xlabel("$ε_{i}$ [mm]")
+    axs[i, j].set_ylabel("$ε_{i+1}$ [mm]")
+    axs[i, j].set_title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)")
+    axs[i, j].legend()
+    axs[i, j].grid(True)
+
+
+    plt.tight_layout()
+    plt.show()
+
+def get_delta_x(tow_number):
+    tow_data_bef = get_synced_data(tow_number, spacesynced=True)
+    delta_t = tow_data_bef["x"].iloc[-1] - tow_data_bef["x"].iloc[0]
+    return delta_t
+
 if __name__ == "__main__":
 
     start_time = time.perf_counter()
-    # GlobalValidation(20, 5)
-    print(peakMeanRealTows())
+    generate_simulated_VS_real(n_real_tow=6, rdm_seed=75, test_ratio=0.2, errorCor_show=False, bins_show=False,
+                               num_bins=100, peak_plots = False, sim_plot = True)
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
     print(f"Elapsed time: {round(elapsed_time,2)} seconds")
