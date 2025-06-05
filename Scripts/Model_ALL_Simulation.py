@@ -95,8 +95,8 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
         plt.plot(x_vals, bottom_line[:n_steps], linestyle=":", color=color, linewidth=2)
         
     if plot == True:
-        plt.xlabel("x position [mm]", fontsize=20)
-        plt.ylabel("y position [mm]", fontsize=20)
+        plt.xlabel("x position (mm)", fontsize=20)
+        plt.ylabel("y position (mm)", fontsize=20)
         plt.title(f"Simulated {num_tows}-Tow Layout with Random Start Errors", fontsize=20)
         if num_tows <= 50:
             plt.legend(loc="upper right", ncol=2, fontsize=15)

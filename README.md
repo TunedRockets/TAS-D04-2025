@@ -23,6 +23,7 @@ The following input parameters can be adjusted in the **Settings Section** of th
 - `Tow Spacing`: Distance between centerlines of adjacent tows (mm).
 
 These parameters directly affect the simulation results and can be used to tune the model for different scenarios.
+After changing any of these parameters, make sure to press "Enter" to confirm the change.
 
 ## 📌 Notes
 
