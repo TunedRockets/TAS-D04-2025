@@ -3,7 +3,7 @@ imports all the data from the excel files
 grouped into one file by Johannes.
 used only (?) by Handling_ALL_Functions.py
 
-Authors: ...
+Authors: Martijn, 
 
 '''
 
