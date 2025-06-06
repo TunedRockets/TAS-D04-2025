@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+import constants
 from sklearn.model_selection import train_test_split
 from Handling_ALL_Functions import get_synced_data
 
@@ -44,22 +45,22 @@ def plot_variable_relationships(test_ratio=0.5, show=True, save=False, save_path
                 # Diagonal: histogram
                 ax.hist(df_train[variables[i]], bins=30, edgecolor='black', color='skyblue')
                 if i == n - 1:
-                    ax.set_xlabel(variables[i], fontsize=9)
+                    ax.set_xlabel(variables[i], fontsize=constants.font_medium)
                 else:
                     ax.set_xlabel("")
                     ax.set_xticks([])
-                ax.set_ylabel("Frequency", fontsize=9)
+                ax.set_ylabel("Frequency", fontsize=constants.font_medium)
 
             else:
                 # Off-diagonal: scatter plot
                 ax.scatter(df_train[variables[j]], df_train[variables[i]], alpha=0.6, edgecolors='k', s=10)
                 if i == n - 1:
-                    ax.set_xlabel(variables[j], fontsize=9)
+                    ax.set_xlabel(variables[j], fontsize=constants.font_medium)
                 else:
                     ax.set_xlabel("")
                     ax.set_xticks([])
 
-                ax.set_ylabel(variables[i], fontsize=9)
+                ax.set_ylabel(variables[i], fontsize=constants.font_medium)
 
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.95], h_pad=6)
