@@ -17,12 +17,13 @@ Any figures saved during execution will be saved to the `Figures` folder.
 
 The following input parameters can be adjusted in the **Settings Section** of the User Interface:
 
-- `num_tows`: Number of adjacent tows to simulate.
-- `tow_width`: Width of a single tow.
-- `tow_length`: Total length of each tow to be laid.
-- `tow_spacing`: Distance between centerlines of adjacent tows.
+- `Number of Tows`: Number of adjacent tows to simulate.
+- `Tow Width`: Width of a single tow (mm).
+- `Tow Length`: Total length of each tow to be laid (mm).
+- `Tow Spacing`: Distance between centerlines of adjacent tows (mm).
 
 These parameters directly affect the simulation results and can be used to tune the model for different scenarios.
+After changing any of these parameters, make sure to press "Enter" to confirm the change.
 
 ## 📌 Notes
 

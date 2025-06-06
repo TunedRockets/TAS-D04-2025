@@ -295,22 +295,22 @@ def plot_all_graphs_with_sync(tow):
     time_end = get_time_for_position(1000)
 
     # Start plotting
-    fig, ax = plt.subplots(figsize=(4, 3))
+    fig, ax = plt.subplots(figsize=(8, 6))
 
     ax.plot(CAM_time, CAM_velocity, label="CAM Velocity", color="red")
-    ax.scatter(sync_CAM_time, 0, color="red", edgecolors="black", zorder=5, label="CAM Sync")
+    ax.scatter(sync_CAM_time, 0, color="red", edgecolors="black", s=200, marker="o", zorder=6, label="CAM Sync")  # circle
 
     ax.plot(LLS_A_time, LLS_A_velocity, label="LLS A Velocity", color="green")
-    ax.scatter(sync_A_time, 0, color="green", edgecolors="black", zorder=5, label="LLS A Sync")
+    ax.scatter(sync_A_time, 0, color="green", edgecolors="black", s=200, marker="^", zorder=6, label="LLS A Sync")  # triangle up
 
     ax.plot(LLS_B_time, LLS_B_velocity, label="LLS B Velocity", color="orange")
-    ax.scatter(sync_B_time, 0, color="orange", edgecolors="black", zorder=5, label="LLS B Sync")
+    ax.scatter(sync_B_time, 0, color="orange", edgecolors="black", s=200, marker="s", zorder=5, label="LLS B Sync")  # square
 
     ax.plot(LT_time, LT_velocity, label="LT Velocity", color="blue")
-    ax.scatter(ti, 0, color="blue", edgecolors="black", zorder=5, label="LT Sync")
+    ax.scatter(ti, 0, color="blue", edgecolors="black", s=200, marker="D", zorder=5, label="LT Sync")  # diamond
 
-    ax.set_xlabel("Time (s)", fontsize = constants.font_small)
-    ax.set_ylabel("Velocity (measurement/s)", fontsize = constants.font_small)
+    ax.set_xlabel("Time (s)", fontsize = constants.font_extra_large)
+    ax.set_ylabel("Velocity (measurement/s)", fontsize = constants.font_extra_large)
     ax.set_xlim(time_start, time_end)
     ax.grid(True)
 
@@ -321,7 +321,7 @@ def plot_all_graphs_with_sync(tow):
     max_vel = np.max(np.abs(all_velocities))
     ax.set_ylim(-max_vel, max_vel)
 
-    ax.legend(loc="lower left", fontsize = constants.font_extra_small, ncol = 2)
+    ax.legend(loc="lower left", fontsize = constants.font_extra_large, ncol = 2)
     plt.tight_layout()
     plt.show()
 

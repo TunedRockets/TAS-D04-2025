@@ -28,3 +28,4 @@ font_extra_small = 8
 font_small = 12
 font_medium = 14
 font_large = 16
+font_extra_large = 24

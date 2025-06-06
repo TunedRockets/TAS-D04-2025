@@ -5,7 +5,6 @@ import scipy.stats as stats
 from Handling_ALL_Functions import get_synced_data
 import random
 import pandas as pd
-import constants
 
 steps_per_mm = 360 / 1000       # Keep consistent with User_Interface
 
@@ -57,7 +56,7 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
     #get perfect offsets
     offsets = np.linspace(-(num_tows - 1) / 2, (num_tows - 1) / 2, num_tows) * tow_spacing_mm
     plt.figure(figsize=(12, 8))
-    # plt.axis("equal") # ADDED HERE !!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    #plt.axis("equal") # ADDED HERE !!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #for coloring properly (chatgpt did the plotting)
     cmap = plt.get_cmap("tab10")
     x_vals = np.arange(n_steps) / steps_per_mm  # convert step indices to mm
@@ -95,8 +94,8 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
         plt.plot(x_vals, bottom_line[:n_steps], linestyle=":", color=color, linewidth=2)
         
     if plot == True:
-        plt.xlabel("x position (mm)", fontsize=20)
-        plt.ylabel("y position (mm)", fontsize=20)
+        plt.xlabel("x position [mm]", fontsize=20)
+        plt.ylabel("y position [mm]", fontsize=20)
         plt.title(f"Simulated {num_tows}-Tow Layout with Random Start Errors", fontsize=20)
         if num_tows <= 50:
             plt.legend(loc="upper right", ncol=2, fontsize=15)
@@ -226,32 +225,64 @@ def simulation_verificatoin(num_simulations):
     print(f"Average Overlap Percentage: {avg_overlap:.2f}%")
 
 def main():
-    gap_overlap_df, gap_df, overlap_df, gap_percent, overlap_percent = generate_multitow_layout(num_tows=2)
+    num_segments = 10
+    segment_length_mm = 100
+    steps_per_segment = int(segment_length_mm * steps_per_mm)
+    total_steps = steps_per_segment * num_segments
 
-    # Plot the gap(s) over steps (not time)
-    x_vals_mm = gap_overlap_df.index / steps_per_mm  # convert index (steps) to mm
+    # Get parameters and generate error paths
+    _, slope_cam, intercept_cam, _, _, _, x_sorted_cam, bin_edges_cam, devs_cam = consecutive_error("CAM", test_ratio=0.5, num_bins=180, bins_show=False, plot_fit=False)
+    _, slope_lt, intercept_lt, _, _, _, x_sorted_lt, bin_edges_lt, devs_lt = consecutive_error("LT", test_ratio=0.5, num_bins=180, bins_show=False, plot_fit=False)
+    _, slope_llsb, intercept_llsb, _, _, _, x_sorted_llsb, bin_edges_llsb, devs_llsb = consecutive_error("LLS_B", test_ratio=0.5, num_bins=180, bins_show=False, plot_fit=False)
 
-    plt.figure(figsize=(12, 5))
-    for column in gap_overlap_df.columns:
-        plt.plot(x_vals_mm, gap_overlap_df[column], label=column)
+    start_cam = random.uniform(-0.6, 0.4)
+    start_lt = random.uniform(-1, -0.8)
+    start_llsb = random.uniform(-0.15, -0.02)
 
-    plt.xlabel("Position (mm)", fontsize=20)
-    plt.ylabel("Distance between tows (mm)", 
-               fontsize=20)
-    
-    '''plt.title(f"Vertical Gaps Between Adjacent Tows Over Distance\n"
-            f"Gap Area: {gap_percent:.2f}%      Overlap Area: {overlap_percent:.2f}%",
-            fontsize=constants.font_large)'''
-    
-    plt.axhline(0, color='gray', linestyle='--', linewidth=1)
-    plt.grid(True)
+    cam_path = generate_error_path(start_cam, total_steps, slope_cam, intercept_cam,
+                                   x_sorted_cam, bin_edges_cam, devs_cam)
+    lt_path = generate_error_path(start_lt, total_steps, slope_lt, intercept_lt,
+                                  x_sorted_lt, bin_edges_lt, devs_lt)
+    centerline = cam_path + lt_path
+
+    width_error = generate_error_path(start_llsb, total_steps, slope_llsb, intercept_llsb,
+                                      x_sorted_llsb, bin_edges_llsb, devs_llsb)
+    width = width_error + 6.35  # nominal width
+
+    top_line = centerline + 0.5 * width
+    bottom_line = centerline - 0.5 * width
+
+    x_vals = np.arange(total_steps) / steps_per_mm  # tow length in mm
+
+    # Create subplots with narrower width and reduced spacing
+    fig, axs = plt.subplots(1, num_segments, figsize=(11, 6), sharey=True)
+    plt.subplots_adjust(wspace=0.01)
+
+    for i in range(num_segments):
+        start = i * steps_per_segment
+        end = (i + 1) * steps_per_segment
+
+        segment_y = x_vals[start:end] - x_vals[start]  # reset y to 0 for each segment
+
+        axs[i].plot(centerline[start:end], segment_y, linestyle='--', color='orange', linewidth=1.5)
+        axs[i].plot(top_line[start:end], segment_y, linestyle='-', color='orange', linewidth=2)
+        axs[i].plot(bottom_line[start:end], segment_y, linestyle='-', color='orange', linewidth=2)
+
+        axs[i].set_title(f"Segment {i+1}", fontsize=10)
+        axs[i].set_xlim([-7, 7])
+        axs[i].set_ylim([0, 100])
+        axs[i].set_aspect('equal')  # Equal scaling for x and y
+        axs[i].grid(True)
+
+        axs[i].set_yticks(np.linspace(0, 100, 6))
+        axs[i].set_yticklabels([f"{int(val)}" for val in np.linspace(0, 100, 6)])
+
+        if i == 0:
+            axs[i].set_ylabel("Segment Length (mm)")
+            axs[i].set_xlabel("Lateral (mm)")
+
     plt.tight_layout()
     plt.show()
-
-    real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=360)
-
-    # Run the simulation 250 times 
-    #simulation_verificatoin(num_simulations = 250)
     
 if __name__ == "__main__":
     main()
