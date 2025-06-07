@@ -1,6 +1,6 @@
 # AFP Defect Prediction Model
 
-Welcome to the AFP (Automated Fiber Placement) Gaps and Overlap Prediction Model. This tool enables simulation of tows during the AFP process and prediction of gaps and overlaps defects based on statistical error modeling.
+Welcome to the AFP (Automated Fiber Placement) Gaps and Overlap Prediction Model. This tool enables simulation of tows during the AFP process and prediction of gap and overlap defects based on statistical error modeling.
 
 ## 🚀 Getting Started
 
