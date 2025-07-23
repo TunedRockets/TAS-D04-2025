@@ -148,6 +148,174 @@ def _test_join_function():
 ##################################################################################################################################################################
 """Functions for plotting data"""
 
+def find_x930_test(LT_x: list, LT_time: list, mode: str = "x"):
+    """
+    Visualizes LT_x data over time. 
+    - If mode = 'x': plots x-position vs time with red dot at x ≈ 930.
+    - If mode = 'v': plots velocity vs time with red dot where x ≈ 930.
+    
+    Also finds:
+    - First and last time where x ≈ 930 (within two tolerances),
+    - Calculates time width between first and last ≈ 930.
+    
+    Returns:
+        first_value (x or velocity), first_time, t_width
+    """
+
+    x_list = []
+    v_list = []
+    t_list = []
+
+    seen_x_values = set()
+    x930 = 930
+    tolerance = 0.05        # For first-time detection
+    end_tolerance = 0.2     # For last-time detection
+
+    # Store first & last times and values
+    first_x930_time = None
+    first_x930_value = None
+    last_x930_time = None
+
+    for i in range(1, len(LT_x)):  # Start from 1 to avoid LT_x[-1]
+        if 0 <= LT_x[i] <= 1000:
+            x_list.append(LT_x[i])
+            velocity = (LT_x[i] - LT_x[i-1]) / (LT_time[i] - LT_time[i-1])
+            v_list.append(velocity)
+            t_list.append(LT_time[i])
+
+            # First time x ≈ 930
+            if abs(LT_x[i] - x930) < tolerance and x930 not in seen_x_values:
+                first_x930_time = LT_time[i]
+                first_x930_value = LT_x[i] if mode == "x" else velocity
+                # print(f"First x ≈ 930: x = {LT_x[i]:.3f} mm, t = {LT_time[i]:.3f} s, v = {velocity:.3f} mm/s")
+                seen_x_values.add(x930)
+
+            # Last time x ≈ 930 (uses broader tolerance)
+            if abs(LT_x[i] - x930) < end_tolerance:
+                last_x930_time = LT_time[i]
+
+        if LT_x[i] > 1000:
+            break
+
+    # Compute time width
+    t_width = None
+    if first_x930_time is not None and last_x930_time is not None:
+        t_width = last_x930_time - first_x930_time
+
+    ##############################################################################################################################
+
+    # # Plotting
+    # plt.figure(figsize=(8, 5))
+
+    # if mode == "x":
+    #     plt.plot(t_list, x_list, label="LT X Position vs Time", color="blue")
+    #     ylabel = "X Position [mm]"
+    #     if first_x930_time is not None:
+    #         plt.scatter(first_x930_time, first_x930_value, color="red", s=50, label="x ≈ 930 mm")
+    # elif mode == "v":
+    #     plt.plot(t_list, v_list, label="LT Velocity vs Time", color="green")
+    #     ylabel = "Velocity [mm/s]"
+    #     if first_x930_time is not None:
+    #         plt.scatter(first_x930_time, first_x930_value, color="red", s=50, label="Velocity @ x ≈ 930 mm")
+    # else:
+    #     raise ValueError("Invalid mode. Use 'x' or 'v'.")
+
+    # # Labels and formatting
+    # plt.xlabel("Time [s]")
+    # plt.ylabel(ylabel)
+    # plt.title("LT Data vs Time")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
+
+    return first_x930_value, first_x930_time, t_width
+
+def plot_all_graphs_test(tow, generate=False):
+    # Load data
+    LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
+    LT_y = Handling_ALL_Functions.get_processed_data(tow, "LT")["y"]
+    LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT")["time"]
+    LLS_A_width = Handling_ALL_Functions.get_processed_data(tow, "LLS_A")["width"]
+    LLS_A_time = Handling_ALL_Functions.get_processed_data(tow, "LLS_A")["time"]
+    LLS_B_width = Handling_ALL_Functions.get_processed_data(tow, "LLS_B")["width"]
+    LLS_B_time = Handling_ALL_Functions.get_processed_data(tow, "LLS_B")["time"]
+    CAM_center = Handling_ALL_Functions.get_processed_data(tow, "CAM")["center"]
+    CAM_time = Handling_ALL_Functions.get_processed_data(tow, "CAM")["time"]
+
+    # Compute LT velocity using zeroed time
+    v_list = []
+    t_list = []
+    first_t = []
+
+    for i in range(1, len(LT_x)):
+        if 0 <= LT_x[i] <= 1000:
+            first_t.append(LT_time[i])
+            velocity = (LT_x[i] - LT_x[i-1]) / (LT_time[i] - LT_time[i-1])
+            LT_time_zeroed = LT_time[i] - first_t[0]
+            v_list.append(velocity)
+            t_list.append(LT_time_zeroed)
+        if LT_x[i] > 1000:
+            break
+
+    # Helper to compute velocity with constant time step
+    def compute_velocity(values, dt):
+        return [(values[i+1] - values[i]) / dt for i in range(len(values)-1)] + [0]
+
+    # Compute other velocities
+    LLS_A_velocity = compute_velocity(LLS_A_width, 0.004)
+    LLS_B_velocity = compute_velocity(LLS_B_width, 0.004)
+    CAM_velocity = compute_velocity(CAM_center, 0.001)
+
+    # Plot velocity graphs (time on x-axis)
+    plt.figure(figsize=(10, 6))
+    plt.plot(t_list, v_list, label="LT Velocity", color="blue")
+    plt.plot(CAM_time, CAM_velocity, label="CAM Velocity", color="orange")
+    plt.plot(LLS_A_time, LLS_A_velocity, label="LLS_A Velocity", color="red")
+    plt.plot(LLS_B_time, LLS_B_velocity, label="LLS_B Velocity", color="green")
+
+    plt.title(f"All Velocity Graphs for Tow {tow}")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Velocity [mm/s]")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    # Generate tow geometry (x-axis = LT_x position)
+    if generate:
+        # Interpolate CAM_center and LLS_B_width onto LT_time
+        cam_interp = np.interp(LT_time, CAM_time, CAM_center)
+        llsb_interp = np.interp(LT_time, LLS_B_time, LLS_B_width)
+
+        # Find cutoff index where LT_x first exceeds 1000
+        cutoff_index = next((i for i, x in enumerate(LT_x) if x > 1000), len(LT_x))
+
+        # Truncate all lists to the valid forward range
+        LT_x = LT_x[:cutoff_index]
+        LT_y = LT_y[:cutoff_index]
+        LT_time = LT_time[:cutoff_index]
+        cam_interp = cam_interp[:cutoff_index]
+        llsb_interp = llsb_interp[:cutoff_index]
+
+        # Compute geometry
+        centerline = np.array(LT_y) + cam_interp
+        top_edge = centerline + llsb_interp
+        bottom_edge = centerline - llsb_interp
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(LT_x, centerline, label="Tow Centerline", color="orange", linestyle="--")
+        plt.plot(LT_x, top_edge, label="Tow Top Edge", color="orange")
+        plt.plot(LT_x, bottom_edge, label="Tow Bottom Edge", color="orange")
+
+        plt.title(f"Tow Geometry for Tow {tow}")
+        plt.xlabel("LT X Position [mm]")
+        plt.ylabel("Y Position [mm]")
+        plt.xlim(0, 1000)
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
 def LT_x_plotter(LT_x: list, LT_time: list, data_state: str = "p"):
     "This function visually shows the LT_xvelocity data. It is not usefull for anything elsewhere"
 
@@ -490,14 +658,14 @@ def LLS_sync(widths, times, sensor_type, t_width:float, data_state: str = "p"):
 
     ##########################################################################################################
 
-    # plt.plot(times, width_velocities, zorder=1)
-    # plt.scatter([time_stop], [0], color="red", edgecolor="black", s=100, zorder=5, label="Min point")
-    # plt.title("Width velocity")
-    # plt.xlabel("Time [s]")
-    # plt.ylabel("Rate of change of tow width [m/s]")
-    # plt.grid()
-    # plt.show()
-     
+    plt.plot(times, width_velocities, zorder=1)
+    plt.scatter([time_stop], [0], color="red", edgecolor="black", s=100, zorder=5, label="Min point")
+    plt.title("Width velocity")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Rate of change of tow width [m/s]")
+    plt.grid()
+    plt.show()
+
     return time_stop
 
 def scan_for_min(t_len: float, times: list, values: list, start_time: float, end_time: float) -> tuple:
@@ -791,7 +959,25 @@ def _sync_time_data():
 ##################################################################################################################################################################
 
 def main():
-    plot_all_graphs_with_sync(6)
+
+    tow = 2
+    plot_all_graphs_test(tow, generate=True)
+    # for tow in range(2, 32):
+        # print("Tow ", tow)
+    # LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
+    # LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT")["time"]
+    # LLS_A_width = Handling_ALL_Functions.get_processed_data(tow, "LLS_A")["width"]
+    # LLS_A_time = Handling_ALL_Functions.get_processed_data(tow, "LLS_A")["time"]
+    # LLS_B_width = Handling_ALL_Functions.get_processed_data(tow, "LLS_B")["width"]
+    # LLS_B_time = Handling_ALL_Functions.get_processed_data(tow, "LLS_B")["time"]
+    # CAM_center = Handling_ALL_Functions.get_processed_data(tow, "CAM")["center"]
+    # CAM_time = Handling_ALL_Functions.get_processed_data(tow, "CAM")["time"]
+    # first_x930_value, first_x930_time, t_width = find_x930_test(LT_x, LT_time, "x")
+    # print("x = ", first_x930_value, "time = ", first_x930_time, "time width = ", t_width)
+    # A = LLS_sync(LLS_A_width, LLS_A_time, "LLS_A", t_width)
+    # B = LLS_sync(LLS_B_width, LLS_B_time, "LLS_B", t_width)
+
+    # plot_all_graphs_with_sync(tow)
     print("Hello world") # hi
     
 if __name__ == "__main__":
