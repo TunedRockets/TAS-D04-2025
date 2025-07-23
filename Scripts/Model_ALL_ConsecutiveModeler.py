@@ -65,11 +65,12 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
         'Error robot position',
         'Error tape lateral movement']
 
+    bin_widths = [0.005, 0.005, 0.005, 0.008]
     if bin_widths is None:
         bin_widths = [None] * 4
 
     for i, vals in enumerate(errors):
-        fig, ax = plt.subplots(figsize=(8, 3))
+        fig, ax = plt.subplots(figsize=(8, 2.5))
         # print(f'TESTTEST: i={i}, vals={vals} #######################')
         row, col = divmod(i, 2)
         clean = vals.dropna().to_numpy()
@@ -77,8 +78,8 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
         bw = bin_widths[i]
         bins = 40 if bw is None else np.arange(mn, mx + bw, bw)
 
-        ax.hist(clean, bins=bins, alpha=0.5, density=True, label='real')
-        ax.hist(sim_data[i], bins=bins, alpha=0.5, density=True, label='simulated')
+        ax.hist(clean, bins=bins, alpha=0.5, density=True, label='Experimental')
+        ax.hist(sim_data[i], bins=bins, alpha=0.5, density=True, label='Model')
         best = best_fit_distribution(clean, bins=len(bins) - 1)
         dist, params = best['dist'], best['params']
         friendly = distribution_labels.get(dist.name, dist.name)
@@ -128,8 +129,11 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
         sim_mean = np.array(sim_data[i]).mean()
         sim_std = np.array(sim_data[i]).std()
 
-        ax.axvline(mean_val, color='purple', linestyle='-', label='Real Mean', linewidth=1)
-        ax.axvline(sim_mean, color='red', linestyle='-', label='Simulated Mean', linewidth=1)     # + '\n' + rf'$\sigma$ = {sim_std:.2f}'
+        print(f'{titles[i]} Experimental mean/std = {mean_val}/{std_val}')
+        print(f'{titles[i]} Model mean/std = {sim_mean}/{sim_std}')
+
+        ax.axvline(mean_val, color='purple', linestyle='-', label='Experimental Mean', linewidth=1)
+        ax.axvline(sim_mean, color='red', linestyle='-', label='Model Mean', linewidth=1)     # + '\n' + rf'$\sigma$ = {sim_std:.2f}'
         ax.axvline(0, color='black', linestyle='dashed')
 
         #ax[row, col].set_title(titles[i])

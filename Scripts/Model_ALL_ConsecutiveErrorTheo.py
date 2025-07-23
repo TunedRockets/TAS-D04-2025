@@ -61,7 +61,7 @@ def weighted_linregress(x, y, weights):
 
     return slope, intercept, r_value, p_value_slope, stderr_slope
 
-def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, bins_show = False, plot_fit=True, fourPlots = False, axs = None, noTitle = False):
+def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, bins_show = False, plot_fit=True, fourPlots = False, axs = None, noTitle = True):
     """
         Analyze consecutive error pairs and their distributions from processed sensor data.
 
@@ -99,12 +99,16 @@ def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, 
 
         if sensor == "LT":
             tow_data = tow_data_bef[["time", "x", "y", "z", "error_LT", "z error"]]
+            x_lable = "Error robot position (mm)"
         if sensor == "LLS_A":
             tow_data = tow_data_bef[["time", "width_LLS_A", "center_LLS_A", "width error_LLS_A"]]
+            x_lable = "Error tape width before compaction (mm)"
         if sensor == "LLS_B":
             tow_data = tow_data_bef[["time", "width_LLS_B", "center_LLS_B", "width error_LLS_B"]]
+            x_lable = "Error tape width after compaction (mm)"
         if sensor == "CAM":
             tow_data = tow_data_bef[["time", "width_CAM", "center_CAM", "error_CAM"]]
+            x_lable = "Error tape lateral movement (mm)"
         velocity_data = tow_data_bef[["time", "x"]]
 
         # Ensure that the returned object is a dataframe
@@ -179,21 +183,26 @@ def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, 
     error_label = error_labels[sensor]
 
     # Plot scatter + binned fit
-    if plot_fit:
-        plt.figure(figsize=(6.5, 5))
-        plt.scatter(x_train, y_train, alpha=0.2, marker='o', edgecolors='k', label="Training Set")
-        plt.scatter(x_binned, y_binned, alpha=1, color='red', marker='s', s=40, label="Binned Averages")
+    if plot_fit:                    #TODO: fix these plots
+        plt.figure(figsize=(5, 4))    #(6.5, 5)
+        plt.scatter(x_train, y_train, alpha=0.2, marker='o', s=10, edgecolors='k', label="Training Set")
+        plt.scatter(x_binned, y_binned, alpha=1, color='red', marker='s', s=10, label="Binned Averages")
         plt.plot(x_binned, np.array(x_binned) * slope + intercept, color='red', label='Linear Fit')
 
-        plt.xlabel("$ε_{i}$ (mm)", fontsize=constants.font_medium)
-        plt.ylabel("$ε_{i+1}$ (mm)", fontsize=constants.font_medium)
+        plt.xlabel(x_lable, fontsize=constants.font_medium)  #"$ε_{i}$ (mm)"
+        plt.ylabel("subsequent error (mm)", fontsize=constants.font_medium)    #"$ε_{i+1}$ (mm)"
 
         if not noTitle:
             plt.title(f"{sensor} {error_label} : Consecutive Error Correlation (Training set)",
                       fontsize=constants.font_small)
 
+        plt.xlim(-1.2, 1.2)
+        plt.ylim(-1.2, 1.2)
+        plt.xticks(np.linspace(-1.2, 1.2, 9))
+        plt.yticks(np.linspace(-1.2, 1.2, 9))
         plt.legend(fontsize=constants.font_small)
-        plt.grid(True)
+        #plt.grid(True)
+        plt.tight_layout(rect=[0, 0, 1, 1])
         plt.show()
 
     # Compute Deviations per Bin
@@ -222,7 +231,7 @@ def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, 
     total_bins = num_bins
     total_pages = math.ceil(total_bins / plots_per_page)
 
-    if bins_show:
+    if bins_show:           #TODO: fix these plots
         for page in range(total_pages):
             start = page * plots_per_page
             end = min(start + plots_per_page, total_bins)
@@ -1267,10 +1276,12 @@ def get_delta_x(tow_number):
 
 if __name__ == "__main__":
 
-    start_time = time.perf_counter()
-    generate_simulated_VS_real(n_real_tow=6, rdm_seed=75, test_ratio=0.2, errorCor_show=False, bins_show=False,
-                               num_bins=100, peak_plots = False, sim_plot = True)
-    end_time = time.perf_counter()
-    elapsed_time = end_time - start_time
-    print(f"Elapsed time: {round(elapsed_time,2)} seconds")
+    #start_time = time.perf_counter()
+    #generate_simulated_VS_real(n_real_tow=6, rdm_seed=75, test_ratio=0.2, errorCor_show=False, bins_show=False,
+    #                           num_bins=100, peak_plots = False, sim_plot = True)
+    #end_time = time.perf_counter()
+    #elapsed_time = end_time - start_time
+    #print(f"Elapsed time: {round(elapsed_time,2)} seconds")
+    generate_simulated_VS_real(n_real_tow=31, rdm_seed=0, errorCor_show=True, bins_show=False,
+                               num_bins=20, peak_plots=False, sim_plot=False, test_ratio=0.001)
 

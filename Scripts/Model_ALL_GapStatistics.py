@@ -7,7 +7,7 @@ import random
 import pandas as pd
 from Data_ALL_importer import GAP_exceltoarray
 
-steps_per_mm = 3 / 10
+steps_per_mm = 0.36
 
 
 # starting error distribution can be found here, but is assumed to be uniform based on these graphs ranges of values
@@ -53,11 +53,11 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
                              plot=True):
     # Get binned models
     bin_stats_cam, slope_cam, intercept_cam, _, _, _, x_sorted_cam, bin_edges_cam, devs_cam = consecutive_error(
-        "CAM", test_ratio=0.00001, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "CAM", test_ratio=0.00001, num_bins=180, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     bin_stats_lt, slope_lt, intercept_lt, _, _, _, x_sorted_lt, bin_edges_lt, devs_lt = consecutive_error(
-        "LT", test_ratio=0.00001, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "LT", test_ratio=0.00001, num_bins=180, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     bin_stats_llsb, slope_llsb, intercept_llsb, _, _, _, x_sorted_llsb, bin_edges_llsb, devs_llsb = consecutive_error(
-        "LLS_B", test_ratio=0.00001, num_bins=90, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
+        "LLS_B", test_ratio=0.00001, num_bins=180, bins_show=False, plot_fit=False, random_state=random.randint(0, 10000))
     # get perfect offsets
     offsets = np.linspace(-(num_tows - 1) / 2, (num_tows - 1) / 2, num_tows) * tow_spacing_mm
     plt.figure(figsize=(12, 8))
@@ -180,25 +180,29 @@ def main():
     #real_gap_data = calculate_real_gap_overlap_percentages(num_tows=15, tow_spacing_mm=12.5)
     real_gap_data = get_traverse_data()
     mean_real = np.mean(real_gap_data)
+    std_real = np.std(real_gap_data)
     print(f'the REAL MEAN = {mean_real}')
     # real_gap_data = filter(lambda x: 4 >= x >= 8, real_gap_data)
     print(real_gap_data)
 
-    gap_overlap_df = generate_multitow_layout(num_tows=100, tow_spacing_mm=12.5)
+    gap_overlap_df = generate_multitow_layout(num_tows=200, tow_spacing_mm=12.5, n_steps=2778)
     mean_sim = np.mean(gap_overlap_df)
+    std_sim = np.std(gap_overlap_df)
     #print(f'uuhhhuhhh {real_gap_data}')
     #print('wtf')
+    print(f'Experimental mean/std = {mean_real}/{std_real}')
+    print(f'Model mean/std = {mean_sim}/{std_sim}')
 
     #plots
     gap_center = 12.5-6.35
     fig, ax = plt.subplots(figsize=(8, 4))
-    ax.hist(real_gap_data, label='real', bins=[0]+list(np.linspace(gap_center-1.2, gap_center+1.2, 100+1))+[10], alpha=0.5, density=True)     # bins=[0]+list(np.linspace(6.15-1.2, 6.15+1.2, 80+1))+[10]
-    ax.hist(gap_overlap_df, label='simulated', bins=[0]+list(np.linspace(gap_center-1.2, gap_center+1.2, 100+1))+[10], alpha=0.5, density=True)
-    ax.axvline(mean_real, color='purple', linestyle='-', label='Real Mean')
-    ax.axvline(mean_sim, color='red', linestyle='-', label='Simulated Mean')
+    ax.hist(real_gap_data, label='Experimental', bins=[0]+list(np.linspace(gap_center-1.2, gap_center+1.2, 100+1))+[10], alpha=0.5, density=True)     # bins=[0]+list(np.linspace(6.15-1.2, 6.15+1.2, 80+1))+[10]
+    ax.hist(gap_overlap_df, label='Model', bins=[0]+list(np.linspace(gap_center-1.2, gap_center+1.2, 100+1))+[10], alpha=0.5, density=True)
+    ax.axvline(mean_real, color='purple', linestyle='-', label='Experimental Mean')
+    ax.axvline(mean_sim, color='red', linestyle='-', label='Model Mean')
     ax.set_xlabel("Gap (mm)", fontsize=12)
     ax.set_ylabel("Density", fontsize=12)
-    ax.axvline(gap_center, color='black', linestyle='dashed')
+    ax.axvline(gap_center, color='black', linestyle='dashed', label='Ideal Gap')
     # plt.title(f"Gaps")
     ax.set_xlim(gap_center-1.2, gap_center+1.2)
     ax.axhline(0, color='gray', linestyle='--', linewidth=1)
