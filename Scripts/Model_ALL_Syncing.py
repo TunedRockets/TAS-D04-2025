@@ -230,7 +230,10 @@ def find_x930_test(LT_x: list, LT_time: list, mode: str = "x"):
 
     return first_x930_value, first_x930_time, t_width
 
-def plot_all_graphs_test(tow, generate=False):
+def plot_all_graphs_or_generate_experimental_tow(tow, generate=False):
+    """This function can be used to plot all velocities vs time for a tow if generate is False
+       This function can also be used to generate an expirmental tow if generate is True"""
+
     # Load data
     LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
     LT_y = Handling_ALL_Functions.get_processed_data(tow, "LT")["y"]
@@ -266,20 +269,21 @@ def plot_all_graphs_test(tow, generate=False):
     LLS_B_velocity = compute_velocity(LLS_B_width, 0.004)
     CAM_velocity = compute_velocity(CAM_center, 0.001)
 
-    # Plot velocity graphs (time on x-axis)
-    plt.figure(figsize=(10, 6))
-    plt.plot(t_list, v_list, label="LT Velocity", color="blue")
-    plt.plot(CAM_time, CAM_velocity, label="CAM Velocity", color="orange")
-    plt.plot(LLS_A_time, LLS_A_velocity, label="LLS_A Velocity", color="red")
-    plt.plot(LLS_B_time, LLS_B_velocity, label="LLS_B Velocity", color="green")
+    if not generate:
+        # Plot velocity graphs (time on x-axis)
+        plt.figure(figsize=(10, 6))
+        plt.plot(t_list, v_list, label="LT Velocity", color="blue")
+        plt.plot(CAM_time, CAM_velocity, label="CAM Velocity", color="orange")
+        plt.plot(LLS_A_time, LLS_A_velocity, label="LLS_A Velocity", color="red")
+        plt.plot(LLS_B_time, LLS_B_velocity, label="LLS_B Velocity", color="green")
 
-    plt.title(f"All Velocity Graphs for Tow {tow}")
-    plt.xlabel("Time [s]")
-    plt.ylabel("Velocity [mm/s]")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+        plt.title(f"All Velocity Graphs for Tow {tow}")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Velocity [mm/s]")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
 
     # Generate tow geometry (x-axis = LT_x position)
     if generate:
@@ -961,24 +965,22 @@ def _sync_time_data():
 def main():
 
     tow = 2
-    plot_all_graphs_test(tow, generate=True)
-    # for tow in range(2, 32):
-        # print("Tow ", tow)
-    # LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
-    # LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT")["time"]
+    plot_all_graphs_or_generate_experimental_tow(tow, generate=True)
+    LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
+    LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT")["time"]
     # LLS_A_width = Handling_ALL_Functions.get_processed_data(tow, "LLS_A")["width"]
     # LLS_A_time = Handling_ALL_Functions.get_processed_data(tow, "LLS_A")["time"]
     # LLS_B_width = Handling_ALL_Functions.get_processed_data(tow, "LLS_B")["width"]
     # LLS_B_time = Handling_ALL_Functions.get_processed_data(tow, "LLS_B")["time"]
     # CAM_center = Handling_ALL_Functions.get_processed_data(tow, "CAM")["center"]
     # CAM_time = Handling_ALL_Functions.get_processed_data(tow, "CAM")["time"]
-    # first_x930_value, first_x930_time, t_width = find_x930_test(LT_x, LT_time, "x")
-    # print("x = ", first_x930_value, "time = ", first_x930_time, "time width = ", t_width)
+    first_x930_value, first_x930_time, t_width = find_x930_test(LT_x, LT_time, "x")
+    print("x = ", first_x930_value, "time = ", first_x930_time, "time width = ", t_width)
     # A = LLS_sync(LLS_A_width, LLS_A_time, "LLS_A", t_width)
     # B = LLS_sync(LLS_B_width, LLS_B_time, "LLS_B", t_width)
 
     # plot_all_graphs_with_sync(tow)
-    print("Hello world") # hi
+    # print("Hello world") # hi
     
 if __name__ == "__main__":
     main()
