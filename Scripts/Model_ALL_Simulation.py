@@ -247,11 +247,6 @@ def main():
     plt.grid(True)
     plt.tight_layout()
     plt.show()
-
-    real_gap_df, real_gap_pct, real_overlap_pct = calculate_real_gap_overlap_percentages(num_tows=360)
-
-    # Run the simulation 250 times 
-    #simulation_verificatoin(num_simulations = 250)
     
 if __name__ == "__main__":
     main()
