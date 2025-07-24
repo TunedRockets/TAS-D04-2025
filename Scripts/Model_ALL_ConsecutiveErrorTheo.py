@@ -61,7 +61,7 @@ def weighted_linregress(x, y, weights):
 
     return slope, intercept, r_value, p_value_slope, stderr_slope
 
-def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, bins_show = False, plot_fit=True, fourPlots = False, axs = None, noTitle = True):
+def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, bins_show = False, plot_fit=True, fourPlots = False, axs = None, noTitle = True, return_plot_data=False):
     """
         Analyze consecutive error pairs and their distributions from processed sensor data.
 
@@ -205,6 +205,9 @@ def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, 
         plt.tight_layout(rect=[0, 0, 1, 1])
         plt.show()
 
+    if return_plot_data:
+        return x_train, y_train, x_binned, y_binned, slope, intercept
+
     # Compute Deviations per Bin
 
     deviations_per_bin, velocities_per_bin = [], []
@@ -231,7 +234,7 @@ def consecutive_error(sensor, test_ratio=0.2, num_bins = 20, random_state=None, 
     total_bins = num_bins
     total_pages = math.ceil(total_bins / plots_per_page)
 
-    if bins_show:           #TODO: fix these plots
+    if bins_show:
         for page in range(total_pages):
             start = page * plots_per_page
             end = min(start + plots_per_page, total_bins)
@@ -1274,6 +1277,97 @@ def get_delta_x(tow_number):
     delta_t = tow_data_bef["x"].iloc[-1] - tow_data_bef["x"].iloc[0]
     return delta_t
 
+def plot_blobs():
+    # some parameters for the plots
+    test_ratio = 0.0001
+    num_bins = 15
+    bins_show = False
+    errorCor_show = True
+    x_label = 'Current error'
+    y_label = 'Subsequent error'
+    csfont = {'fontname': 'Times New Roman'}
+
+    # gathering the data for the plots from the consecutive error function
+    X_CAM, Y_CAM, X_CAM_binned, Y_CAM_binned, slope_CAM, intercept_CAM = consecutive_error(
+        "CAM", test_ratio=test_ratio, num_bins=num_bins, bins_show=bins_show, plot_fit=errorCor_show, return_plot_data=True)
+    X_LT, Y_LT, X_LT_binned, Y_LT_binned, slope_LT, intercept_LT = consecutive_error(
+        "LT", test_ratio=test_ratio, num_bins=num_bins, bins_show=bins_show, plot_fit=errorCor_show, return_plot_data=True)
+    X_LLSB, Y_LLSB, X_LLSB_binned, Y_LLSB_binned, slope_LLSB, intercept_LLSB = consecutive_error(
+        "LLS_B", test_ratio=test_ratio, num_bins=num_bins, bins_show=bins_show, plot_fit=errorCor_show, return_plot_data=True)
+    X_LLSA, Y_LLSA, X_LLSA_binned, Y_LLSA_binned, slope_LLSA, intercept_LLSA = consecutive_error(
+        "LLS_A", test_ratio=test_ratio, num_bins=num_bins, bins_show=bins_show, plot_fit=errorCor_show, return_plot_data=True)
+
+    # --------PLotting----------
+    plt.rc('font', family='Times New Roman')
+    fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+
+    #CAM plot
+    axs[0, 0].scatter(X_CAM, Y_CAM, alpha=0.2, marker='o', s=8, edgecolors='k', label="Training Set")
+    axs[0, 0].scatter(X_CAM_binned, Y_CAM_binned, alpha=1, color='red', marker='s', s=13, label="Binned Averages")
+    axs[0, 0].plot(X_CAM_binned, np.array(X_CAM_binned) * slope_CAM + intercept_CAM, color='red', label='Linear Fit')
+
+    #axs[0, 0].set_xlabel(x_label, fontsize=constants.font_medium, **csfont)  #"$ε_{i}$ (mm)"
+    axs[0, 0].set_ylabel(y_label, fontsize=constants.font_medium, **csfont)    #"$ε_{i+1}$ (mm)"
+    axs[0, 0].set_title('Tape lateral movement', fontsize=constants.font_medium, **csfont)
+    axs[0, 0].set_xlim(-0.6, 0.9)
+    axs[0, 0].set_ylim(-0.6, 0.9)
+    axs[0, 0].set_xticks(np.linspace(-0.6, 0.9, 6))
+    axs[0, 0].set_yticks(np.linspace(-0.6, 0.9, 6))
+    axs[0, 0].grid(True)
+
+    #LT plot
+    axs[0, 1].scatter(X_LT, Y_LT, alpha=0.2, marker='o', s=8, edgecolors='k')
+    axs[0, 1].scatter(X_LT_binned, Y_LT_binned, alpha=1, color='red', marker='s', s=13)
+    axs[0, 1].plot(X_LT_binned, np.array(X_LT_binned) * slope_LT + intercept_LT, color='red', linewidth=2)
+
+    #axs[0, 1].set_xlabel(x_label, fontsize=constants.font_medium, **csfont)
+    #axs[0, 1].set_ylabel(y_label, fontsize=constants.font_medium, **csfont)
+    axs[0, 1].set_title('Robot position', fontsize=constants.font_medium, **csfont)
+    axs[0, 1].set_xlim(-1.2, -0.6)
+    axs[0, 1].set_ylim(-1.2, -0.6)
+    axs[0, 1].set_xticks(np.linspace(-1.2, -0.6, 3))
+    axs[0, 1].set_yticks(np.linspace(-1.2, -0.6, 3))
+    axs[0, 1].grid(True)
+
+    #LLSB plot
+    axs[1,0].scatter(X_LLSB, Y_LLSB, alpha=0.2, marker='o', s=8, edgecolors='k')
+    axs[1,0].scatter(X_LLSB_binned, Y_LLSB_binned, alpha=1, color='red', marker='s', s=13)
+    axs[1,0].plot(X_LLSB_binned, np.array(X_LLSB_binned) * slope_LLSB + intercept_LLSB, color='red', linewidth=2)
+
+    axs[1,0].set_xlabel(x_label, fontsize=constants.font_medium, **csfont)
+    axs[1,0].set_ylabel(y_label, fontsize=constants.font_medium, **csfont)
+    axs[1, 0].set_title('Tape width after compaction', fontsize=constants.font_medium, **csfont)
+    axs[1,0].set_xlim(-0.6, 0.3)
+    axs[1,0].set_ylim(-0.6, 0.3)
+    axs[1,0].set_xticks(np.linspace(-0.6, 0.3, 4))
+    axs[1,0].set_yticks(np.linspace(-0.6, 0.3, 4))
+    axs[1,0].grid(True)
+
+    #LLSA plot
+    axs[1, 1].scatter(X_LLSA, Y_LLSA, alpha=0.2, marker='o', s=8, edgecolors='k')
+    axs[1, 1].scatter(X_LLSA_binned, Y_LLSA_binned, alpha=1, color='red', marker='s', s=13)
+    axs[1, 1].plot(X_LLSA_binned, np.array(X_LLSA_binned) * slope_LLSA + intercept_LLSA, color='red', linewidth=2)
+
+    axs[1, 1].set_xlabel(x_label, fontsize=constants.font_medium, **csfont)
+    axs[1, 1].set_title('Tape width before compaction', fontsize=constants.font_medium, **csfont)
+    axs[1, 1].set_xlim(-0.6, 0.3)
+    axs[1, 1].set_ylim(-0.6, 0.3)
+    axs[1, 1].set_xticks(np.linspace(-0.6, 0.3, 4))
+    axs[1, 1].set_yticks(np.linspace(-0.6, 0.3, 4))
+    axs[1, 1].grid(True)
+
+
+    #fig.subplots_adjust(bottom=0.2)
+    lgd = fig.legend(fontsize=constants.font_small, loc='lower center',
+          fancybox=True, shadow=True, ncol=5)
+    #leg.set_in_layout(True)
+    #plt.grid(True)
+    #plt.savefig('samplefigure', bbox_extra_artists=(lgd), bbox_inches='tight')
+    plt.tight_layout(rect=[0, 0.04, 1, 1])
+    plt.show()
+
+
+
 if __name__ == "__main__":
 
     #start_time = time.perf_counter()
@@ -1282,6 +1376,5 @@ if __name__ == "__main__":
     #end_time = time.perf_counter()
     #elapsed_time = end_time - start_time
     #print(f"Elapsed time: {round(elapsed_time,2)} seconds")
-    generate_simulated_VS_real(n_real_tow=31, rdm_seed=0, errorCor_show=True, bins_show=False,
-                               num_bins=20, peak_plots=False, sim_plot=False, test_ratio=0.001)
+    plot_blobs()
 
