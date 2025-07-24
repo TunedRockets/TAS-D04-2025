@@ -16,7 +16,8 @@ def save_distribution_data():
     def export_data(data_table: pd.DataFrame, short_name):
         '''This function saves a pandas dataframe as
             a .pkl, it will be saved with the short name,
-            use that to access it'''
+            use that to access it.
+            It was never used and isn't currently functioning I think'''
 
         _save_path = "Script\\"
 
@@ -25,7 +26,8 @@ def save_distribution_data():
         return
 
 def save_all_distribution_data(_save_path, LT_short_name, CAM_short_name, LLSA_short_name, LLSB_short_name):
-    '''This function saves all the data of the distributions generated of the consecutive data.'''
+    '''This function saves all the data of the distributions generated of the consecutive data.
+        It was never used and isn't currently functioning I think'''
     LT_dist = consecutive_error('LT')
     CAM_dist = consecutive_error('CAM')
     LLSA_dist = consecutive_error('LLS_A')
@@ -43,6 +45,9 @@ def save_all_distribution_data(_save_path, LT_short_name, CAM_short_name, LLSA_s
 
 
 def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_widths: list[float] = None):
+    '''This function plots a histogram of real and simulated data
+        for each of the sensors separately.'''
+
     distribution_labels = {
         'norm': 'Normal Distribution',
         'logistic': 'Logistic Distribution',
@@ -148,7 +153,11 @@ def plot_histograms(real_data: pd.DataFrame, sim_data: list, title: str, bin_wid
 
 
 
-def run_model(save_data: bool=False, use_saved: bool=False):
+def run_model(save_data: bool=False, use_saved: bool=False, generate_varying_bin_plots: bool=False, return_data: bool=True):
+    '''This function executes all steps needed to plot the
+        histograms for each sensor, including experimental and real.
+        This involves first getting the data and then plotting.'''
+
     real_data = pd.concat((get_synced_data(t, spacesynced=True) for t in range(3, 32, 2)), ignore_index=True)
 
     cam_start_range = (-0.4, 0.6)
@@ -183,14 +192,18 @@ def run_model(save_data: bool=False, use_saved: bool=False):
         LLSA_dist = consecutive_error('LLS_A', random_state=rs, num_bins=num_bins, test_ratio=0.00001, plot_fit=False)
         LLSB_dist = consecutive_error('LLS_B', random_state=rs, num_bins=num_bins, test_ratio=0.00001, plot_fit=False)
 
+        # ------ This section generates the simulated data used for the comparison ------
         n_runs = 200
         total_data = []
         n_steps = 289
         total_error = [[], [], [], []]
         for run in range(n_runs):
+            # starting position data
             start_cam = random.uniform(*cam_start_range)
             start_lt = random.uniform(*lt_start_range)
             start_llsb = random.uniform(*llsb_start_range)
+
+            # generating data
             LT_error_list = generate_error_path(start_lt, n_steps, LT_dist[1], LT_dist[2], LT_dist[-3], LT_dist[-2],
                                                 LT_dist[-1])
             CAM_error_list = generate_error_path(start_cam, n_steps, CAM_dist[1], CAM_dist[2], CAM_dist[-3], CAM_dist[-2],
@@ -253,81 +266,85 @@ def run_model(save_data: bool=False, use_saved: bool=False):
 
     real_hist()
 
-    LT_generated_bins_mean_var = np.array(LT_generated_bins_mean_var)
-    CAM_generated_bins_mean_var = np.array(CAM_generated_bins_mean_var)
-    LLSA_generated_bins_mean_var = np.array(LLSA_generated_bins_mean_var)
-    LLSB_generated_bins_mean_var = np.array(LLSB_generated_bins_mean_var)
+    # This generates plots to determine optimal bin number based on global mean and variance.
+    if generate_varying_bin_plots:
+        LT_generated_bins_mean_var = np.array(LT_generated_bins_mean_var)
+        CAM_generated_bins_mean_var = np.array(CAM_generated_bins_mean_var)
+        LLSA_generated_bins_mean_var = np.array(LLSA_generated_bins_mean_var)
+        LLSB_generated_bins_mean_var = np.array(LLSB_generated_bins_mean_var)
 
-    # plotting mean
-    plt.subplot(223)
-    plt.plot(LT_generated_bins_mean_var[:, 0], LT_generated_bins_mean_var[:, 1], label='mean')
-    plt.hlines(y=[-0.94], xmin=0, xmax=100, linestyle='dotted')
-    plt.title('LT')
-    # plt.ylim((min(LT_generated_bins_mean_var[:, 0]), max(LT_generated_bins_mean_var[:, 0])))
-    plt.legend()
+        # plotting mean
+        plt.subplot(223)
+        plt.plot(LT_generated_bins_mean_var[:, 0], LT_generated_bins_mean_var[:, 1], label='mean')
+        plt.hlines(y=[-0.94], xmin=0, xmax=100, linestyle='dotted')
+        plt.title('LT')
+        # plt.ylim((min(LT_generated_bins_mean_var[:, 0]), max(LT_generated_bins_mean_var[:, 0])))
+        plt.legend()
 
-    plt.subplot(224)
-    plt.plot(CAM_generated_bins_mean_var[:, 0], CAM_generated_bins_mean_var[:, 1], label='mean')
-    plt.hlines(y=[0.32], xmin=0, xmax=100, linestyle='dotted')
-    plt.title('CAM')
-    # plt.ylim((min(CAM_generated_bins_mean_var[:, 1]), max(CAM_generated_bins_mean_var[:, 1])))
-    plt.legend()
+        plt.subplot(224)
+        plt.plot(CAM_generated_bins_mean_var[:, 0], CAM_generated_bins_mean_var[:, 1], label='mean')
+        plt.hlines(y=[0.32], xmin=0, xmax=100, linestyle='dotted')
+        plt.title('CAM')
+        # plt.ylim((min(CAM_generated_bins_mean_var[:, 1]), max(CAM_generated_bins_mean_var[:, 1])))
+        plt.legend()
 
-    plt.subplot(221)
-    plt.plot(LLSA_generated_bins_mean_var[:, 0], LLSA_generated_bins_mean_var[:, 1], label='mean')
-    plt.hlines(y=[-0.25], xmin=0, xmax=100, linestyle='dotted')
-    plt.title('LLSA')
-    # plt.ylim((min(LLSA_generated_bins_mean_var[:, 1]), max(LLSA_generated_bins_mean_var[:, 1])))
-    plt.legend()
+        plt.subplot(221)
+        plt.plot(LLSA_generated_bins_mean_var[:, 0], LLSA_generated_bins_mean_var[:, 1], label='mean')
+        plt.hlines(y=[-0.25], xmin=0, xmax=100, linestyle='dotted')
+        plt.title('LLSA')
+        # plt.ylim((min(LLSA_generated_bins_mean_var[:, 1]), max(LLSA_generated_bins_mean_var[:, 1])))
+        plt.legend()
 
-    plt.subplot(222)
-    plt.plot(LLSB_generated_bins_mean_var[:, 0], LLSB_generated_bins_mean_var[:, 1], label='mean')
-    plt.hlines(y=[-0.08], xmin=0, xmax=100, linestyle='dotted')
-    plt.title('LLSB')
-    # plt.ylim((min(LLSB_generated_bins_mean_var[:, 1]), max(LLSB_generated_bins_mean_var[:, 1])))
-    plt.legend()
+        plt.subplot(222)
+        plt.plot(LLSB_generated_bins_mean_var[:, 0], LLSB_generated_bins_mean_var[:, 1], label='mean')
+        plt.hlines(y=[-0.08], xmin=0, xmax=100, linestyle='dotted')
+        plt.title('LLSB')
+        # plt.ylim((min(LLSB_generated_bins_mean_var[:, 1]), max(LLSB_generated_bins_mean_var[:, 1])))
+        plt.legend()
 
-    plt.tight_layout()
-    plt.show()
+        plt.tight_layout()
+        plt.show()
 
-    ###############
-    # plotting variance
-    plt.subplot(223)
-    plt.plot(LT_generated_bins_mean_var[:, 0], LT_generated_bins_mean_var[:, 2], label='variance')
-    plt.hlines(y=[0.05], xmin=0, xmax=100, linestyle='dotted')
-    plt.title('LT')
-    plt.legend()
+        ###############
+        # plotting variance
+        plt.subplot(223)
+        plt.plot(LT_generated_bins_mean_var[:, 0], LT_generated_bins_mean_var[:, 2], label='variance')
+        plt.hlines(y=[0.05], xmin=0, xmax=100, linestyle='dotted')
+        plt.title('LT')
+        plt.legend()
 
-    plt.subplot(224)
-    plt.plot(CAM_generated_bins_mean_var[:, 0], CAM_generated_bins_mean_var[:, 2], label='variance')
-    plt.hlines(y=[0.18], xmin=0, xmax=100, linestyle='dotted')
-    plt.title('CAM')
-    plt.legend()
+        plt.subplot(224)
+        plt.plot(CAM_generated_bins_mean_var[:, 0], CAM_generated_bins_mean_var[:, 2], label='variance')
+        plt.hlines(y=[0.18], xmin=0, xmax=100, linestyle='dotted')
+        plt.title('CAM')
+        plt.legend()
 
-    plt.subplot(221)
-    plt.plot(LLSA_generated_bins_mean_var[:, 0], LLSA_generated_bins_mean_var[:, 2], label='variance')
-    plt.hlines(y=[0.08], xmin=0, xmax=100, linestyle='dotted')
-    plt.title('LLSA')
-    plt.legend()
+        plt.subplot(221)
+        plt.plot(LLSA_generated_bins_mean_var[:, 0], LLSA_generated_bins_mean_var[:, 2], label='variance')
+        plt.hlines(y=[0.08], xmin=0, xmax=100, linestyle='dotted')
+        plt.title('LLSA')
+        plt.legend()
 
-    plt.subplot(222)
-    plt.plot(LLSB_generated_bins_mean_var[:, 0], LLSB_generated_bins_mean_var[:, 2], label='variance')
-    plt.hlines(y=[0.07], xmin=0, xmax=100, linestyle='dotted')
-    plt.title('LLSB')
-    plt.legend()
+        plt.subplot(222)
+        plt.plot(LLSB_generated_bins_mean_var[:, 0], LLSB_generated_bins_mean_var[:, 2], label='variance')
+        plt.hlines(y=[0.07], xmin=0, xmax=100, linestyle='dotted')
+        plt.title('LLSB')
+        plt.legend()
 
-    plt.tight_layout()
-    plt.show()
+        plt.tight_layout()
+        plt.show()
 
-    means = [-0.95, 0.31, -0.26, -0.09] # TODO: make sure values are correct, same for variance!
-    variances = [0.05, 0.18, 0.08, 0.07]
-    for i in range(len(LT_generated_bins_mean_var[:, 0])):
-        delta_mean = LT_generated_bins_mean_var - means[0]
+        means = [-0.95, 0.31, -0.26, -0.09]
+        variances = [0.05, 0.18, 0.08, 0.07]
+        for i in range(len(LT_generated_bins_mean_var[:, 0])):
+            delta_mean = LT_generated_bins_mean_var - means[0]
+
+    if return_data:
+        return total_error
 
 
 
 
-data = run_model()
 
 def tow_visualizer(tows: list[pd.DataFrame], y_intended: list, name: str, ideal: bool):
     """
@@ -403,6 +420,8 @@ def tow_visualizer(tows: list[pd.DataFrame], y_intended: list, name: str, ideal:
     plt.show()
 
 def main():
+    data = run_model()
+
     print("Hello world")
 
 if __name__ == "__main__":
