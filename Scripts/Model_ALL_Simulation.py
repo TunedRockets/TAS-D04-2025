@@ -65,8 +65,20 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
     top_lines = []
     bottom_lines = []
 
+
+    tow_colors = [
+    '#FFD700',   # gold
+    '#FF8C00',   # darkorange
+    ]   
+
     for i, offset in enumerate(offsets):
-        color = cmap(i % 10)
+
+        '''Uncomment this if you want to visualize the 10 virtual tows with different colors, 
+        and comment the line that says:
+        color = tow_colors[i % len(tow_colors)]  
+        which is (circa) line 111'''
+        #color = tow_colors[i % len(tow_colors)]
+        
         start_cam = random.uniform(*cam_start_range)
         start_lt = random.uniform(*lt_start_range)
         start_llsb = random.uniform(*llsb_start_range)
@@ -88,16 +100,27 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
         bottom_lines.append(bottom_line)
 
         # --- Plot ---
-        plt.plot(x_vals, [offset]*n_steps, linestyle="--", color="gray", alpha=0.6,
-                label="Ideal Centerline" if i == 0 else "")
-        plt.plot(x_vals, centerline[:n_steps], color=color, label=f"Tow {i+1} Centerline", linewidth=4)
-        plt.plot(x_vals, top_line[:n_steps], linestyle=":", color=color, linewidth=2)
-        plt.plot(x_vals, bottom_line[:n_steps], linestyle=":", color=color, linewidth=2)
+
+        # Make titles Times new Roman
+        plt.rcParams['font.family'] = 'serif'
+        plt.rcParams['font.serif']  = ['Times New Roman']
+
+        # if you use math text and want matching font:
+        plt.rcParams['mathtext.fontset'] = 'custom'
+        plt.rcParams['mathtext.rm']      = 'Times New Roman'
+
+        # Sort the colors for the two tows
+        color = tow_colors[i % len(tow_colors)]
+
+        plt.plot(x_vals, [offset]*n_steps, linestyle=":", color="black", alpha=0.6)
+        plt.plot(x_vals, centerline[:n_steps], color=color, linestyle="--", linewidth=1.5)
+        plt.plot(x_vals, top_line[:n_steps], linestyle="-", color=color, linewidth=2.5)
+        plt.plot(x_vals, bottom_line[:n_steps], linestyle="-", color=color, linewidth=2.5)
         
     if plot == True:
-        plt.xlabel("x position (mm)", fontsize=20)
-        plt.ylabel("y position (mm)", fontsize=20)
-        plt.title(f"Simulated {num_tows}-Tow Layout with Random Start Errors", fontsize=20)
+        plt.xlabel("Distance along tow path, x (mm)", fontsize=20)
+        plt.ylabel("Tow lateral offset, y (mm)", fontsize=20)
+        #plt.title(f"Simulated {num_tows}-Tow Layout with Random Start Errors", fontsize=20)
         if num_tows <= 50:
             plt.legend(loc="upper right", ncol=2, fontsize=15)
         plt.grid(True)
