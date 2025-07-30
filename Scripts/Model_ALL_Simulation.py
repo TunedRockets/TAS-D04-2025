@@ -112,17 +112,19 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
         # Sort the colors for the two tows
         color = tow_colors[i % len(tow_colors)]
 
-        plt.plot(x_vals, [offset]*n_steps, linestyle=":", color="black", alpha=0.6)
+        plt.plot(x_vals, [offset]*n_steps, linestyle="-.", color="black", alpha=1, linewidth=1)
         plt.plot(x_vals, centerline[:n_steps], color=color, linestyle="--", linewidth=1.5)
         plt.plot(x_vals, top_line[:n_steps], linestyle="-", color=color, linewidth=2.5)
         plt.plot(x_vals, bottom_line[:n_steps], linestyle="-", color=color, linewidth=2.5)
         
     if plot == True:
-        plt.xlabel("Distance along tow path, x (mm)", fontsize=20)
-        plt.ylabel("Tow lateral offset, y (mm)", fontsize=20)
+        plt.xlabel("Distance along tow path, x (mm)", fontsize=25)
+        plt.ylabel("Tow lateral offset, y (mm)", fontsize=25)
         #plt.title(f"Simulated {num_tows}-Tow Layout with Random Start Errors", fontsize=20)
-        if num_tows <= 50:
-            plt.legend(loc="upper right", ncol=2, fontsize=15)
+        '''Uncomment the two following lines if you want a legend in the 2 virtual tow figure'''
+        #if num_tows <= 50:
+            #plt.legend(loc="upper right", ncol=2, fontsize=15)
+
         plt.grid(True)
         plt.tight_layout()
         # The next line is commented for User_Interface. If you need to show the graph for a bit, make sure to revert it back after.
