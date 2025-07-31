@@ -965,7 +965,7 @@ def _sync_time_data():
 def main():
 
     tow = 2
-    plot_all_graphs_or_generate_experimental_tow(tow, generate=True)
+    plot_all_graphs_or_generate_experimental_tow(tow, generate=False)
     LT_x = Handling_ALL_Functions.get_processed_data(tow, "LT")["x"]
     LT_time = Handling_ALL_Functions.get_processed_data(tow, "LT")["time"]
     # LLS_A_width = Handling_ALL_Functions.get_processed_data(tow, "LLS_A")["width"]
