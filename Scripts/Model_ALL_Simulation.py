@@ -111,21 +111,41 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
 
         # Sort the colors for the two tows
         color = tow_colors[i % len(tow_colors)]
-
-        plt.plot(x_vals, [offset]*n_steps, linestyle="-.", color="black", alpha=1, linewidth=1)
-        plt.plot(x_vals, centerline[:n_steps], color=color, linestyle="--", linewidth=1.5)
-        plt.plot(x_vals, top_line[:n_steps], linestyle="-", color=color, linewidth=2.5)
-        plt.plot(x_vals, bottom_line[:n_steps], linestyle="-", color=color, linewidth=2.5)
         
+        '''I did a little tweak, just for the label box below the figure looks nicer'''
+        plt.plot(x_vals, [offset]*n_steps, linestyle=":", color="black", alpha=1, 
+                 linewidth=1, label='Programmed path' if i==0 else '_nolegend_')
+        
+        centre_label = "Tow 1 centreline" if i == 0 else "Tow 2 centreline"
+        plt.plot(x_vals, centerline[:n_steps], color=color, linestyle="--", linewidth=1.5, label=centre_label)
+
+        edge_label = "Tow 1 edge" if i == 0 else "Tow 2 edge"
+        plt.plot(x_vals, top_line[:n_steps], linestyle="-", color=color, linewidth=2.5, label=edge_label)
+        plt.plot(x_vals, bottom_line[:n_steps], linestyle="-", color=color, linewidth=2.5, label='_nolegend_')
+
+
+
+    
+
+        plt.legend(loc='lower center',           # centered below the axes
+                    bbox_to_anchor=(0.5, -0.22),  # change the y-coord so it goes underneath the x-axis
+                    ncol=3,                       # three entries side-by-side
+                    frameon=True,                 
+                    fontsize=12)
+        
+    # Set x-axis limits
+    plt.xlim(0, 1000)
+
+
     if plot == True:
-        plt.xlabel("Distance along tow path, x (mm)", fontsize=25)
-        plt.ylabel("Tow lateral offset, y (mm)", fontsize=25)
+        plt.xlabel("Tow length (mm)", fontsize=25)
+        plt.ylabel("Tow width (mm)", fontsize=25)
         #plt.title(f"Simulated {num_tows}-Tow Layout with Random Start Errors", fontsize=20)
         '''Uncomment the two following lines if you want a legend in the 2 virtual tow figure'''
         #if num_tows <= 50:
             #plt.legend(loc="upper right", ncol=2, fontsize=15)
 
-        plt.grid(True)
+        plt.grid(False)
         plt.tight_layout()
         # The next line is commented for User_Interface. If you need to show the graph for a bit, make sure to revert it back after.
         # plt.show()
