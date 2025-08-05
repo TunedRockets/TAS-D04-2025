@@ -113,22 +113,43 @@ def generate_multitow_layout(num_tows=5, tow_spacing_mm=6.35, tow_width_mm=6.35,
         color = tow_colors[i % len(tow_colors)]
         
         '''I did a little tweak, just for the label box below the figure looks nicer'''
-        plt.plot(x_vals, [offset]*n_steps, linestyle=":", color="black", alpha=1, 
-                 linewidth=1, label='Programmed path' if i==0 else '_nolegend_')
-        
-        centre_label = "Tow 1 centreline" if i == 0 else "Tow 2 centreline"
-        plt.plot(x_vals, centerline[:n_steps], color=color, linestyle="--", linewidth=1.5, label=centre_label)
+        plt.plot(
+        x_vals,
+        [offset]*n_steps,
+        linestyle=":",
+        color="black",
+        linewidth=1,
+        label="Programmed paths" if i == 0 else "_nolegend_")
 
-        edge_label = "Tow 1 edge" if i == 0 else "Tow 2 edge"
-        plt.plot(x_vals, top_line[:n_steps], linestyle="-", color=color, linewidth=2.5, label=edge_label)
-        plt.plot(x_vals, bottom_line[:n_steps], linestyle="-", color=color, linewidth=2.5, label='_nolegend_')
+        # centrelines — only label once
+        plt.plot(
+        x_vals,
+        centerline[:n_steps],
+        "--",
+        color=color,
+        linewidth=1.5,
+        label="Tow centerlines" if i == 0 else "_nolegend_")
 
+        # edges — only label once
+        plt.plot(
+        x_vals,
+        top_line[:n_steps],
+        "-",
+        color=color,
+        linewidth=2.5,
+        label="Tow edges" if i == 0 else "_nolegend_")
 
+        # bottom edge same style, no legend
+        plt.plot(
+        x_vals,
+        bottom_line[:n_steps],
+        "-",
+        color=color,
+        linewidth=2.5,
+        label="_nolegend_")
 
-    
-
-        plt.legend(loc='lower center',           # centered below the axes
-                    bbox_to_anchor=(0.5, -0.22),  # change the y-coord so it goes underneath the x-axis
+    plt.legend(loc='lower center',           # centered below the axes
+                    bbox_to_anchor=(0.5, -0.18),  # change the y-coord so it goes underneath the x-axis
                     ncol=3,                       # three entries side-by-side
                     frameon=True,                 
                     fontsize=12)
