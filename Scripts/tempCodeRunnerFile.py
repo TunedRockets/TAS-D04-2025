@@ -243,25 +243,46 @@ def generate_error_path(start_error, n_steps, slope, intercept, x_sorted, bin_ed
 if __name__ == "__main__":
     # Test your function here
 
-    bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin = consecutive_error("CAM", 0.0001, num_bins=20, bins_show=False)
+    #bin_stats_df, slope, intercept, r_value, p_value, std_err, x_sorted, bin_edges, deviations_per_bin = consecutive_error("CAM", 0.0001, num_bins=20, bins_show=False)
 
 
 
-    synced_data_tow_1 = get_synced_data(tow=1).to_numpy
-    synced_data_cam_tow_1 = synced_data_tow_1[:,14]
-    start_error = synced_data_cam_tow_1[0]
-    n_steps = len(synced_data_cam_tow_1) - 1
-    simulated_tow_path = generate_error_path(
-    start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0
-    )
+    #synced_data_tow_1 = get_synced_data(tow=1).to_numpy
+    #synced_data_cam_tow_1 = synced_data_tow_1[:,14]
+    #start_error = synced_data_cam_tow_1[0]
+    ##n_steps = len(synced_data_cam_tow_1) - 1
+    #simulated_tow_path = generate_error_path(
+    #start_error, n_steps, slope, intercept, x_sorted, bin_edges, deviations_per_bin, random_seed=0
+    #)
 
-    plt.figure(figsize=(12, 5))
-    plt.plot(simulated_tow_path, label="Simulated Error Path")
-    plt.plot(synced_data_cam_tow_1,label="real data",linestyle="--")
-    plt.xlabel("Step")
-    plt.ylabel("Error")
-    plt.title("Simulated Machine Error Path Over Time")
-    plt.grid(True)
-    plt.legend()
-    plt.show()
+    #plt.figure(figsize=(12, 5))
+    #plt.plot(simulated_tow_path, label="Simulated Error Path")
+    #plt.plot(synced_data_cam_tow_1,label="real data",linestyle="--")
+    #plt.xlabel("Step")
+    #plt.ylabel("Error")
+    #plt.title("Simulated Machine Error Path Over Time")
+    #plt.grid(True)
+    #plt.legend()
+    #plt.show()
 
+    import pickle
+    import pandas as pd
+
+    #Step 1: Load the pkl file
+    for tow in range(1,32):
+        with open(f"Processed data/proccessed_{tow}_space.pkl", "rb") as f:
+            data = pickle.load(f)
+
+    # Step 2: Convert to DataFrame (depends on structure of data)
+        if isinstance(data, pd.DataFrame):
+            df = data
+        elif isinstance(data, dict):
+            df = pd.DataFrame.from_dict(data)
+        else:
+            df = pd.DataFrame(data)
+
+    # Step 3: Display the DataFrame
+    #print(df.head())   # or use df.info()
+
+        # Step 4: Save to CSV
+        df.to_csv(f"Processed data/proccessed_{tow}_space.csv", index=False)

@@ -333,9 +333,9 @@ def main():
     # force-recompute LT data for tows 1–31 and print first rows
 
 
-    df = get_synced_data(1)
+    df = get_synced_data(2)
     print("All columns in df:", df.columns.tolist())
-    print(df.head())
+    #print(df.head())
 
     '''for k in range(1, 32):
         df = get_synced_data(k, overwrite=False)
